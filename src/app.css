@@ -24,8 +24,8 @@
 	--color-secondary: #cccccc;
 	--text-secondary: black;
 
-	--surface-primary: black;
-	--text-surface-primary: white;
+	--surface-primary: white;
+	--text-surface-primary: black;
 	--surface-secondary: #f15405;
 	--text-surface-secondary: white;
 	background: var(--surface-primary);

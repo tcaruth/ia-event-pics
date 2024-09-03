@@ -6,7 +6,6 @@
 	preparePageTransition();
 </script>
 
-<Navbar />
 <main>
 	<slot />
 </main>

@@ -35,7 +35,7 @@ const events = new Map([
  * @param {URL} url
  */
 function getEvent(url) {
-    const event = events.get(Number(url.searchParams.get('e') || 0))
+    const event = events.get(Number(url.searchParams.get('e') || 1))
     return event
 }
 export {getEvent}

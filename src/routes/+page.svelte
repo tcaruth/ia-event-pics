@@ -4,7 +4,6 @@
 
 <heading>
     <div>
-        
         <h1>{data.event?.name}</h1>
         <p>{data.event?.description}{data.event?.description && data.event?.date ? ` - ${data.event?.date}` : `${data.event?.date}`}</p>
     </div>

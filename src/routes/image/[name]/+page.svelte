@@ -12,8 +12,7 @@
 
 </script>
 <nav>
-    <a href="/?e={data.event?.id}">Home</a>
-    <a href="{referrer}">Back</a>
+    <a href="/?e={data.event?.id}">View all images in the gallery!</a>
 </nav>
 <heading>
     <h1>{$page.params.name}</h1>
