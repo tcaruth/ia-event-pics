@@ -5,7 +5,10 @@
 <heading>
     <div>
         <h1>{data.event?.name}</h1>
-        <p>{data.event?.description}{data.event?.description && data.event?.date ? ` - ${data.event?.date}` : `${data.event?.date}`}</p>
+        <p>{data.event?.description}</p>
+        {#if data.event?.date}
+        <p>{data.event?.date}</p>
+        {/if}
     </div>
 </heading>
 
