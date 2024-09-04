@@ -42,6 +42,9 @@ export async function GET() {
         }
     });
 
+    // sort by created date, most recent first
+    urls.sort((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime());
+
     return new Response(JSON.stringify(urls));
 }
 
