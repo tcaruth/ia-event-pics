@@ -40,4 +40,7 @@ a {
 	[style*='--tag'] {
 		view-transition-name: var(--tag);
 	}
+	/* ::view-transition-group(root) {
+		animation-duration: 2s;
+	} */
 }

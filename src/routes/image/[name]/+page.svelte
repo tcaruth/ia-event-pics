@@ -39,13 +39,15 @@
         }
         
     }
+
 </script>
 
 <svelte:head>
 <title>{$page.params.name.length>0 ? $page.params.name + ' - ': ''}IA Event Pics</title>
 </svelte:head>
 
-<nav>
+<nav style:--tag="heading">
+    <h1 style:--tag="title">{data.event?.name}</h1>
     <a href="/?e={data.event?.id}">← <span>View all images in the gallery!</span></a>
 </nav>
 <!-- <heading>
@@ -53,7 +55,7 @@
 </heading> -->
 <div class="content">
     <figure>
-        <img src={image_url} alt="User generated" />
+        <img src={image_url} alt="User generated" style:--tag={encodeURIComponent(btoa($page.params.name)).substring(0,8)}/>
     </figure>
     <div class="actions">
         <!-- <a class="button" download={$page.params.name} href={image_url}>
@@ -82,11 +84,11 @@
         background: var(--color-primary);
         color: var(--text-primary);
         border-radius: 1rem;
+        padding: 1rem;
         a {
             font-size: large;
             font-weight: bold;
             color: var(--text-primary);
-            padding: 2rem;
             display: block;
             span {
                 text-decoration: underline;

@@ -2,9 +2,9 @@
     export let data;
 </script>
 
-<heading>
+<heading style:--tag="heading">
     <div>
-        <h1>{data.event?.name}</h1>
+        <h1 style:--tag="title">{data.event?.name}</h1>
         <p>{data.event?.description}</p>
         {#if data.event?.date}
         <p>{data.event?.date}</p>
@@ -16,7 +16,9 @@
     {#each data.images as image}
     <a href="/image/{image.name}">
         <figure>
-            <div class="img"><img src={image.url} alt="User generated" /></div>
+            <div class="img">
+                <img src={image.url} alt="User generated" style:--tag={encodeURIComponent(btoa(image.name)).substring(0,8)} />
+            </div>
             <figcaption>{new Intl.DateTimeFormat(undefined, { dateStyle: 'short', timeStyle: 'short' }).format(new Date(image.created))}</figcaption>
         </figure>
     </a>
