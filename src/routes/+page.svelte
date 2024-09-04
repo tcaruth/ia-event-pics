@@ -17,7 +17,7 @@
     <a href="/image/{image.name}">
         <figure>
             <div class="img">
-                <img src={image.url} alt="User generated" style:--tag={encodeURIComponent(btoa(image.name)).substring(0,8)} />
+                <img src={image.url} alt="User generated" style:--tag={encodeURIComponent(btoa(image.name))} />
             </div>
             <figcaption>{new Intl.DateTimeFormat(undefined, { dateStyle: 'short', timeStyle: 'short' }).format(new Date(image.created))}</figcaption>
         </figure>
