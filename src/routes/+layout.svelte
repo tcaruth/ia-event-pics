@@ -6,6 +6,10 @@
 	preparePageTransition();
 </script>
 
+<svelte:head>
+    <title>IA Event Pics</title>
+</svelte:head>
+
 <main>
 	<slot />
 </main>
