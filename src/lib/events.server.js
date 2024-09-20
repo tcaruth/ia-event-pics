@@ -14,6 +14,25 @@ const events = new Map([
         1,
         {
             id: 1,
+            name: 'Find the fun in your day!',
+            description: 'Demonstrate the Power of One principals by taking a fun photo!',
+            date: '',
+            location: 'VGM Headquarters in Waterloo, IA',
+            primary_image: 'https://www.vgmgroup.com/images/building-background-.jpg',
+            colors: {
+                primary: '#023876',
+                primary_text: 'white',
+                secondary: '#cccccc',
+                secondary_text: 'black',
+                surface: 'black',
+                surface_text: 'white'
+            }
+        }
+    ],
+    [
+        2,
+        {
+            id: 1,
             name: '2024 Fall Crop',
             description: 'Crafting crops raising money for Multiple Sclerosis research',
             date: 'September 6-7, 2024',
