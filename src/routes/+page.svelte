@@ -74,6 +74,7 @@
     .primary {
         text-align: center;
         img {
+            width: 100%;
             max-width: calc(100vw - 4rem);
         }
     }
