@@ -1,16 +1,4 @@
-/* :root {
-	--color-primary: #4B0082;
-	--text-primary: white;
-
-	--color-secondary: #cccccc;
-	--text-secondary: black;
-
-	--surface-primary: white;
-	--text-surface-primary: black;
-	--surface-secondary: #4B0082;
-	--text-surface-secondary: white;
-} */
-
+/* base */
 :root {
 	font-size: 18px;
 
@@ -18,6 +6,25 @@
 		font-family: serif;
 	}
 	font-family: sans-serif;
+	background: var(--surface-primary);
+	color: var(--text-surface-primary);
+}
+/* vgm */
+:root { 
+	--color-primary: #023876;
+	--text-primary: white;
+
+	--color-secondary: #cccccc;
+	--text-secondary: black;
+
+	--surface-primary: white;
+	--text-surface-primary: black;
+	--surface-secondary: #023876;
+	--text-surface-secondary: white;
+}
+
+/* jason */
+/* :root { 
 	--color-primary: #f15405;
 	--text-primary: white;
 
@@ -28,9 +35,7 @@
 	--text-surface-primary: black;
 	--surface-secondary: #f15405;
 	--text-surface-secondary: white;
-	background: var(--surface-primary);
-	color: var(--text-surface-primary);
-}
+} */
 
 a {
 	text-decoration: none;
