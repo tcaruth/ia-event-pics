@@ -14,7 +14,7 @@ const events = new Map([
         1,
         {
             id: 1,
-            name: 'Aubri and Travis's wedding!',
+            name: 'Aubri and Travis!',
             description: 'Thanks for joining us on our special day!',
             date: '',
             location: '',
