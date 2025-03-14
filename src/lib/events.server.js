@@ -14,13 +14,13 @@ const events = new Map([
         1,
         {
             id: 1,
-            name: 'Find the fun in your day!',
-            description: 'Demonstrate the Power of One principals by taking a fun photo!',
+            name: 'Aubri and Travis's wedding!',
+            description: 'Thanks for joining us on our special day!',
             date: '',
-            location: 'VGM Headquarters in Waterloo, IA',
-            primary_image: 'https://www.vgmgroup.com/images/building-background-.jpg',
+            location: '',
+            primary_image: '',
             colors: {
-                primary: '#023876',
+                primary: '#91134c',
                 primary_text: 'white',
                 secondary: '#cccccc',
                 secondary_text: 'black',
