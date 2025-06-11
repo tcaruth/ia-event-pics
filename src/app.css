@@ -2,15 +2,16 @@
 :root {
 	font-size: 18px;
 
-	h1, h2, h3, h4, h5, h6 {
-		font-family: serif;
+	/*h1, h2, h3, h4, h5, h6 {
+		font-family: sans-serif;
 	}
+	*/
 	font-family: sans-serif;
 	background: var(--surface-primary);
 	color: var(--text-surface-primary);
 }
 /* vgm */
-:root { 
+/* :root { 
 	--color-primary: #023876;
 	--text-primary: white;
 
@@ -21,7 +22,22 @@
 	--text-surface-primary: black;
 	--surface-secondary: #023876;
 	--text-surface-secondary: white;
+} */
+/* heartland  */
+:root { 
+	--color-primary: #377175;
+	--text-primary: white;
+
+	--color-secondary: #99b6b2;
+	--text-secondary: black;
+
+	--surface-primary: white;
+	--text-surface-primary: black;
+	--surface-secondary: #B8D5E7;
+	--text-surface-secondary: white;
 }
+
+
 
 /* jason */
 /* :root { 
