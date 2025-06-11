@@ -18,7 +18,7 @@ const events = new Map([
             description: 'Save the date! June 8-10, 2026',
             date: '',
             location: '',
-            primary_image: '',
+            primary_image: 'https://vgmheartland.com/ords/r/heartland/200/files/static/v53/color-logo.png',
             heading_font: 'sans-serif',
             main_font: 'sans-serif',
             colors: {
