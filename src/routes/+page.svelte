@@ -36,7 +36,7 @@
         color: var(--text-primary);
         padding: 1rem;
         margin-block: 1rem;
-        border-radius: 1rem;
+        border-radius: 4px;
         
         box-shadow: 
         0 4px 6px -1px rgb(0 0 0 / 0.1), 
