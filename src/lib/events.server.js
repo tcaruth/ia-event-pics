@@ -14,15 +14,17 @@ const events = new Map([
         1,
         {
             id: 1,
-            name: 'Aubri and Travis!',
-            description: 'Thanks for joining us on our special day!',
+            name: 'Heartland Conference 2025',
+            description: 'Save the date! June 8-10, 2026',
             date: '',
             location: '',
             primary_image: '',
+            heading_font: 'sans-serif',
+            main_font: 'sans-serif',
             colors: {
-                primary: '#91134c',
+                primary: '#377175',
                 primary_text: 'white',
-                secondary: '#cccccc',
+                secondary: '#99b6b2',
                 secondary_text: 'black',
                 surface: 'black',
                 surface_text: 'white'
