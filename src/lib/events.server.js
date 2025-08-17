@@ -14,17 +14,17 @@ const events = new Map([
         1,
         {
             id: 1,
-            name: 'Heartland Conference 2025',
-            description: 'Save the date! June 8-10, 2026',
+            name: 'Hawkeye Child Development Center Open House 2025',
+            description: '',
             date: '',
             location: '',
-            primary_image: 'https://vgmheartland.com/ords/r/heartland/200/files/static/v53/color-logo.png',
+            primary_image: 'https://www.hawkeyecollege.edu/students/resources/daycare/_images/preschool-media-banner-narrow.webp',
             heading_font: 'sans-serif',
             main_font: 'sans-serif',
             colors: {
-                primary: '#377175',
+                primary: '#0153A4',
                 primary_text: 'white',
-                secondary: '#99b6b2',
+                secondary: '#fe6100',
                 secondary_text: 'black',
                 surface: 'black',
                 surface_text: 'white'
@@ -44,6 +44,27 @@ const events = new Map([
                 primary: '#f15405',
                 primary_text: 'black',
                 secondary: '#cccccc',
+                secondary_text: 'black',
+                surface: 'black',
+                surface_text: 'white'
+            }
+        }
+    ],
+    [
+        4,
+        {
+            id: 4,
+            name: 'Heartland Conference 2025',
+            description: 'Save the date! June 8-10, 2026',
+            date: '',
+            location: '',
+            primary_image: 'https://vgmheartland.com/ords/r/heartland/200/files/static/v53/color-logo.png',
+            heading_font: 'sans-serif',
+            main_font: 'sans-serif',
+            colors: {
+                primary: '#377175',
+                primary_text: 'white',
+                secondary: '#99b6b2',
                 secondary_text: 'black',
                 surface: 'black',
                 surface_text: 'white'

@@ -23,8 +23,22 @@
 	--surface-secondary: #023876;
 	--text-surface-secondary: white;
 } */
-/* heartland  */
+
+/* hawkeye */
 :root { 
+	--color-primary: #0153A4;
+	--text-primary: white;
+
+	--color-secondary: #fe6100;
+	--text-secondary: black;
+
+	--surface-primary: white;
+	--text-surface-primary: black;
+	--surface-secondary: #0153A4;
+	--text-surface-secondary: white;
+}
+/* heartland  */
+/* :root { 
 	--color-primary: #377175;
 	--text-primary: white;
 
@@ -35,7 +49,7 @@
 	--text-surface-primary: black;
 	--surface-secondary: #B8D5E7;
 	--text-surface-secondary: white;
-}
+} */
 
 
 
