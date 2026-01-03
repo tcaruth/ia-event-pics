@@ -1,15 +1,14 @@
 /* base */
 :root {
 	font-size: 18px;
+	--body-font: sans-serif;
+	--heading-font: sans-serif;
 
-	/*h1, h2, h3, h4, h5, h6 {
-		font-family: sans-serif;
-	}
-	*/
-	font-family: sans-serif;
+	font-family: var(--body-font);
 	background: var(--surface-primary);
 	color: var(--text-surface-primary);
 }
+
 /* vgm */
 /* :root { 
 	--color-primary: #023876;
@@ -25,7 +24,7 @@
 } */
 
 /* hawkeye */
-:root { 
+:root {
 	--color-primary: #0153A4;
 	--text-primary: white;
 
@@ -37,6 +36,7 @@
 	--surface-secondary: #0153A4;
 	--text-surface-secondary: white;
 }
+
 /* heartland  */
 /* :root { 
 	--color-primary: #377175;
@@ -75,6 +75,7 @@ a {
 	[style*='--tag'] {
 		view-transition-name: var(--tag);
 	}
+
 	/* ::view-transition-group(root) {
 		animation-duration: 2s;
 	} */
