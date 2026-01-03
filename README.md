@@ -8,57 +8,47 @@ A custom-built photo gallery and distribution platform for an Iowa-based physica
 2.  **Process:** The booth generates two versions: 
     *   An **Overlay Version** (with event-specific branding).
     *   An **Original Version** (the original high-quality capture for organizers).
-3.  **Upload:** Images are named by timestamp (e.g., `202512300123456.jpg`) and immediately uploaded to Oracle Cloud Infrastructure (OCI) Object Storage using a per-event prefix: `b/booth/o/{event-slug}/{filename}.jpg`.
-4. **Instant Delivery:** The booth optimistically displays a QR code to `https://iaevent.pics/[event-slug]/[filename]` before the upload even finishes. The frontend uses an automated polling mechanism to check for the image's availability, ensuring it appears as soon as the upload is complete without requiring a manual refresh.
+3. **Upload:** Images are immediately uploaded to **Sanity.io** using a custom uploader script (`scripts/sanity-uploader.js`).
+4. **Instant Delivery:** The booth optimistically displays a QR code to `https://iaevent.pics/[event-slug]/[filename]` before the upload even finishes. The frontend uses an automated polling mechanism until the image appears in Sanity.
 
 ## 🚀 Key Features
 
-*   **Svelte 5 Powered:** Built with the latest SvelteKit features for high performance and smooth transitions.
-*   **Sanity CMS Integration:** Dynamic event configuration (colors, fonts, passwords) managed via Sanity Studio.
-*   **Event-Specific Branding:** Real-time styling updates based on CMS data.
-*   **OCI Integration:** Uses OCI Object Storage with Pre-Authenticated Requests (PAR) for public reading and the OCI SDK for server-side management.
-*   **Attendee Experience:** Mobile-friendly viewing, easy "Share" API integration, and download capabilities.
-*   **Admin Dashboard:** Per-event admin pages (`/[slug]/admin`) for managing and deleting images.
-*   **Batch Download:** One-click ZIP generation for organizers to download all event photos (overlaid and original).
+*   **Svelte 5 Powered:** Built with SvelteKit 5 utilizing runes for high performance.
+*   **Unified CMS & Storage:** Both event metadata and high-resolution image assets are hosted on Sanity.io.
+*   **Event-Specific Branding:** Real-time styling updates (colors, fonts) driven by Sanity data.
+*   **Sanity Image Pipeline:** High-performance, optimized image delivery (WebP, auto-resize).
+*   **Admin Dashboard:** Per-event admin pages (`/[slug]/admin`) for managing and deleting images directly from the gallery.
+*   **Batch Download:** One-click ZIP generation for organizers to download all event photos.
 
 ## 🛠️ Tech Stack
 
 *   **Framework:** SvelteKit (Svelte 5)
-*   **CMS:** Sanity.io
+*   **CMS & Storage:** Sanity.io
 *   **Styling:** Vanilla CSS
-*   **Storage:** OCI Object Storage
-*   **Deployment:** Netlify
+*   **Deployment:** Netlify (Frontend) & Sanity.studio (CMS)
 *   **Barcode Gen:** `qrcode` for in-browser generation.
+
+## 📂 Project Structure
+
+- `/src`: SvelteKit application source.
+- `/studio`: Sanity Studio (Schema definitions and CMS UI).
+- `/scripts`: Utility scripts for photobooth integration.
 
 ## ⚙️ Configuration
 
 Copy `.env.example` to `.env` and configure the following:
 
 ```env
-# URL for Reading (Public PAR)
-PUBLIC_BUCKET_READ="https://.../b/bucket/o/"
-
-# Sanity Configuration
+# Sanity.io Config
 VITE_SANITY_PROJECT_ID="your-project-id"
 VITE_SANITY_DATASET="production"
+SANITY_API_TOKEN="your-write-token"
 
 # Admin Login
 ADMIN_PASSWORD="your-master-admin-password"
-
-# OCI SDK Credentials (Required for Deletion)
-OCI_USER_OCID="ocid1.user.oc1..."
-OCI_TENANCY_OCID="ocid1.tenancy.oc1..."
-OCI_FINGERPRINT="xx:xx:xx..."
-OCI_REGION="us-ashburn-1"
-OCI_NAMESPACE="your-namespace"
-OCI_BUCKET_NAME="booth"
-
-# LOCALLY: Paste PEM content here. 
-# IN NETLIFY: Set as Environment Variable.
-OCI_PRIVATE_KEY="-----BEGIN RSA PRIVATE KEY-----\n..."
 ```
 
-### Managing Events
+### Managing Events & Studio
 
 Events are managed via **Sanity Studio**. To add or update an event:
 1.  Log in to your Sanity Studio instance.
@@ -68,6 +58,8 @@ Events are managed via **Sanity Studio**. To add or update an event:
 
 ## 🗺️ Roadmap (TODO)
 
+- [x] **Consolidate Storage:** Migrate from OCI to Sanity.io.
+- [x] **Monorepo:** Consolidate Sanity Studio into the main repository.
 - [x] **CMS Integration:** Replace hardcoded events with Sanity CMS.
 - [x] **Batch Download:** Allow event organizers to download all images in one click.
-- [ ] **Multi-booth Capability:** Allow multiple booths (e.g., codename "MOOSE") to be configured and managed via Sanity.
+- [ ] **Multi-booth Capability:** Allow multiple booths (e.g., codename "MOOSE") to be configured via Sanity.

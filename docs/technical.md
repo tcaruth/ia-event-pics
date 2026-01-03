@@ -6,28 +6,26 @@ IA Event Pics is a SvelteKit-based web application designed for the distribution
 
 - **Frontend:** SvelteKit 5 utilizing runes for state management.
 - **Backend:** SvelteKit server-side functions running on Netlify Functions.
-- **CMS:** Sanity.io for event configuration, metadata, and branding data.
-- **Storage:** Oracle Cloud Infrastructure (OCI) Object Storage.
+- **CMS & Storage:** Sanity.io for all event metadata and image asset hosting.
 - **Styling:** Vanilla CSS with dynamic CSS variables driven by Sanity data.
 
 ## 💾 Data Model
 
-Images are uploaded directly to OCI Object Storage with a per-event prefix.
+Images are managed within Sanity as a `gallery` array on the `event` document.
 
-### Image Naming Convention
-- **Path:** `b/booth/o/{event-slug}/{timestamp}.jpg`
-- **Types:**
-    - `timestamp.jpg`: Overlaid/branded version for attendees.
-    - `timestamp-raw.jpg`: Original high-quality capture (hidden from public galleries).
+### Image Structure
+- **Reference:** Images are stored as Sanity assets.
+- **Metadata:** Each image in the gallery contains:
+    - `asset`: Reference to the image file.
+    - `created`: ISO timestamp of capture.
+    - `alt`: Descriptive text for accessibility.
+- **Optimization:** Served via Sanity's image pipeline (WebP, auto-resize).
 
 ## ⚙️ Backend Logic
 
 ### API Endpoints
-- `/api/image-list`: Fetches objects from the OCI bucket. 
-    - `event={slug}`: Filters results to a specific event directory.
-    - `type=all`: Includes raw images in the response.
-- `/api/image/[encoded-path]`: 
-    - `DELETE`: Deletes an image via the OCI SDK. Requires admin authentication.
+- `/api/image-list?event={slug}`: Fetches event-specific images from Sanity.
+- Deletion: Managed via a Form Action in `src/routes/[slug]/admin/+page.server.js` using the Sanity write token.
 
 ## 🎨 Frontend Logic
 
@@ -42,9 +40,19 @@ To handle the "race condition" where an attendee scans a QR code before the uplo
 - **Friendly UI:** Displays a custom loading spinner and reassuring messaging until the image is detected.
 - **Fallback:** After 3 minutes (60 retries) without success, it transitions to an error state with a manual refresh option.
 
+## 📂 Project Structure
+
+- `/src`: Main SvelteKit application.
+- `/studio`: Sanity Studio (Schema definitions and CMS UI).
+- `/scripts`: Utility scripts for photobooth integration and testing.
+
 ## 🚀 Deployment
 
 The project is hosted on **Netlify**.
 - **Build Command:** `npm run build`
 - **Adapter:** `@sveltejs/adapter-netlify`
-- **Environment Variables:** Required for OCI SDK authentication and admin password (see `.env.example`).
+- **Environment Variables:**
+    - `SANITY_API_TOKEN`: Required for write operations (deletions/uploads).
+    - `VITE_SANITY_PROJECT_ID` & `VITE_SANITY_DATASET`: Sanity configuration.
+
+The Sanity Studio is deployed independently to **sanity.studio** via `npm run studio:deploy`.

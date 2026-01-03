@@ -14,7 +14,7 @@ This guide is for event organizers and photobooth operators to manage photos and
 1.  Locate the photo in the Admin Dashboard.
 2.  Click the **Delete** button.
 3.  Confirm the deletion in the popup dialog.
-4.  **Warning:** This action is permanent and removes the photo from OCI storage.
+4.  **Warning:** This action is permanent and removes the photo from Sanity storage.
 
 ## 🎨 Updating Event Branding
 

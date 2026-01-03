@@ -1,7 +1,6 @@
 <script>
 	import { enhance } from '$app/forms';
 	import heroImage from '$lib/assets/photobooth_hero_party.png';
-	/** @type {import('./$types').ActionData} */
 	export let form;
 
 	let loading = false;

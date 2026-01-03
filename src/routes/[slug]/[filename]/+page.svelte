@@ -6,7 +6,7 @@
 
 	const imageUrl = data.image?.url || '';
 
-	let qrPageUrlDataUrl = QRCode.toDataURL($page.url.href, { errorCorrectionLevel: 'L' });
+	let qrPageUrlDataUrl = Promise.resolve('');
 	let loadingState = 'checking'; // 'checking', 'loaded', 'error'
 	let retryCount = 0;
 	const MAX_RETRIES = 60; // 3 minutes at 3s interval
@@ -25,6 +25,8 @@
 	}
 
 	onMount(() => {
+		qrPageUrlDataUrl = QRCode.toDataURL($page.url.href, { errorCorrectionLevel: 'L' });
+		/** @type {ReturnType<typeof setInterval>} */
 		let interval;
 
 		const poll = async () => {
@@ -101,7 +103,8 @@
 
 		{#await qrPageUrlDataUrl then dataUrl}
 			<figure class="qr-container">
-				<img class="qrcode" src={dataUrl} alt="QR Code for the displayed photo" />
+				<!-- svelte-ignore a11y_img_redundant_alt -->
+				<img class="qrcode" src={dataUrl} alt="QR Code link for this image" />
 				<figcaption>Scan to share this image</figcaption>
 			</figure>
 		{/await}

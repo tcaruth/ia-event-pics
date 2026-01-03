@@ -1,6 +1,8 @@
 <script>
 	console.log('admin page');
+	/** @type {import('./$types').PageData} */
 	export let data;
+	/** @type {import('./$types').ActionData} */
 	export let form;
 	import { enhance } from '$app/forms';
 	import JSZip from 'jszip';
@@ -10,8 +12,10 @@
 
 	/** @type {HTMLDialogElement} */
 	let deleteDialog;
+	/** @type {import('$lib/events.server').EventImage | null} */
 	let imageToDelete = null;
 
+	/** @param {import('$lib/events.server').EventImage} image */
 	function confirmDelete(image) {
 		imageToDelete = image;
 		deleteDialog.showModal();
@@ -28,9 +32,14 @@
 		downloadProgress = 'Fetching image list...';
 
 		try {
-			const response = await fetch('/api/image-list?type=all');
+			const response = await fetch(`/api/image-list?event=${data.slug}`);
 			if (!response.ok) throw new Error('Failed to fetch image list');
 			const images = await response.json();
+
+			if (!images || images.length === 0) {
+				alert('No images found to download.');
+				return;
+			}
 
 			const zip = new JSZip();
 			const total = images.length;
@@ -40,28 +49,46 @@
 				.replace(/-+/g, '-')
 				.replace(/^-|-$/g, '');
 
-			for (let i = 0; i < total; i++) {
-				const image = images[i];
-				downloadProgress = `Downloading image ${i + 1} of ${total}: ${image.name}...`;
+			let completed = 0;
+			const CONCURRENCY_LIMIT = 5;
+			const chunks = [];
 
-				const imgRes = await fetch(image.url);
-				if (!imgRes.ok) {
-					console.error(`Failed to download ${image.name}`);
-					continue;
-				}
-				const blob = await imgRes.blob();
+			for (let i = 0; i < images.length; i += CONCURRENCY_LIMIT) {
+				chunks.push(images.slice(i, i + CONCURRENCY_LIMIT));
+			}
 
-				// Improved filename: event-name_timestamp_suffix.jpg
-				const timestamp = new Date(image.created)
-					.toISOString()
-					.replace(/[:.]/g, '-')
-					.replace('T', '_')
-					.split('Z')[0];
-				const suffix = image.name.includes('raw') ? '_raw' : '_overlaid';
-				const ext = image.name.split('.').pop() || 'jpg';
-				const friendlyName = `${eventSlug}_${timestamp}${suffix}.${ext}`;
+			for (const chunk of chunks) {
+				await Promise.all(
+					chunk.map(async (/** @type {import('$lib/events.server').EventImage} */ image) => {
+						const imgRes = await fetch(image.url);
+						if (!imgRes.ok) {
+							console.error(`Failed to download ${image.name}`);
+							completed++;
+							return;
+						}
+						const blob = await imgRes.blob();
 
-				zip.file(friendlyName, blob);
+						// Improved filename: event-name_timestamp_suffix.jpg
+						const timestamp = new Date(image.created)
+							.toISOString()
+							.replace(/[:.]/g, '-')
+							.replace('T', '_')
+							.split('Z')[0];
+
+						// Determine suffix based on name or presence of 'raw'
+						let suffix = '';
+						if (image.name) {
+							suffix = image.name.toLowerCase().includes('raw') ? '_raw' : '_overlaid';
+						}
+
+						const ext = image.name?.split('.').pop() || 'jpg';
+						const friendlyName = `${eventSlug}_${timestamp}${suffix}.${ext}`;
+
+						zip.file(friendlyName, blob);
+						completed++;
+						downloadProgress = `Downloading image ${completed} of ${total}...`;
+					})
+				);
 			}
 
 			downloadProgress = 'Generating ZIP file...';

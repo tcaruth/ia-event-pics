@@ -16,22 +16,22 @@ export async function GET({ url: requestUrl }) {
                 "name": asset->originalFilename,
                 "created": coalesce(created, _createdAt),
                 "id": asset->_id,
-                "md5": asset->metadata.lqip
+                "key": _key
             }
         }`;
 
+        /** @type {{gallery: import('$lib/events.server').EventImage[]}} */
         const data = await client.fetch(query, { slug: eventSlug });
 
         if (!data || !data.gallery) {
             return new Response(JSON.stringify([]));
         }
 
-        const urls = data.gallery.map((/** @type {any} */ image) => ({
+        const urls = data.gallery.map((image) => ({
             name: image.name,
-            fullPath: image.created, // Using key as fullPath for legacy compatibility
+            fullPath: image.key, // Using key as fullPath for legacy compatibility
             url: image.url,
-            created: image.created,
-            md5: image.md5
+            created: image.created
         }));
 
         // Sort by created date (or key if that's all we have)

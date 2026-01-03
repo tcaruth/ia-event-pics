@@ -2,7 +2,58 @@ import { client } from './sanity';
 import groq from 'groq';
 
 /**
+ * @typedef {Object} ImageMetadata
+ * @property {string} [lqip]
+ * @property {Object} [dimensions]
+ * @property {number} [dimensions.width]
+ * @property {number} [dimensions.height]
+ * @property {number} [dimensions.aspectRatio]
+ */
+
+/**
+ * @typedef {Object} EventImage
+ * @property {string} url
+ * @property {string} created
+ * @property {string} key
+ * @property {string} name
+ * @property {string} id
+ * @property {ImageMetadata} [metadata]
+ * @property {string} fullPath
+ */
+
+/**
+ * @typedef {Object} EventColors
+ * @property {string} [primary]
+ * @property {string} [primaryText]
+ * @property {string} [secondary]
+ * @property {string} [secondaryText]
+ * @property {string} [surface]
+ * @property {string} [surfaceText]
+ */
+
+/**
+ * @typedef {Object} EventFonts
+ * @property {string} [heading]
+ * @property {string} [body]
+ */
+
+/**
+ * @typedef {Object} EventData
+ * @property {string} title
+ * @property {string} name
+ * @property {string} [date]
+ * @property {string} [location]
+ * @property {string} [primary_image]
+ * @property {string} [adminPassword]
+ * @property {EventFonts} [fonts]
+ * @property {EventColors} [colors]
+ * @property {EventImage[]} images
+ * @property {string} [description]
+ */
+
+/**
  * @param {string} slug
+ * @returns {Promise<EventData | null>}
  */
 async function getEvent(slug) {
     if (!slug) {
@@ -11,6 +62,7 @@ async function getEvent(slug) {
 
     const query = groq`*[_type == "event" && slug.current == $slug][0]{
         title,
+        description,
         "name": title,
         date,
         location,
