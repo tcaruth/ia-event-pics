@@ -8,7 +8,7 @@ A custom-built photo gallery and distribution platform for an Iowa-based physica
 2.  **Process:** The booth generates two versions: 
     *   An **Overlay Version** (with event-specific branding).
     *   An **Original Version** (the original high-quality capture for organizers).
-3. **Upload:** Images are immediately uploaded to **Sanity.io** using a custom uploader script (`scripts/sanity-uploader.js`).
+3.- **Build Command:** `bun run build`
 4. **Instant Delivery:** The booth optimistically displays a QR code to `https://iaevent.pics/[event-slug]/[filename]` before the upload even finishes. The frontend uses an automated polling mechanism until the image appears in Sanity.
 
 ## 🚀 Key Features
