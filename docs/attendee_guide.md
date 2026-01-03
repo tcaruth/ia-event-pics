@@ -4,9 +4,9 @@ Welcome! This guide explains how to access and download your photos from the eve
 
 ## 📱 How to View Your Photo
 
-1.  **Scan the QR Code:** After your photo is taken, a QR code will appear on the photobooth screen.
-2.  **Open the Link:** Scan the code with your phone's camera to open your personal photo page on `iaevent.pics`.
-3.  **Wait for Upload:** If you scan very quickly, the photo might still be uploading. Refresh the page after a few seconds if it doesn't appear immediately.
+1.  **Scan the QR Code:** After your photo is taken, scan the code shown on the screen.
+2.  **Enter Event Code:** If you are on the homepage (`iaevent.pics`), simply enter your **Event Code** (provided by the host) to access your event's gallery.
+3.  **Wait for Upload:** If you scan very quickly, the photo might still be moving through the tubes! The page will automatically check for your photo every few seconds and display it as soon as it's ready. No need to manually refresh.
 
 ## 📥 Downloading Your Photo
 
@@ -17,7 +17,3 @@ Welcome! This guide explains how to access and download your photos from the eve
 
 - **Social Media:** Tap the "Share" button to use your phone's native sharing menu. You can send it via Text, Email, Instagram, or Facebook.
 - **Direct Link:** You can also copy the URL from your browser and send it to friends.
-
----
-
-*Enjoy your memories!*

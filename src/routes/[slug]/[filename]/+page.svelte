@@ -1,11 +1,50 @@
 <script>
 	import { page } from '$app/stores';
 	import QRCode from 'qrcode';
+	import { onMount } from 'svelte';
 	export let data;
 
 	const imageUrl = `${data.publicBucketRead}${data.slug}/${data.filename}`;
 
 	let qrPageUrlDataUrl = QRCode.toDataURL($page.url.href, { errorCorrectionLevel: 'L' });
+	let loadingState = 'checking'; // 'checking', 'loaded', 'error'
+	let retryCount = 0;
+	const MAX_RETRIES = 60; // 3 minutes at 3s interval
+
+	async function checkImage() {
+		try {
+			const response = await fetch(imageUrl, { method: 'HEAD', cache: 'no-cache' });
+			if (response.ok) {
+				loadingState = 'loaded';
+				return true;
+			}
+		} catch (e) {
+			console.error('Error checking image:', e);
+		}
+		return false;
+	}
+
+	onMount(() => {
+		let interval;
+
+		const poll = async () => {
+			const found = await checkImage();
+			if (found) {
+				clearInterval(interval);
+			} else {
+				retryCount++;
+				if (retryCount >= MAX_RETRIES) {
+					loadingState = 'error';
+					clearInterval(interval);
+				}
+			}
+		};
+
+		poll(); // Initial check
+		interval = setInterval(poll, 3000);
+
+		return () => clearInterval(interval);
+	});
 
 	async function downloadImage() {
 		const response = await fetch(imageUrl);
@@ -38,12 +77,27 @@
 <div class="image-viewer">
 	<div class="content">
 		<a href="/{data.slug}" class="close">×</a>
-		<img src={imageUrl} alt={data.filename} />
 
-		<div class="actions">
-			<button class="button" type="button" on:click={downloadImage}> Download </button>
-			<button class="button" type="button" on:click={shareImage}> Share </button>
-		</div>
+		{#if loadingState === 'checking'}
+			<div class="loading-container">
+				<div class="spinner"></div>
+				<p>Checking for your photo...</p>
+				<p class="subtext">If you just took it, it might still be moving through the tubes!</p>
+			</div>
+		{:else if loadingState === 'error'}
+			<div class="loading-container">
+				<p class="error-text">We couldn't find your photo yet.</p>
+				<p class="subtext">Please try refreshing page in a moment or check with the organizer.</p>
+				<button class="button" on:click={() => window.location.reload()}>Refresh Now</button>
+			</div>
+		{:else}
+			<img src={imageUrl} alt={data.filename} />
+
+			<div class="actions">
+				<button class="button" type="button" on:click={downloadImage}> Download </button>
+				<button class="button" type="button" on:click={shareImage}> Share </button>
+			</div>
+		{/if}
 
 		{#await qrPageUrlDataUrl then dataUrl}
 			<figure class="qr-container">
@@ -135,5 +189,41 @@
 	figcaption {
 		font-size: 0.9rem;
 		opacity: 0.8;
+	}
+
+	.loading-container {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 1rem;
+		color: white;
+		text-align: center;
+		min-height: 40vh;
+	}
+
+	.spinner {
+		width: 40px;
+		height: 40px;
+		border: 4px solid rgba(255, 255, 255, 0.1);
+		border-left-color: white;
+		border-radius: 50%;
+		animation: spin 1s linear infinite;
+	}
+
+	.subtext {
+		font-size: 0.9rem;
+		opacity: 0.6;
+	}
+
+	.error-text {
+		color: #ff4444;
+		font-weight: bold;
+	}
+
+	@keyframes spin {
+		to {
+			transform: rotate(360deg);
+		}
 	}
 </style>
