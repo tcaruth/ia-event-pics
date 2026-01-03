@@ -10,7 +10,7 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json --watch",
 		"test": "npm run test:integration && npm run test:unit",
 		"test:integration": "playwright test",
-		"test:unit": "vitest",
+		"test:unit": "vitest --run",
 		"lint": "prettier --check .",
 		"format": "prettier --write ."
 	},
@@ -30,6 +30,12 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@sanity/client": "^7.13.2",
+		"@sanity/image-url": "^2.0.2",
+		"cookie": "^1.0.2",
+		"groq": "^5.1.0",
+		"jszip": "^3.10.1",
+		"oci-sdk": "^2.122.2",
 		"qrcode": "^1.5.4"
 	}
 }

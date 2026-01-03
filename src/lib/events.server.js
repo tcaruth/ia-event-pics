@@ -1,83 +1,32 @@
-const events = new Map([
-    [
-        0,
-        {
-            id: 0,
-            name: 'Gallery',
-            description: '',
-            date: '',
-            location: '',
-            primary_image: ''
-        }
-    ],
-    [
-        1,
-        {
-            id: 1,
-            name: 'Hawkeye Child Development Center Open House 2025',
-            description: '',
-            date: '',
-            location: '',
-            primary_image: 'https://www.hawkeyecollege.edu/students/resources/daycare/_images/preschool-media-banner-narrow.webp',
-            heading_font: 'sans-serif',
-            main_font: 'sans-serif',
-            colors: {
-                primary: '#0153A4',
-                primary_text: 'white',
-                secondary: '#fe6100',
-                secondary_text: 'black',
-                surface: 'black',
-                surface_text: 'white'
-            }
-        }
-    ],
-    [
-        2,
-        {
-            id: 1,
-            name: '2024 Fall Crop',
-            description: 'Crafting crops raising money for Multiple Sclerosis research',
-            date: 'September 6-7, 2024',
-            location: 'Wild Rose Casino, 777 Wild Rose Dr, Clinton, IA 52732',
-            primary_image: 'https://scontent.find1-1.fna.fbcdn.net/v/t39.30808-6/434262231_808813901288730_2383296708988799290_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=127cfc&_nc_ohc=BQ2ac78qmrUQ7kNvgFkx96F&_nc_ht=scontent.find1-1.fna&oh=00_AYDuzChVKvoy2aXL1XQyzWY5jBiSCPUQOr3LlwdRwDEdIA&oe=66DBFFAE',
-            colors: {
-                primary: '#f15405',
-                primary_text: 'black',
-                secondary: '#cccccc',
-                secondary_text: 'black',
-                surface: 'black',
-                surface_text: 'white'
-            }
-        }
-    ],
-    [
-        4,
-        {
-            id: 4,
-            name: 'Heartland Conference 2025',
-            description: 'Save the date! June 8-10, 2026',
-            date: '',
-            location: '',
-            primary_image: 'https://vgmheartland.com/ords/r/heartland/200/files/static/v53/color-logo.png',
-            heading_font: 'sans-serif',
-            main_font: 'sans-serif',
-            colors: {
-                primary: '#377175',
-                primary_text: 'white',
-                secondary: '#99b6b2',
-                secondary_text: 'black',
-                surface: 'black',
-                surface_text: 'white'
-            }
-        }
-    ]
-])
+import { client } from './sanity';
+import groq from 'groq';
 
 /**
- * @param {URL} url
+ * @param {string} slug
  */
-function getEvent(url) {
-    const event = events.get(Number(url.searchParams.get('e') || 1))
-    return event
+async function getEvent(slug) {
+    if (!slug) {
+        return null;
+    }
+
+    const query = groq`*[_type == "event" && slug.current == $slug][0]{
+        title,
+        "name": title,
+        date,
+        location,
+        "primary_image": primaryImage.asset->url,
+        adminPassword,
+        fonts,
+        colors
+    }`;
+
+    try {
+        const event = await client.fetch(query, { slug: slug });
+        return event;
+    } catch (error) {
+        console.error('Error fetching event from Sanity:', error);
+        return null;
+    }
 }
-export {getEvent}
+
+export { getEvent };
