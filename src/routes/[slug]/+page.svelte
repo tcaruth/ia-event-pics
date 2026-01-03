@@ -1,102 +1,164 @@
 <script>
 	export let data;
+
+	/** @param {string} dateStr */
+	function formatTime(dateStr) {
+		if (!dateStr) return 'Just now';
+		const date = new Date(dateStr);
+		// If event spans multiple days, we might want date, but user requested time.
+		// For now, let's stick to time as requested.
+		return new Intl.DateTimeFormat(undefined, {
+			timeStyle: 'short'
+		}).format(date);
+	}
 </script>
 
-<heading style:--tag="heading">
-	<div
-		style="
-        --color-primary: {data.event?.colors?.primary || '#0153A4'};
-        --text-primary: {data.event?.colors?.primaryText || 'white'};
-        --color-secondary: {data.event?.colors?.secondary || '#fe6100'};
-        --text-secondary: {data.event?.colors?.secondaryText || 'black'};
-        --surface-primary: {data.event?.colors?.surface || 'white'};
-        --text-surface-primary: {data.event?.colors?.surfaceText || 'black'};
-        --heading-font: {data.event?.fonts?.heading || 'sans-serif'};
-        --body-font: {data.event?.fonts?.body || 'sans-serif'};
-        font-family: var(--body-font);
-    "
-	>
-		<h1 style:--tag="title" style="font-family: var(--heading-font)">{data.event?.name}</h1>
-		<p>{data.event?.description}</p>
-		{#if data.event?.date}
-			<p>{data.event?.date}</p>
-		{/if}
-	</div>
-</heading>
+<div class="gallery-page">
+	<header class="event-header" style:--tag="heading">
+		<div class="header-content">
+			<h1 style:--tag="title" style="font-family: var(--heading-font)">{data.event?.name}</h1>
+			<p class="description">{data.event?.description || ''}</p>
+			{#if data.event?.date}
+				<p class="date">{data.event?.date}</p>
+			{/if}
+		</div>
+	</header>
 
-<div class="gallery">
-	{#each data.images as image}
-		<a href="/{data.slug}/{image.name}">
-			<figure>
-				<div class="img">
-					<img
-						src={image.url}
-						alt="User generated"
-						style:--tag={'img-' + image.name.replace(/[^a-z0-9]/gi, '-')}
-					/>
-				</div>
-				<figcaption>
-					{image.created
-						? new Intl.DateTimeFormat(undefined, { dateStyle: 'short', timeStyle: 'short' }).format(
-								new Date(image.created)
-							)
-						: 'Just now'}
-				</figcaption>
-			</figure>
-		</a>
-	{/each}
+	<main class="gallery-wrapper">
+		<div class="gallery">
+			{#each data.event?.images || [] as image}
+				<a href="/{data.slug}/{image.name}" class="gallery-item">
+					<figure>
+						<div class="img-container">
+							<img
+								src={image.url}
+								alt={image.alt || ''}
+								loading="lazy"
+								style:--tag={'img-' + image.name.replace(/[^a-z0-9]/gi, '-')}
+							/>
+						</div>
+						<figcaption>
+							{formatTime(image.created)}
+						</figcaption>
+					</figure>
+				</a>
+			{/each}
+		</div>
+
+		{#if data.event?.primary_image}
+			<div class="primary-image-section">
+				<img src={data.event?.primary_image} alt={data.event?.name} />
+			</div>
+		{/if}
+	</main>
 </div>
-{#if data.event?.primary_image}
-	<div class="primary">
-		<img src={data.event?.primary_image} alt={data.event?.name} />
-	</div>
-{/if}
 
 <style>
-	heading > div {
+	.gallery-page {
+		min-height: 100vh;
+	}
+
+	.event-header {
 		background: var(--color-primary);
 		color: var(--text-primary);
-		padding: 1rem;
-		margin-block: 1rem;
-		border-radius: 4px;
-
-		box-shadow:
-			0 4px 6px -1px rgb(0 0 0 / 0.1),
-			0 2px 4px -2px rgb(0 0 0 / 0.1);
+		padding: var(--spacing-lg) var(--spacing-md);
+		text-align: center;
+		border-bottom-left-radius: var(--radius-lg);
+		border-bottom-right-radius: var(--radius-lg);
+		box-shadow: var(--shadow-md);
 	}
+
+	.header-content h1 {
+		margin: 0;
+		font-size: 2.5rem;
+		font-weight: 800;
+	}
+
+	.description {
+		margin-top: 0.5rem;
+		opacity: 0.9;
+		font-size: 1.125rem;
+	}
+
+	.date {
+		margin-top: 0.25rem;
+		opacity: 0.7;
+		font-size: 0.875rem;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+	}
+
+	.gallery-wrapper {
+		padding: var(--spacing-lg) var(--spacing-md);
+		max-width: 1400px;
+		margin: 0 auto;
+	}
+
 	.gallery {
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-		gap: 1.5rem;
-		&:hover a figure {
-			opacity: 0.9;
-		}
-
-		a figure {
-			margin: 0;
-			.img {
-				border-radius: 1rem;
-				overflow: hidden;
-				img {
-					width: 100%;
-					height: 100%;
-					object-fit: cover;
-				}
-			}
-			figcaption {
-				color: var(--text-surface-primary);
-				text-decoration: none;
-			}
-			&:hover {
-				opacity: 1;
-			}
-		}
+		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+		gap: var(--spacing-md);
 	}
-	.primary {
+
+	.gallery-item {
+		transition: transform var(--transition-base);
+	}
+
+	.gallery-item:hover {
+		transform: translateY(-4px);
+	}
+
+	figure {
+		margin: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
+
+	.img-container {
+		aspect-ratio: 1;
+		border-radius: var(--radius-md);
+		overflow: hidden;
+		background: var(--surface-secondary);
+		box-shadow: var(--shadow-sm);
+		border: 1px solid var(--border-color);
+	}
+
+	img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		transition: transform 0.5s ease;
+	}
+
+	.gallery-item:hover img {
+		transform: scale(1.05);
+	}
+
+	figcaption {
+		font-size: 0.875rem;
+		font-weight: 600;
+		color: var(--text-surface-secondary);
+		text-align: center;
+	}
+
+	.primary-image-section {
+		margin-top: var(--spacing-xl);
 		text-align: center;
 		img {
-			width: 100%;
-			max-width: calc(100vw - 4rem);
+			border-radius: var(--radius-lg);
+			max-width: 100%;
+			box-shadow: var(--shadow-lg);
+		}
+	}
+
+	@media (max-width: 600px) {
+		.gallery {
+			grid-template-columns: repeat(2, 1fr);
+			gap: var(--spacing-sm);
+		}
+		.header-content h1 {
+			font-size: 1.75rem;
 		}
 	}
 </style>

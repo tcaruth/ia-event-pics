@@ -19,6 +19,7 @@ import groq from 'groq';
  * @property {string} id
  * @property {ImageMetadata} [metadata]
  * @property {string} fullPath
+ * @property {string} [alt]
  */
 
 /**
@@ -49,6 +50,7 @@ import groq from 'groq';
  * @property {EventColors} [colors]
  * @property {EventImage[]} images
  * @property {string} [description]
+ * @property {string} [theme]
  */
 
 /**
@@ -70,6 +72,7 @@ async function getEvent(slug) {
         adminPassword,
         fonts,
         colors,
+        theme,
         "images": gallery[]{
             "url": asset->url,
             "created": coalesce(created, _createdAt), 
@@ -77,7 +80,8 @@ async function getEvent(slug) {
             "name": asset->originalFilename,
             "id": asset->_id,
             "metadata": asset->metadata,
-            "fullPath": _key
+            "fullPath": _key,
+            "alt": alt
         }
     }`;
 

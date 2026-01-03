@@ -25,7 +25,14 @@
 	}
 
 	onMount(() => {
-		qrPageUrlDataUrl = QRCode.toDataURL($page.url.href, { errorCorrectionLevel: 'L' });
+		qrPageUrlDataUrl = QRCode.toDataURL($page.url.href, {
+			errorCorrectionLevel: 'L',
+			margin: 2,
+			color: {
+				dark: '#000000',
+				light: '#ffffff'
+			}
+		});
 		/** @type {ReturnType<typeof setInterval>} */
 		let interval;
 
@@ -60,54 +67,67 @@
 	}
 
 	async function shareImage() {
-		const response = await fetch(imageUrl);
-		const blob = await response.blob();
-		const file = new File([blob], `${data.filename}`, { type: blob.type });
-
-		if (navigator.canShare && navigator.canShare({ files: [file] })) {
-			await navigator.share({
-				files: [file]
-			});
-		} else if (navigator.canShare && navigator.canShare({ url: imageUrl, title: data.filename })) {
-			navigator.share({ url: imageUrl, title: data.filename });
-		} else {
-			navigator.clipboard.writeText(imageUrl);
+		try {
+			if (navigator.share) {
+				await navigator.share({
+					title: `Photo from ${data.event?.name}`,
+					url: window.location.href
+				});
+			} else {
+				await navigator.clipboard.writeText(window.location.href);
+				alert('Link copied to clipboard!');
+			}
+		} catch (err) {
+			console.error('Sharing failed', err);
 		}
 	}
 </script>
 
 <div class="image-viewer">
-	<div class="content">
-		<a href="/{data.slug}" class="close">×</a>
+	<div class="content-container">
+		<header class="viewer-header">
+			<a href="/{data.slug}" class="back-link">
+				<span class="icon">←</span> Back to Gallery
+			</a>
+		</header>
 
-		{#if loadingState === 'checking'}
-			<div class="loading-container">
-				<div class="spinner"></div>
-				<p>Checking for your photo...</p>
-				<p class="subtext">If you just took it, it might still be moving through the tubes!</p>
-			</div>
-		{:else if loadingState === 'error'}
-			<div class="loading-container">
-				<p class="error-text">We couldn't find your photo yet.</p>
-				<p class="subtext">Please try refreshing page in a moment or check with the organizer.</p>
-				<button class="button" on:click={() => window.location.reload()}>Refresh Now</button>
-			</div>
-		{:else}
-			<img src={imageUrl} alt={data.filename} />
+		<main class="viewer-main">
+			{#if loadingState === 'checking'}
+				<div class="status-container">
+					<div class="spinner"></div>
+					<p>Finding your photo...</p>
+					<p class="subtext">Just a moment while we process the magic.</p>
+				</div>
+			{:else if loadingState === 'error'}
+				<div class="status-container">
+					<p class="error-text">Photo Not Found</p>
+					<p class="subtext">We couldn't locate this photo. It might still be uploading.</p>
+					<button class="btn btn-primary" on:click={() => window.location.reload()}>Retry</button>
+				</div>
+			{:else}
+				<div class="image-wrapper">
+					<img src={imageUrl} alt={data.filename} class="main-image" />
+				</div>
 
-			<div class="actions">
-				<button class="button" type="button" on:click={downloadImage}> Download </button>
-				<button class="button" type="button" on:click={shareImage}> Share </button>
-			</div>
-		{/if}
+				<div class="action-bar">
+					<button class="action-btn" on:click={downloadImage}>
+						<span class="icon">↓</span> Save
+					</button>
+					<button class="action-btn primary" on:click={shareImage}>
+						<span class="icon">↗</span> Share
+					</button>
+				</div>
 
-		{#await qrPageUrlDataUrl then dataUrl}
-			<figure class="qr-container">
-				<!-- svelte-ignore a11y_img_redundant_alt -->
-				<img class="qrcode" src={dataUrl} alt="QR Code link for this image" />
-				<figcaption>Scan to share this image</figcaption>
-			</figure>
-		{/await}
+				<div class="qr-section">
+					{#await qrPageUrlDataUrl then dataUrl}
+						<figure class="qr-figure">
+							<img src={dataUrl} alt="QR Code" class="qr-code" />
+							<figcaption>Scan to share this photo</figcaption>
+						</figure>
+					{/await}
+				</div>
+			{/if}
+		</main>
 	</div>
 </div>
 
@@ -115,118 +135,172 @@
 	.image-viewer {
 		position: fixed;
 		inset: 0;
-		background: black;
-		display: block;
+		background: var(--surface-primary);
+		color: var(--text-surface-primary);
 		z-index: 1000;
 		overflow-y: auto;
-		padding: 4rem 1rem;
+		display: flex;
+		flex-direction: column;
 	}
-	.content {
-		position: relative;
-		max-width: calc(100vw - 2rem);
+
+	.content-container {
+		width: 100%;
+		max-width: 800px;
 		margin: 0 auto;
 		display: flex;
 		flex-direction: column;
-		gap: 2rem;
-		align-items: center;
-	}
-	img {
-		max-width: 100%;
-		max-height: 80vh;
-		object-fit: contain;
-		border-radius: 0.5rem;
-		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-	}
-	.close {
-		position: fixed;
-		top: 1rem;
-		right: 1rem;
-		color: white;
-		text-decoration: none;
-		font-size: 2rem;
-		line-height: 1;
-		background: rgba(0, 0, 0, 0.5);
-		width: 3rem;
-		height: 3rem;
-		display: grid;
-		place-items: center;
-		border-radius: 50%;
-		z-index: 1001;
-	}
-	.actions {
-		display: flex;
-		gap: 1rem;
-		width: 100%;
-		justify-content: center;
-	}
-	.button {
-		padding: 0.75rem 1.5rem;
-		border-radius: 0.5rem;
-		border: 1px solid rgba(255, 255, 255, 0.3);
-		color: white;
-		background: rgba(255, 255, 255, 0.1);
-		font-size: 1rem;
-		font-weight: 600;
-		cursor: pointer;
-		transition: all 0.2s;
-		flex: 1;
-		max-width: 150px;
-	}
-	.button:hover {
-		background: rgba(255, 255, 255, 0.2);
-		transform: translateY(-2px);
-	}
-	.qr-container {
-		text-align: center;
-		color: white;
-		margin: 0;
-		padding-bottom: 2rem;
-	}
-	.qrcode {
-		margin: 0 auto 0.5rem;
-		max-width: 150px;
-		border-radius: 0.5rem;
-		background: white;
-		padding: 0.5rem;
-	}
-	figcaption {
-		font-size: 0.9rem;
-		opacity: 0.8;
+		min-height: 100%;
+		padding: var(--spacing-md);
 	}
 
-	.loading-container {
+	.viewer-header {
+		padding: var(--spacing-sm) 0;
+		display: flex;
+		justify-content: flex-start;
+	}
+
+	.back-link {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-weight: 600;
+		color: var(--text-surface-primary);
+		opacity: 0.8;
+		transition: opacity var(--transition-base);
+	}
+
+	.back-link:hover {
+		opacity: 1;
+	}
+
+	.viewer-main {
+		flex: 1;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		gap: 1rem;
-		color: white;
+		gap: var(--spacing-lg);
+		padding-bottom: var(--spacing-xl);
+	}
+
+	.image-wrapper {
+		width: 100%;
+		display: flex;
+		justify-content: center;
+		background: rgba(0, 0, 0, 0.03);
+		border-radius: var(--radius-lg);
+		padding: var(--spacing-sm);
+	}
+
+	.main-image {
+		max-width: 100%;
+		max-height: 70vh;
+		object-fit: contain;
+		border-radius: var(--radius-md);
+		box-shadow: var(--shadow-lg);
+	}
+
+	.action-bar {
+		display: flex;
+		gap: var(--spacing-sm);
+		width: 100%;
+		max-width: 400px;
+	}
+
+	.action-btn {
+		flex: 1;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
+		padding: 1rem;
+		border-radius: var(--radius-md);
+		font-weight: 700;
+		font-size: 1.125rem;
+		border: 2px solid var(--border-color);
+		background: transparent;
+		color: var(--text-surface-primary);
+		transition: var(--transition-base);
+	}
+
+	.action-btn.primary {
+		background: var(--color-primary);
+		color: var(--text-primary);
+		border-color: var(--color-primary);
+	}
+
+	.action-btn:hover {
+		transform: translateY(-2px);
+		box-shadow: var(--shadow-md);
+	}
+
+	.qr-section {
 		text-align: center;
-		min-height: 40vh;
+		margin-top: var(--spacing-sm);
+	}
+
+	.qr-figure {
+		margin: 0;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.qr-code {
+		width: 120px;
+		height: 120px;
+		padding: 0.5rem;
+		background: white;
+		border-radius: var(--radius-sm);
+		box-shadow: var(--shadow-sm);
+	}
+
+	figcaption {
+		font-size: 0.875rem;
+		opacity: 0.7;
+	}
+
+	.status-container {
+		text-align: center;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 1rem;
 	}
 
 	.spinner {
-		width: 40px;
-		height: 40px;
-		border: 4px solid rgba(255, 255, 255, 0.1);
-		border-left-color: white;
+		width: 48px;
+		height: 48px;
+		border: 4px solid var(--border-color);
+		border-top-color: var(--color-primary);
 		border-radius: 50%;
 		animation: spin 1s linear infinite;
 	}
 
 	.subtext {
+		color: var(--text-surface-secondary);
 		font-size: 0.9rem;
-		opacity: 0.6;
 	}
 
 	.error-text {
-		color: #ff4444;
-		font-weight: bold;
+		color: #ef4444;
+		font-size: 1.5rem;
+		font-weight: 700;
 	}
 
 	@keyframes spin {
 		to {
 			transform: rotate(360deg);
+		}
+	}
+
+	@media (max-width: 480px) {
+		.action-bar {
+			padding: 0;
+		}
+		.main-image {
+			max-height: 60vh;
 		}
 	}
 </style>

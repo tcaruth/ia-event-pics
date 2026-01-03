@@ -5,5 +5,9 @@ export default defineCliConfig({
         projectId: '2i1qgrlb', // User to update
         dataset: 'production'
     },
-    studioHost: 'iaeventpics'
+    studioHost: 'iaeventpics',
+    deployment: {
+        autoUpdates: true,
+        appId: 'h1w9srkok44w5z5f9is4z2z5'
+    }
 })

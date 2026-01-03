@@ -32,6 +32,7 @@ Images are managed within Sanity as a `gallery` array on the `event` document.
 ### Event-Specific Branding
 Data is fetched from Sanity via GROQ queries in `src/lib/events.server.js`. Branding is applied by injecting CSS variables into the layout:
 - `--color-primary`, `--color-secondary`, `--color-surface`
+- **Theme:** A `data-theme` attribute (e.g., `dark`, `light`) is applied to the `<body>` tag based on event settings.
 ### Robust Image Loading
 To handle the "race condition" where an attendee scans a QR code before the upload from the photobooth is complete, the image viewer implements a robust loading mechanism:
 - **Status Tracking:** Uses a `loadingState` (`'checking'`, `'loaded'`, `'error'`) to manage the UI.
@@ -49,7 +50,7 @@ To handle the "race condition" where an attendee scans a QR code before the uplo
 ## 🚀 Deployment
 
 The project is hosted on **Netlify**.
-- **Build Command:** `npm run build`
+- **Build Command:** `bun run build`
 - **Adapter:** `@sveltejs/adapter-netlify`
 - **Environment Variables:**
     - `SANITY_API_TOKEN`: Required for write operations (deletions/uploads).

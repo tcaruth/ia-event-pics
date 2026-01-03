@@ -6,26 +6,30 @@
 	let loading = false;
 </script>
 
-<div class="page-container">
-	<div class="hero">
+<div class="page-container" data-theme="dark">
+	<section class="hero">
 		<div class="hero-content">
-			<h1>Capture the Magic at Your Next Event</h1>
+			<!-- <div class="badge">Professional Quality</div> -->
+			<h1 class="gradient-text">Capture the Magic at Your Next Event</h1>
 			<p class="subhead">
 				High-quality photobooth rentals for weddings, corporate events, and parties.
 			</p>
 			<div class="cta-group">
-				<a href="mailto:contact@example.com" class="btn-primary">Book Now</a>
+				<a href="mailto:contact@example.com" class="btn btn-primary">Book Your Date</a>
+				<a href="#find" class="btn btn-secondary">Find Photos</a>
 			</div>
 		</div>
 		<div class="hero-image">
-			<img src={heroImage} alt="Happy people using a photobooth" />
+			<div class="image-wrapper">
+				<img src={heroImage} alt="Happy people using a photobooth" />
+			</div>
 		</div>
-	</div>
+	</section>
 
-	<div class="lookup-section">
+	<section id="find" class="lookup-section">
 		<div class="card">
 			<h2>Find Your Event</h2>
-			<p>Enter your event code to view and download your photos.</p>
+			<p>Enter your unique event code to view and download your memories.</p>
 
 			<form
 				method="POST"
@@ -41,285 +45,320 @@
 					<input
 						type="text"
 						name="code"
-						placeholder="Event Code"
+						placeholder="e.g. WEDDING2024"
 						class:error={form?.invalid}
 						value={form?.code ?? ''}
 						required
 						autocomplete="off"
 					/>
 					{#if form?.invalid}
-						<span class="error-msg">Event not found</span>
+						<div class="error-msg">
+							<span class="icon">⚠️</span>
+							Event not found. Please check your code.
+						</div>
 					{/if}
 				</div>
-				<button type="submit" disabled={loading} class="btn-secondary">
-					{loading ? 'Finding Event...' : 'Go to Event'}
+				<button type="submit" disabled={loading} class="btn btn-submit">
+					{#if loading}
+						<span class="spinner"></span> Finding...
+					{:else}
+						Go to Event
+					{/if}
 				</button>
 			</form>
 		</div>
-	</div>
+	</section>
 
-	<div class="features">
+	<section class="features">
 		<div class="feature-item">
+			<div class="feature-icon">✨</div>
 			<h3>Instant Prints</h3>
-			<p>Get high-quality prints in seconds for a lasting memory.</p>
+			<p>Get high-quality prints in seconds for a lasting physical memory of your night.</p>
 		</div>
 		<div class="feature-item">
+			<div class="feature-icon">📱</div>
 			<h3>Digital Sharing</h3>
-			<p>Instantly share your photos to social media or via email.</p>
+			<p>Instantly share your photos to social media or via email with our live gallery.</p>
 		</div>
 		<div class="feature-item">
+			<div class="feature-icon">🎨</div>
 			<h3>Custom Branding</h3>
-			<p>Personalize prints and screens with your event's logo and theme.</p>
+			<p>Personalize prints and screens with your event's unique logo and theme.</p>
 		</div>
-	</div>
+	</section>
 </div>
 
 <style>
-	/* Premium Page Styles - High Contrast & Accessibility Focused */
-	:global(body) {
-		margin: 0;
-		padding: 0;
-		background: #000000; /* Fallback */
-		font-family:
-			'Inter',
-			system-ui,
-			-apple-system,
-			sans-serif;
-		-webkit-font-smoothing: antialiased;
-	}
-
 	.page-container {
 		width: 100%;
 		min-height: 100vh;
-		box-sizing: border-box;
-		background: #000000; /* Ensure content background is black */
-		color: #ffffff;
-		display: flex;
-		flex-direction: column;
+		background: var(--surface-primary);
+		color: var(--text-surface-primary);
+		overflow-x: hidden;
 	}
 
-	/* Hero Section */
 	.hero {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		padding: 5rem 2rem;
-		background: radial-gradient(circle at 70% 20%, #1a1a1a, #000000 70%);
-		text-align: center;
+		display: grid;
+		grid-template-columns: 1fr;
 		gap: 3rem;
-		border-bottom: 1px solid #333;
+		padding: var(--spacing-xl) var(--spacing-md);
+		max-width: 1400px;
+		margin: 0 auto;
+		align-items: center;
 	}
 
 	@media (min-width: 900px) {
 		.hero {
-			flex-direction: row;
-			text-align: left;
-			justify-content: space-between;
-			padding: 8rem 6rem;
-			max-width: 1400px;
-			margin: 0 auto;
-			gap: 4rem;
+			grid-template-columns: 1.2fr 0.8fr;
+			padding: var(--spacing-xl) var(--spacing-xl);
+			min-height: 80vh;
 		}
-		.hero-content {
-			flex: 1;
-			padding-right: 2rem;
-		}
-		.hero-image {
-			flex: 1;
-			display: flex;
-			justify-content: center;
-		}
+	}
+
+	.hero-content {
+		z-index: 1;
+	}
+
+	.badge {
+		display: inline-block;
+		padding: 0.5rem 1rem;
+		background: rgba(255, 255, 255, 0.1);
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		border-radius: var(--radius-round);
+		font-size: 0.875rem;
+		font-weight: 600;
+		color: var(--color-secondary);
+		margin-bottom: 2rem;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
 	}
 
 	h1 {
-		font-size: 3.5rem;
+		font-size: clamp(2.5rem, 5vw, 4.5rem);
 		font-weight: 800;
-		margin: 0 0 1.5rem 0;
 		line-height: 1.1;
+		margin-bottom: 2rem;
 		letter-spacing: -0.02em;
-		color: #ffffff; /* pure white for contrast */
+	}
+
+	.gradient-text {
+		background: linear-gradient(135deg, #fff 0%, #a1a1aa 100%);
+		-webkit-background-clip: text;
+		-webkit-text-fill-color: transparent;
 	}
 
 	.subhead {
-		color: #e0e0e0; /* High contrast light grey */
-		font-size: 1.5rem;
-		margin-bottom: 2.5rem;
+		font-size: clamp(1.125rem, 2vw, 1.5rem);
+		color: var(--text-surface-secondary);
 		max-width: 600px;
-		line-height: 1.5;
-		font-weight: 400;
+		line-height: 1.6;
+		margin-bottom: 3rem;
 	}
 
 	.cta-group {
-		margin-bottom: 2rem;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 1.5rem;
+	}
+
+	.btn {
+		padding: 1rem 2rem;
+		font-size: 1.125rem;
+		font-weight: 700;
+		border-radius: var(--radius-md);
+		transition: var(--transition-base);
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
 	}
 
 	.btn-primary {
-		display: inline-block;
 		background: #ffffff;
 		color: #000000;
-		padding: 1.25rem 2.5rem;
-		font-size: 1.25rem;
-		font-weight: 700;
-		border-radius: 8px; /* More modern, less pill-shaped */
-		text-decoration: none;
-		transition:
-			transform 0.2s,
-			box-shadow 0.2s;
-		border: 2px solid #ffffff;
+		border: none;
+		box-shadow: 0 10px 20px -5px rgba(255, 255, 255, 0.1);
 	}
 
 	.btn-primary:hover {
 		transform: translateY(-2px);
-		box-shadow: 0 4px 20px rgba(255, 255, 255, 0.25);
-		background: #f0f0f0;
+		box-shadow: 0 20px 30px -10px rgba(255, 255, 255, 0.2);
+		background: #f4f4f5;
 	}
 
-	.btn-primary:focus-visible {
-		outline: 3px solid #007bff;
-		outline-offset: 4px;
+	.btn-secondary {
+		background: transparent;
+		color: #ffffff;
+		border: 2px solid rgba(255, 255, 255, 0.2);
+	}
+
+	.btn-secondary:hover {
+		background: rgba(255, 255, 255, 0.05);
+		border-color: #ffffff;
+	}
+
+	.image-wrapper {
+		position: relative;
+		border-radius: var(--radius-lg);
+		overflow: hidden;
+		box-shadow: var(--shadow-lg);
+		border: 1px solid rgba(255, 255, 255, 0.1);
 	}
 
 	.hero-image img {
 		width: 100%;
-		max-width: 600px;
-		border-radius: 12px;
-		box-shadow: 0 40px 80px rgba(0, 0, 0, 0.8); /* Deep shadow */
-		border: 1px solid #333;
+		height: auto;
+		display: block;
+		transform: scale(1.02);
+		transition: transform 0.5s ease-out;
+	}
+
+	.hero-image:hover img {
+		transform: scale(1.05);
 	}
 
 	/* Lookup Section */
 	.lookup-section {
-		background: #0a0a0a;
-		padding: 6rem 2rem;
-		display: flex;
-		justify-content: center;
-		border-bottom: 1px solid #222;
-		width: 100%;
-		box-sizing: border-box;
+		padding: var(--spacing-xl) var(--spacing-md);
+		background: radial-gradient(circle at 50% 0%, #18181b, #000);
+		display: grid;
+		place-items: center;
 	}
 
 	.card {
-		background: #111111; /* Solid background, no glassmorphism */
-		border: 1px solid #333;
-		padding: 3rem;
-		border-radius: 16px;
-		text-align: center;
-		max-width: 450px;
+		background: #09090b;
+		border: 1px solid #27272a;
+		padding: var(--spacing-lg);
+		border-radius: var(--radius-xl);
 		width: 100%;
-		box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+		max-width: 500px;
+		text-align: center;
+		box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.5);
 	}
 
-	h2 {
-		font-size: 2.25rem;
-		margin: 0 0 1rem 0;
-		font-weight: 700;
-		color: white;
+	.card h2 {
+		font-size: 2rem;
+		margin-bottom: 1rem;
 	}
 
 	.card p {
-		color: #cccccc; /* Accessible grey */
+		color: var(--text-surface-secondary);
 		margin-bottom: 2.5rem;
-		font-size: 1.1rem;
 	}
 
 	.input-group {
-		margin-bottom: 1.5rem;
+		margin-bottom: 2rem;
+		text-align: left;
 	}
 
 	input {
 		width: 100%;
 		padding: 1.25rem;
-		border-radius: 8px;
-		border: 2px solid #444; /* clear border */
-		background: #000000;
+		background: #18181b;
+		border: 2px solid #27272a;
+		border-radius: var(--radius-md);
 		color: white;
-		font-size: 1.125rem;
-		box-sizing: border-box;
+		font-size: 1.25rem;
 		text-align: center;
-		transition: border-color 0.2s;
-		font-family: inherit;
+		transition: var(--transition-base);
+		font-weight: 600;
+		letter-spacing: 0.05em;
 	}
 
 	input:focus {
 		outline: none;
-		border-color: #ffffff;
-		background: #000000;
-	}
-
-	input:focus-visible {
-		outline: 3px solid #007bff;
-		outline-offset: 2px;
-	}
-
-	input::placeholder {
-		color: #666;
-	}
-
-	.btn-secondary {
-		width: 100%;
-		padding: 1.25rem;
-		border-radius: 8px;
-		border: 2px solid #ffffff;
-		background: transparent;
-		color: #ffffff;
-		font-size: 1.125rem;
-		font-weight: 600;
-		cursor: pointer;
-		transition: all 0.2s;
-		font-family: inherit;
-	}
-
-	.btn-secondary:hover:not(:disabled) {
-		background: #ffffff;
-		color: #000000;
-	}
-
-	.btn-secondary:focus-visible {
-		outline: 3px solid #007bff;
-		outline-offset: 4px;
+		border-color: var(--color-secondary);
+		background: #27272a;
 	}
 
 	.error-msg {
-		background: #3d0000;
-		color: #ffcccc; /* High contrast error text */
-		padding: 0.75rem;
-		border-radius: 6px;
 		margin-top: 1rem;
-		display: block;
-		font-weight: 500;
-		border: 1px solid #ff4444;
+		padding: 1rem;
+		background: rgba(239, 68, 68, 0.1);
+		border: 1px solid rgba(239, 68, 68, 0.2);
+		border-radius: var(--radius-sm);
+		color: #f87171;
+		font-size: 0.875rem;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
 	}
 
-	/* Features Section */
+	.btn-submit {
+		width: 100%;
+		background: var(--color-secondary);
+		color: white;
+		border: none;
+		padding: 1.25rem;
+		border-radius: var(--radius-md);
+		font-size: 1.25rem;
+		box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.4);
+	}
+
+	.btn-submit:hover:not(:disabled) {
+		background: #818cf8;
+		transform: translateY(-2px);
+		box-shadow: 0 15px 25px -5px rgba(99, 102, 241, 0.5);
+	}
+
+	.btn-submit:disabled {
+		opacity: 0.7;
+		cursor: not-allowed;
+	}
+
+	/* Features */
 	.features {
 		display: grid;
-		grid-template-columns: 1fr;
-		gap: 4rem;
-		padding: 8rem 2rem;
+		grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+		gap: 3rem;
+		padding: var(--spacing-xl) var(--spacing-md);
 		max-width: 1200px;
 		margin: 0 auto;
-		text-align: center;
-		background: #000000; /* Explicit black background */
-		width: 100%;
-		box-sizing: border-box;
 	}
 
-	@media (min-width: 768px) {
-		.features {
-			grid-template-columns: repeat(3, 1fr);
-		}
+	.feature-item {
+		text-align: center;
+		padding: var(--spacing-lg);
+		border-radius: var(--radius-lg);
+		background: rgba(255, 255, 255, 0.02);
+		border: 1px solid rgba(255, 255, 255, 0.05);
+		transition: var(--transition-base);
+	}
+
+	.feature-item:hover {
+		background: rgba(255, 255, 255, 0.04);
+		border-color: rgba(255, 255, 255, 0.1);
+		transform: translateY(-5px);
+	}
+
+	.feature-icon {
+		font-size: 2.5rem;
+		margin-bottom: 1.5rem;
 	}
 
 	.feature-item h3 {
-		font-size: 1.75rem;
+		font-size: 1.5rem;
 		margin-bottom: 1rem;
-		color: #ffffff;
-		font-weight: 700;
 	}
 
 	.feature-item p {
-		color: #bbbbbb; /* Readable lighter grey */
+		color: var(--text-surface-secondary);
 		line-height: 1.6;
-		font-size: 1.125rem;
+	}
+
+	.spinner {
+		width: 20px;
+		height: 20px;
+		border: 3px solid rgba(255, 255, 255, 0.3);
+		border-radius: 50%;
+		border-top-color: #fff;
+		animation: spin 1s linear infinite;
+		margin-right: 0.75rem;
+	}
+
+	@keyframes spin {
+		to {
+			transform: rotate(360deg);
+		}
 	}
 </style>

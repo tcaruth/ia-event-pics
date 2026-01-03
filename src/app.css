@@ -1,82 +1,85 @@
-/* base */
-:root {
-	font-size: 18px;
-	--body-font: sans-serif;
-	--heading-font: sans-serif;
+@import url('https://fonts.googleapis.com/css2?family=Arvo:ital,wght@0,400;0,700;1,400;1,700&family=Bungee&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Lora:ital,wght@0,400..700;1,400..700&family=Outfit:wght@100..900&family=Pacifico&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Work+Sans:ital,wght@0,100..900;1,100..900&display=swap');
 
-	font-family: var(--body-font);
+:root {
+	--font-main: 'Inter', system-ui, -apple-system, sans-serif;
+	--font-heading: 'Outfit', var(--font-main);
+
+	--radius-sm: 8px;
+	--radius-md: 12px;
+	--radius-lg: 20px;
+	--radius-xl: 32px;
+	--radius-round: 9999px;
+
+	--spacing-xs: 0.5rem;
+	--spacing-sm: 1rem;
+	--spacing-md: 1.5rem;
+	--spacing-lg: 2.5rem;
+	--spacing-xl: 4rem;
+
+	--transition-base: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+	--shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+	--shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+	--shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* Base resets */
+* {
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+	padding: 0;
+	font-family: var(--font-main);
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
 	background: var(--surface-primary);
 	color: var(--text-surface-primary);
 }
 
-/* vgm */
-/* :root { 
-	--color-primary: #023876;
-	--text-primary: white;
-
-	--color-secondary: #cccccc;
-	--text-secondary: black;
-
-	--surface-primary: white;
-	--text-surface-primary: black;
-	--surface-secondary: #023876;
-	--text-surface-secondary: white;
-} */
-
-/* hawkeye */
+/* Theme Defaults (Dark) */
 :root {
-	--color-primary: #0153A4;
-	--text-primary: white;
+	--surface-primary: #000000;
+	--text-surface-primary: #ffffff;
+	--surface-secondary: #18181b;
+	--text-surface-secondary: #a1a1aa;
 
-	--color-secondary: #fe6100;
-	--text-secondary: black;
+	--color-primary: #ffffff;
+	--text-primary: #000000;
+	--color-secondary: #818cf8;
+	--text-secondary: #ffffff;
 
-	--surface-primary: white;
-	--text-surface-primary: black;
-	--surface-secondary: #0153A4;
-	--text-surface-secondary: white;
+	--border-color: #27272a;
 }
 
-/* heartland  */
-/* :root { 
-	--color-primary: #377175;
-	--text-primary: white;
+/* Light Theme Overrides */
+[data-theme='light'] {
+	--surface-primary: #ffffff;
+	--text-surface-primary: #1a1a1a;
+	--surface-secondary: #f4f4f5;
+	--text-surface-secondary: #71717a;
 
-	--color-secondary: #99b6b2;
-	--text-secondary: black;
+	--color-primary: #000000;
+	--text-primary: #ffffff;
+	--color-secondary: #6366f1;
+	--text-secondary: #ffffff;
 
-	--surface-primary: white;
-	--text-surface-primary: black;
-	--surface-secondary: #B8D5E7;
-	--text-surface-secondary: white;
-} */
-
-
-
-/* jason */
-/* :root { 
-	--color-primary: #f15405;
-	--text-primary: white;
-
-	--color-secondary: #cccccc;
-	--text-secondary: black;
-
-	--surface-primary: white;
-	--text-surface-primary: black;
-	--surface-secondary: #f15405;
-	--text-surface-secondary: white;
-} */
+	--border-color: #e4e4e7;
+}
 
 a {
 	text-decoration: none;
+	color: inherit;
+}
+
+button,
+.btn {
+	cursor: pointer;
+	font-family: inherit;
 }
 
 @media (prefers-reduced-motion: no-preference) {
 	[style*='--tag'] {
 		view-transition-name: var(--tag);
 	}
-
-	/* ::view-transition-group(root) {
-		animation-duration: 2s;
-	} */
 }
