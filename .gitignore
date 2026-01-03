@@ -21,3 +21,6 @@ keys/
 # Vite
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Tests
+test-results/
