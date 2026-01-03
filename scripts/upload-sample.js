@@ -1,66 +1,19 @@
-import fs from 'fs';
-import * as oci from 'oci-sdk';
+import { createClient } from '@sanity/client';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const projectRoot = path.resolve(__dirname, '..');
+const {
+    VITE_SANITY_PROJECT_ID,
+    VITE_SANITY_DATASET,
+    SANITY_API_TOKEN
+} = process.env;
 
-// Load .env manually
-const envPath = path.resolve(projectRoot, '.env');
-const envContent = fs.readFileSync(envPath, 'utf-8');
-const env = {};
-let currentKey = null;
-let currentValue = '';
-
-envContent.split('\n').forEach((line) => {
-    if (currentKey) {
-        currentValue += '\n' + line;
-        if (line.trim().endsWith('"') || line.trim().endsWith("'")) {
-            let val = currentValue.trim();
-            if (val.startsWith('"') && val.endsWith('"')) val = val.slice(1, -1);
-            if (val.startsWith("'") && val.endsWith("'")) val = val.slice(1, -1);
-            env[currentKey] = val;
-            currentKey = null;
-        }
-        return;
-    }
-
-    if (line.trim().startsWith('#') || !line.includes('=')) return;
-
-    const parts = line.split('=');
-    const key = parts[0].trim();
-    let value = parts.slice(1).join('=').trim();
-
-    if (
-        (value.startsWith('"') && !value.endsWith('"')) ||
-        (value.startsWith("'") && !value.endsWith("'"))
-    ) {
-        currentKey = key;
-        currentValue = value;
-    } else {
-        if (value.startsWith('"') && value.endsWith('"')) value = value.slice(1, -1);
-        if (value.startsWith("'") && value.endsWith("'")) value = value.slice(1, -1);
-        env[key] = value;
-    }
-});
-
-// Handles PEM key with newlines correctly if it was single line in .env (though usually it is multi-line string in env file?)
-// In the viewed file it looked like a multi-line string.
-// Let's assume the simple parser gets the first line/part.
-// Actually, for multi-line OCI_PRIVATE_KEY, checking the ViewFile output:
-// It was:
-const provider = new oci.common.SimpleAuthenticationDetailsProvider(
-    env.OCI_TENANCY_OCID,
-    env.OCI_USER_OCID,
-    env.OCI_FINGERPRINT,
-    env.OCI_PRIVATE_KEY,
-    null,
-    oci.common.Region.US_ASHBURN_1
-);
-
-const objectStorageClient = new oci.objectstorage.ObjectStorageClient({
-    authenticationDetailsProvider: provider
+const client = createClient({
+    projectId: VITE_SANITY_PROJECT_ID,
+    dataset: VITE_SANITY_DATASET,
+    token: SANITY_API_TOKEN,
+    useCdn: false,
+    apiVersion: '2023-05-03',
 });
 
 async function uploadFromUrl(imageUrl, filename, slug) {
@@ -68,17 +21,39 @@ async function uploadFromUrl(imageUrl, filename, slug) {
     const response = await fetch(imageUrl);
     const buffer = Buffer.from(await response.arrayBuffer());
 
-    console.log(`Uploading ${filename} to ${slug}...`);
-    const putObjectRequest = {
-        namespaceName: env.OCI_NAMESPACE,
-        bucketName: env.OCI_BUCKET_NAME,
-        putObjectBody: buffer,
-        objectName: `${slug}/${filename}`,
-        contentType: 'image/jpeg'
-    };
+    console.log(`Uploading ${filename} as asset...`);
+    const asset = await client.assets.upload('image', buffer, {
+        filename: filename
+    });
 
-    await objectStorageClient.putObject(putObjectRequest);
-    console.log(`Successfully uploaded ${filename}`);
+    console.log(`Asset uploaded: ${asset._id}. Appending to event ${slug}...`);
+
+    // Find the event
+    const event = await client.fetch(`*[_type == "event" && slug.current == $slug][0]`, { slug });
+
+    if (!event) {
+        console.error(`Event ${slug} not found!`);
+        return;
+    }
+
+    // Append to gallery
+    await client
+        .patch(event._id)
+        .setIfMissing({ gallery: [] })
+        .append('gallery', [
+            {
+                _type: 'image',
+                _key: Math.random().toString(36).substring(2, 9),
+                asset: {
+                    _type: 'reference',
+                    _ref: asset._id
+                },
+                created: new Date().toISOString()
+            }
+        ])
+        .commit();
+
+    console.log(`Successfully added ${filename} to ${slug}`);
 }
 
 async function main() {
@@ -92,9 +67,12 @@ async function main() {
     ];
 
     for (const img of stockImages) {
-        await uploadFromUrl(img.url, img.name, slug);
+        try {
+            await uploadFromUrl(img.url, img.name, slug);
+        } catch (error) {
+            console.error(`Failed to upload ${img.name}:`, error.message);
+        }
     }
 }
 
-main().catch(console.error);
 main().catch(console.error);

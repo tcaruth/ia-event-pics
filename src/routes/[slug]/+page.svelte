@@ -36,9 +36,11 @@
 					/>
 				</div>
 				<figcaption>
-					{new Intl.DateTimeFormat(undefined, { dateStyle: 'short', timeStyle: 'short' }).format(
-						new Date(image.created)
-					)}
+					{image.created
+						? new Intl.DateTimeFormat(undefined, { dateStyle: 'short', timeStyle: 'short' }).format(
+								new Date(image.created)
+							)
+						: 'Just now'}
 				</figcaption>
 			</figure>
 		</a>

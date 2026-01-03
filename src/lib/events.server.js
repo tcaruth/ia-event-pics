@@ -17,7 +17,16 @@ async function getEvent(slug) {
         "primary_image": primaryImage.asset->url,
         adminPassword,
         fonts,
-        colors
+        colors,
+        "images": gallery[]{
+            "url": asset->url,
+            "created": coalesce(created, _createdAt), 
+            "key": _key,
+            "name": asset->originalFilename,
+            "id": asset->_id,
+            "metadata": asset->metadata,
+            "fullPath": _key
+        }
     }`;
 
     try {

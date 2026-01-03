@@ -4,7 +4,7 @@
 	import { onMount } from 'svelte';
 	export let data;
 
-	const imageUrl = `${data.publicBucketRead}${data.slug}/${data.filename}`;
+	const imageUrl = data.image?.url || '';
 
 	let qrPageUrlDataUrl = QRCode.toDataURL($page.url.href, { errorCorrectionLevel: 'L' });
 	let loadingState = 'checking'; // 'checking', 'loaded', 'error'

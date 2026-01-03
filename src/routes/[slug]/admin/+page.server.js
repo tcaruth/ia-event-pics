@@ -1,48 +1,42 @@
 import { getEvent } from "$lib/events.server";
+import { client } from "$lib/sanity";
 
-export async function load({ fetch, params }) {
-    // URL structure is now /[slug]/admin, so we get slug from params.
-    const eventSlug = params.slug;
-
-    // We fetch event details.
-    const event = await getEvent(eventSlug);
-
-    // Filter images for this event
-    const apiEndpoint = eventSlug ? `/api/image-list?event=${eventSlug}` : '/api/image-list';
-
-    const images = await fetch(apiEndpoint);
-    const data = await images.json();
-
+export async function load({ params }) {
+    const event = await getEvent(params.slug);
     return {
-        images: data,
+        images: event?.images || [],
         event: event,
-        // Pass slug explicitly if needed by layout or page
-        slug: eventSlug
+        slug: params.slug
     };
 }
 
 export const actions = {
-    delete: async ({ request, fetch }) => {
+    delete: async ({ request, params }) => {
         const data = await request.formData();
-        const fullPath = data.get('fullPath');
+        const key = data.get('fullPath'); // This is the _key from Sanity
+        const eventSlug = params.slug;
 
-        if (!fullPath) {
-            return { success: false, error: 'Image path is required' };
+        if (!key) {
+            return { success: false, error: 'Image key is required' };
         }
 
         try {
-            // Encode the full path because it contains slashes
-            const encodedPath = encodeURIComponent(fullPath);
-            const response = await fetch(`/api/image/${encodedPath}`, {
-                method: 'DELETE'
-            });
+            // Find the event document ID
+            const event = await client.fetch(`*[_type == "event" && slug.current == $slug][0]{_id}`, { slug: eventSlug });
 
-            if (response.ok) {
-                return { success: true };
-            } else {
-                return { success: false, error: 'Failed to delete image' };
+            if (!event) {
+                return { success: false, error: 'Event not found' };
             }
+
+            // Remove the image from the gallery array using its _key
+            await client
+                .patch(event._id)
+                .unset([`gallery[_key=="${key}"]`])
+                .commit();
+
+            return { success: true };
         } catch (e) {
+            console.error('Sanity Delete Error:', e);
             return { success: false, error: e instanceof Error ? e.message : 'An unknown error occurred' };
         }
     }
