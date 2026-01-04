@@ -5,9 +5,10 @@
 	export let data;
 
 	const imageUrl = data.image?.url || '';
+	const qrCodeSize = 300;
 
 	let qrPageUrlDataUrl = Promise.resolve('');
-	let loadingState = 'checking'; // 'checking', 'loaded', 'error'
+	let loadingState = data.image ? 'loaded' : 'checking'; // 'checking', 'loaded', 'error'
 	let retryCount = 0;
 	const MAX_RETRIES = 60; // 3 minutes at 3s interval
 
@@ -31,7 +32,9 @@
 			color: {
 				dark: '#000000',
 				light: '#ffffff'
-			}
+			},
+			width: qrCodeSize,
+			height: qrCodeSize
 		});
 		/** @type {ReturnType<typeof setInterval>} */
 		let interval;
@@ -106,7 +109,13 @@
 				</div>
 			{:else}
 				<div class="image-wrapper">
-					<img src={imageUrl} alt={data.filename} class="main-image" />
+					<img
+						src={imageUrl}
+						alt={data.filename}
+						class="main-image"
+						style:--tag={'img-' + data.filename.replace(/[^a-z0-9]/gi, '-')}
+						on:error={() => (loadingState = 'checking')}
+					/>
 				</div>
 
 				<div class="action-bar">
@@ -121,7 +130,7 @@
 				<div class="qr-section">
 					{#await qrPageUrlDataUrl then dataUrl}
 						<figure class="qr-figure">
-							<img src={dataUrl} alt="QR Code" class="qr-code" />
+							<img src={dataUrl} alt="QR Code" class="qr-code" style="--size: ${qrCodeSize}px;" />
 							<figcaption>Scan to share this photo</figcaption>
 						</figure>
 					{/await}
@@ -248,8 +257,9 @@
 	}
 
 	.qr-code {
-		width: 120px;
-		height: 120px;
+		width: var(--size);
+		aspect-ratio: 1;
+		max-width: calc(100vw - 6rem);
 		padding: 0.5rem;
 		background: white;
 		border-radius: var(--radius-sm);
