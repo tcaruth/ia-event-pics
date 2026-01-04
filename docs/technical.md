@@ -37,7 +37,7 @@ Data is fetched from Sanity via GROQ queries in `src/lib/events.server.js`. Bran
 To handle the "race condition" where an attendee scans a QR code before the upload from the photobooth is complete, the image viewer implements a robust loading mechanism:
 - **Status Tracking:** Uses a `loadingState` (`'checking'`, `'loaded'`, `'error'`) to manage the UI.
 - **Automated Polling:** An `onMount` effect triggers a polling interval every 3 seconds.
-- **Efficient Checking:** Uses `HEAD` requests to verify image existence on OCI Object Storage without downloading the full file repeatedly.
+- **Efficient Checking:** Uses `HEAD` requests to verify image existence on Sanity CDN without downloading the full file repeatedly.
 - **Friendly UI:** Displays a custom loading spinner and reassuring messaging until the image is detected.
 - **Fallback:** After 3 minutes (60 retries) without success, it transitions to an error state with a manual refresh option.
 
