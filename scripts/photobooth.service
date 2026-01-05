@@ -1,0 +1,17 @@
+[Unit]
+Description=Sanity Photobooth Controller
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+Environment="DISPLAY=:0"
+Environment="XAUTHORITY=/home/pi/.Xauthority"
+WorkingDirectory=/home/pi/sanity-controller
+# Adjust paths below as needed
+ExecStart=/home/pi/sanity-controller/start.sh
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

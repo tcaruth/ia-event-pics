@@ -2,7 +2,7 @@ import { getEvent } from "$lib/events.server";
 import { client } from "$lib/sanity";
 
 export async function load({ params }) {
-    const event = await getEvent(params.slug);
+    const event = await getEvent(params.slug, true);
     return {
         images: event?.images || [],
         event: event,

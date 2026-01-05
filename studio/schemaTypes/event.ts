@@ -134,6 +134,13 @@ export default defineType({
             group: 'design',
         }),
         defineField({
+            name: 'overlay',
+            title: 'Overlay Image',
+            type: 'image',
+            description: 'Upload a specific overlay for this event (must be a transparent PNG).',
+            group: 'design',
+        }),
+        defineField({
             name: 'gallery',
             title: 'Image Gallery',
             group: 'event',

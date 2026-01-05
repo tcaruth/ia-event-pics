@@ -1,72 +1,87 @@
-# Photobooth Sanity Uploader
+# Photobooth Controller & Uploader
 
-This guide explains how to set up the Sanity image uploader on a Raspberry Pi running `pibooth`.
+This script serves as the master controller for the photobooth. It manages the startup sequence, synchronizes configuration from Sanity.io (Event details, Colors, Overlays), launches the `pibooth` application, and uploads new photos to the cloud.
 
 ## Prerequisites
 
-1. **Node.js**: The script requires Node.js. Install it on your Pi:
+1. **Node.js**: Requires Node.js 18+.
    ```bash
-   curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-   sudo apt-get install -y nodejs
+   nvm install 18 && nvm use 18
    ```
 
-2. **Sanity API Token**: 
-   - Go to [manage.sanity.io](https://manage.sanity.io)
-   - Select your project -> Settings -> API
-   - Create a new **Write** token. Keep this secret!
+2. **Sanity API Token**: Requires a token with **Write** permissions.
 
 ## Installation
 
-1. Copy the `scripts/` directory and `package.json` to a folder on your Pi (e.g., `/home/pi/sanity-uploader`).
+1. Copy the contents of the `scripts/` directory to your Pi (e.g., `/home/pi/sanity-controller`).
+   - This should include `package.json`, `sanity-uploader.js`, `start.sh`, and any `.cfg` files.
 2. Install dependencies:
    ```bash
-   npm install chokidar @sanity/client dotenv minimist
+   cd /home/pi/sanity-controller
+   npm install
+   chmod +x start.sh
    ```
-3. Create a `.env` file in the uploader directory:
+   *Note: Edit `start.sh` to ensure the `--photobooth` name and directories match your specific setup.*
+3. Create a `.env` file:
    ```env
-   SANITY_PROJECT_ID=your_project_id
+   SANITY_PROJECT_ID=your_id
    SANITY_DATASET=production
-   SANITY_API_TOKEN=your_write_token
+   SANITY_API_TOKEN=your_token
    ```
 
 ## Usage
 
-Run the script by pointing it to your `pibooth` output directory and the event slug:
+This script should be the primary entry point for your photobooth service.
 
 ```bash
-node sanity-uploader.js --dir /home/pi/Pictures/pibooth --event my-event-slug
+node sanity-uploader.js --dir <photo_dir> [--event <slug> | --photobooth <name>] [--config <cfg_path>]
 ```
 
-### Run on Startup (systemd)
+### Arguments
+- `--dir`: Directory to watch for new photos (e.g., `/home/pi/Pictures/pibooth`).
+- `--photobooth`: (Recommended) Name of the photobooth document in Sanity. The script will look up the active event dynamically.
+- `--event`: (Manual Override) Directly specify event slug.
+- `--config`: (Optional) Path to `pibooth.cfg`. Defaults to `~/.config/pibooth/pibooth.cfg`.
 
-To make it run automatically in the background, create a systemd service:
+### Automatic Startup (systemd)
 
-1. Create a service file: `sudo nano /etc/systemd/system/sanity-uploader.service`
-2. Paste the following (update paths):
-   ```ini
-   [Unit]
-   Description=Sanity Image Uploader
-   After=network.target
+The `start.sh` script is used as a wrapper to load `nvm` and the correct Node version before launching the uploader.
 
-   [Service]
-   Type=simple
-   User=pi
-   WorkingDirectory=/home/pi/sanity-uploader
-   ExecStart=/usr/bin/node sanity-uploader.js --dir /home/pi/Pictures/pibooth --event my-event-slug
-   Restart=on-failure
+Create a single service to manage the entire booth: `sudo nano /etc/systemd/system/photobooth.service`
 
-   [Install]
-   WantedBy=multi-user.target
-   ```
-3. Enable and start:
-   ```bash
-   sudo systemctl enable sanity-uploader
-   sudo systemctl start sanity-uploader
-   ```
+```ini
+[Unit]
+Description=Sanity Photobooth Controller
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+Environment="DISPLAY=:0"
+Environment="XAUTHORITY=/home/pi/.Xauthority"
+WorkingDirectory=/home/pi/sanity-controller
+# usage of start.sh ensures nvm/node environment is loaded correctly
+ExecStart=/home/pi/sanity-controller/start.sh
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Enable it:
+```bash
+sudo systemctl enable photobooth
+sudo systemctl start photobooth
+```
 
 ## How it Works
-The script uses `chokidar` to watch the file system. When `pibooth` saves a new photo, the script:
-1. Detects the new file.
-2. Characterizes the asset in Sanity.
-3. Appends a reference to the image in the specific Event's `gallery` array.
-4. Uses the `_key` as a unique identifier for synchronization.
+
+1. **Network Check**: On startup, it waits until `iaevent.pics` is reachable, appropriately handling offline boots.
+2. **Configuration Sync**:
+   - Fetches the active Event from Sanity.
+   - **Colors**: Converts Sanity color palette to `pibooth.cfg` RGB values (Window background, text colors, photo matting).
+   - **Overlay**: Downloads the event's overlay image to `current_overlay.png` and updates config to use it.
+   - **Texts**: Updates config with Event Title (Window Title/Footer 1) and Date/Location (Footer 2).
+3. **Launch Pibooth**: Spawns the `pibooth` application in the background.
+4. **Watch & Upload**: Monitors the photo directory and uploads new images to the Event's gallery in Sanity.

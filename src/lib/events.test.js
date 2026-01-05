@@ -39,5 +39,35 @@ describe('events.server.js', () => {
             const event = await getEvent('non-existent');
             expect(event).toBeNull();
         });
+        it('filters pibooth images when admin is false', async () => {
+            const mockEvent = {
+                title: 'Test Event',
+                images: [
+                    { name: 'photo1.jpg' },
+                    { name: 'pibooth-capture.jpg' },
+                    { name: 'photo2.jpg' }
+                ]
+            };
+            client.fetch.mockResolvedValue(mockEvent);
+
+            const event = await getEvent('test-event', false);
+            expect(event.images).toHaveLength(2);
+            expect(event.images.map(i => i.name)).not.toContain('pibooth-capture.jpg');
+        });
+
+        it('shows all images when admin is true', async () => {
+            const mockEvent = {
+                title: 'Test Event',
+                images: [
+                    { name: 'photo1.jpg' },
+                    { name: 'pibooth-capture.jpg' }
+                ]
+            };
+            client.fetch.mockResolvedValue(mockEvent);
+
+            const event = await getEvent('test-event', true);
+            expect(event.images).toHaveLength(2);
+            expect(event.images.map(i => i.name)).toContain('pibooth-capture.jpg');
+        });
     });
 });

@@ -12,7 +12,7 @@ export const actions = {
 
         // Search for event by slug (used as code)
         const query = `*[_type == "event" && slug.current == $code][0]`;
-        const event = await client.fetch(query, { code });
+        const event = await client.fetch(query, { code: decodeURIComponent(code.toString()).trim() });
 
         if (event) {
             throw redirect(303, `/${event.slug.current}`);

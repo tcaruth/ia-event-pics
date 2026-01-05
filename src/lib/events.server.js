@@ -55,9 +55,10 @@ import groq from 'groq';
 
 /**
  * @param {string} slug
+ * @param {boolean} [showAllImages=false]
  * @returns {Promise<EventData | null>}
  */
-async function getEvent(slug) {
+async function getEvent(slug, showAllImages = false) {
     if (!slug) {
         return null;
     }
@@ -87,6 +88,13 @@ async function getEvent(slug) {
 
     try {
         const event = await client.fetch(query, { slug: slug });
+
+        if (event && event.images && !showAllImages) {
+            event.images = event.images.filter((/** @type {import('./events.server').EventImage} */ img) =>
+                !img.name || !img.name.toLowerCase().includes('pibooth')
+            );
+        }
+
         return event;
     } catch (error) {
         console.error('Error fetching event from Sanity:', error);
