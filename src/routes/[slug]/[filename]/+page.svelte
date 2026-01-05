@@ -119,10 +119,10 @@
 				</div>
 
 				<div class="action-bar">
-					<button class="action-btn" on:click={downloadImage}>
+					<button class="action-btn primary" on:click={downloadImage}>
 						<span class="icon">↓</span> Save
 					</button>
-					<button class="action-btn primary" on:click={shareImage}>
+					<button class="action-btn secondary" on:click={shareImage}>
 						<span class="icon">↗</span> Share
 					</button>
 				</div>
@@ -236,6 +236,12 @@
 		background: var(--color-primary);
 		color: var(--text-primary);
 		border-color: var(--color-primary);
+	}
+
+	.action-btn.secondary {
+		background: var(--color-secondary);
+		color: var(--text-secondary);
+		border-color: var(--color-secondary);
 	}
 
 	.action-btn:hover {
