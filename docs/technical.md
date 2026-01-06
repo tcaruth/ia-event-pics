@@ -41,11 +41,18 @@ To handle the "race condition" where an attendee scans a QR code before the uplo
 - **Friendly UI:** Displays a custom loading spinner and reassuring messaging until the image is detected.
 - **Fallback:** After 3 minutes (60 retries) without success, it transitions to an error state with a manual refresh option.
 
+### Photobooth Integration
+A Raspberry Pi runs a custom controller (`/scripts/sanity-uploader.js`) that:
+- **Syncs Config:** Pulls event branding (colors, overlays) from Sanity and injects them into the pibooth software.
+- **Automated Upload:** Watches the disk for new photos and uploads them immediately to Sanity via the client SDK.
+- **Robustness:** Handles transient network outages and DNS failures with automatic retries.
+
 ## 📂 Project Structure
 
 - `/src`: Main SvelteKit application.
 - `/studio`: Sanity Studio (Schema definitions and CMS UI).
-- `/scripts`: Utility scripts for photobooth integration and testing.
+- `/scripts`: Photobooth controller, startup scripts, and configuration templates.
+- `/docs`: Project documentation and guides.
 
 ## 🚀 Deployment
 

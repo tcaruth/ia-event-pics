@@ -92,8 +92,8 @@ function hexToRgbTuple(hex) {
 
 async function checkNetwork() {
     return new Promise((resolve) => {
-        dns.lookup('iaevent.pics', (err) => {
-            if (err && err.code === "ENOTFOUND") {
+        dns.lookup('2i1qgrlb.api.sanity.io', (err) => {
+            if (err) {
                 resolve(false);
             } else {
                 resolve(true);

@@ -77,11 +77,22 @@ sudo systemctl start photobooth
 
 ## How it Works
 
-1. **Network Check**: On startup, it waits until `iaevent.pics` is reachable, appropriately handling offline boots.
+1. **Network Resilience**: On startup, the script waits for a successful connection to the Sanity API (`*.api.sanity.io`). It correctly handles temporary DNS failures (`EAI_AGAIN`) and stays in a wait-loop until the network is fully available.
 2. **Configuration Sync**:
-   - Fetches the active Event from Sanity.
-   - **Colors**: Converts Sanity color palette to `pibooth.cfg` RGB values (Window background, text colors, photo matting).
-   - **Overlay**: Downloads the event's overlay image to `current_overlay.png` and updates config to use it.
-   - **Texts**: Updates config with Event Title (Window Title/Footer 1) and Date/Location (Footer 2).
-3. **Launch Pibooth**: Spawns the `pibooth` application in the background.
-4. **Watch & Upload**: Monitors the photo directory and uploads new images to the Event's gallery in Sanity.
+   - Fetches the active Event from Sanity based on the photobooth name.
+   - **Colors**: Converts Sanity color palette to `pibooth.cfg` RGB values (Window background, text colors).
+   - **Overlay**: Downloads the event's specific overlay image and updates the local pibooth config.
+   - **QR Codes**: Automatically updates the QR code prefix URL to point to the correct event page.
+3. **Launch Pibooth**: Spawns the `pibooth` application in the background with appropriate GUI environment variables.
+4. **Watch & Upload**: Monitors the photo directory and instantly uploads new images to the Event's gallery in Sanity.
+
+## Troubleshooting
+
+### EAI_AGAIN / DNS Issues
+If you see `EAI_AGAIN` errors in the logs, it means the Pi is having trouble resolving the Sanity API address. This is usually transient. The updated `sanity-uploader.js` includes a robust check that waits for this to clear before proceeding.
+
+### Video system not initialized (PyGame)
+This usually happens if the `photobooth` service is running in an environment without access to the X server. Ensure `DISPLAY=:0` and `XAUTHORITY` are correctly set in both `start.sh` and the `systemd` service file.
+
+### Service Failures not Restarting
+If the script crashes but `systemctl status` shows it as "Succeeded", check your `start.sh`. Ensure it uses `set -e` and `set -o pipefail` so that pipe operations (like logging to `tee`) don't mask exit codes.
