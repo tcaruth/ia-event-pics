@@ -16,6 +16,12 @@ This guide is for event organizers and photobooth operators to manage photos and
 3.  Confirm the deletion in the popup dialog.
 4.  **Warning:** This action is permanent and removes the photo from Sanity storage.
 
+### Deleting All Photos
+1.  In the Admin Dashboard, click the **Delete All Photos** button near the top.
+2.  A confirmation dialog will appear showing the total count of images to be deleted.
+3.  Click **Yes, Delete All** to proceed.
+4.  **Warning:** This will permanently remove **ALL** photos for this event. This cannot be undone.
+
 ## 🎨 Updating Event Branding
 
 Branding (colors, fonts, passwords) is managed via **Sanity Studio**.

@@ -12,6 +12,8 @@
 
 	/** @type {HTMLDialogElement} */
 	let deleteDialog;
+	/** @type {HTMLDialogElement} */
+	let deleteAllDialog;
 	/** @type {import('$lib/events.server').EventImage | null} */
 	let imageToDelete = null;
 
@@ -24,6 +26,14 @@
 	function closeDeleteDialog() {
 		deleteDialog.close();
 		imageToDelete = null;
+	}
+
+	function confirmDeleteAll() {
+		deleteAllDialog.showModal();
+	}
+
+	function closeDeleteAllDialog() {
+		deleteAllDialog.close();
 	}
 
 	async function downloadAll() {
@@ -126,12 +136,19 @@
 	{/if}
 
 	{#if form?.success}
-		<div class="alert alert-success">Image deleted successfully.</div>
+		<div class="alert alert-success">{form.message || 'Image deleted successfully.'}</div>
 	{/if}
 
 	<div class="admin-actions">
 		<button class="download-all-btn" on:click={downloadAll} disabled={isDownloading}>
 			{isDownloading ? 'Preparing ZIP...' : 'Download All (ZIP)'}
+		</button>
+		<button
+			class="delete-all-photos-btn"
+			on:click={confirmDeleteAll}
+			disabled={isDownloading || !data.images?.length}
+		>
+			Delete All Photos
 		</button>
 		{#if downloadProgress}
 			<p class="progress-message">{downloadProgress}</p>
@@ -177,7 +194,37 @@
 					}}
 				>
 					<input type="hidden" name="fullPath" value={imageToDelete?.fullPath} />
-					<button type="submit" class="btn-danger">Yes, Delete</button>
+					<!-- svelte-ignore a11y_autofocus -->
+					<button type="submit" class="btn-danger" autofocus>Yes, Delete</button>
+				</form>
+			</div>
+		</div>
+	</dialog>
+
+	<dialog bind:this={deleteAllDialog} class="confirm-dialog">
+		<div class="dialog-content">
+			<h2>Confirm Delete All</h2>
+			<p>
+				Are you sure you want to delete <strong>ALL {data.images?.length} photos</strong> for this event?
+			</p>
+			<p class="warning-text">This action is permanent and cannot be undone.</p>
+
+			<div class="dialog-actions">
+				<button type="button" class="btn-secondary" on:click={closeDeleteAllDialog}>Cancel</button>
+				<form
+					method="POST"
+					action="?/deleteAll"
+					use:enhance={() => {
+						return async ({ result, update }) => {
+							closeDeleteAllDialog();
+							if (result.type === 'success') {
+								await update();
+							}
+						};
+					}}
+				>
+					<!-- svelte-ignore a11y_autofocus -->
+					<button type="submit" class="btn-danger" autofocus>Yes, Delete All</button>
 				</form>
 			</div>
 		</div>
@@ -224,6 +271,27 @@
 
 	.download-all-btn:disabled {
 		background-color: #9ca3af;
+		cursor: not-allowed;
+	}
+
+	.delete-all-photos-btn {
+		padding: 0.75rem 1.5rem;
+		background-color: transparent;
+		color: #ef4444;
+		border: 1px solid #ef4444;
+		border-radius: 0.5rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.2s;
+	}
+
+	.delete-all-photos-btn:hover:not(:disabled) {
+		background-color: #ef4444;
+		color: white;
+	}
+
+	.delete-all-photos-btn:disabled {
+		opacity: 0.5;
 		cursor: not-allowed;
 	}
 

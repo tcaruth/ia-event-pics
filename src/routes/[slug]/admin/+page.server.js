@@ -39,5 +39,28 @@ export const actions = {
             console.error('Sanity Delete Error:', e);
             return { success: false, error: e instanceof Error ? e.message : 'An unknown error occurred' };
         }
+    },
+    deleteAll: async ({ params }) => {
+        const eventSlug = params.slug;
+
+        try {
+            // Find the event document ID
+            const event = await client.fetch(`*[_type == "event" && slug.current == $slug][0]{_id}`, { slug: eventSlug });
+
+            if (!event) {
+                return { success: false, error: 'Event not found' };
+            }
+
+            // Clear the entire gallery array
+            await client
+                .patch(event._id)
+                .set({ gallery: [] })
+                .commit();
+
+            return { success: true, message: 'All photos deleted' };
+        } catch (e) {
+            console.error('Sanity Delete All Error:', e);
+            return { success: false, error: e instanceof Error ? e.message : 'An unknown error occurred' };
+        }
     }
 };
