@@ -146,7 +146,7 @@ async function updatePiboothConfig(baseConfig, configPath, event) {
             console.log("Downloading overlay...");
             try {
                 await downloadImage(event.overlay.asset.url, overlayPath);
-                config.PICTURE.overlays = `'${overlayPath}'`;
+                config.PICTURE.overlays = overlayPath;
                 console.log(`Setting [PICTURE] overlays = ${overlayPath}`);
             } catch (err) {
                 console.error(`Failed to download overlay: ${err.message}`); config.PICTURE.overlays = "";
