@@ -7,20 +7,20 @@ test.describe('Routing', () => {
 
     test('Gallery page loads', async ({ page }) => {
         await page.goto(`/${slug}`);
-        await expect(page.locator('.gallery')).toBeVisible({ timeout: 10000 });
+        await expect(page.locator('.gallery-item')).toHaveCount(4, { timeout: 10000 });
         const heading = page.locator('h1');
         await expect(heading).toBeVisible();
     });
 
     test('Gallery has images', async ({ page }) => {
         await page.goto(`/${slug}`);
-        const figures = page.locator('.gallery a figure');
-        await expect(figures).not.toHaveCount(0, { timeout: 10000 });
+        const images = page.locator('.gallery-item img');
+        await expect(images).toHaveCount(4, { timeout: 10000 });
     });
 
     test('Navigating to image viewer', async ({ page }) => {
         await page.goto(`/${slug}`);
-        const links = page.locator('.gallery a');
+        const links = page.locator('.gallery-item');
         await links.first().waitFor({ state: 'visible' });
         await links.first().click();
         await expect(page.locator('.image-viewer')).toBeVisible({ timeout: 10000 });
