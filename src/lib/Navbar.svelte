@@ -1,156 +1,143 @@
 <script>
-  let isDark = false;
+  import { theme } from '$lib/stores.js';
 
-  function toggleDarkMode() {
-    isDark = !isDark;
-    if (isDark) {
-      document.documentElement.setAttribute('data-theme', 'dark');
-    } else {
-      document.documentElement.setAttribute('data-theme', 'light');
-    }
+  function toggleTheme() {
+    theme.update(current => (current === 'light' ? 'dark' : 'light'));
   }
 </script>
 
-<nav class="sticky top-0 z-50 bg-background/80 dark:bg-background/80 backdrop-blur-md border-b border-border-color">
-  <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-    <div class="flex items-center gap-2">
-      <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-white">
+<nav class="navbar">
+  <div class="container">
+    <div class="logo">
+      <div class="logo-icon">
         <span class="material-symbols-outlined">camera</span>
       </div>
-      <span class="text-xl font-extrabold tracking-tight">IA Event Pics</span>
+      <span class="logo-text">IA Event Pics</span>
     </div>
-    <div class="hidden md:flex items-center gap-8 font-medium">
-      <a class="hover:text-primary transition-colors" href="#pricing">Pricing</a>
-      <a class="hover:text-primary transition-colors" href="#features">Features</a>
-      <a class="hover:text-primary transition-colors" href="#gallery">Gallery</a>
-      <button class="p-2 rounded-full hover:bg-surface transition-colors" on:click={toggleDarkMode}>
-        {#if isDark}
-          <span class="material-symbols-outlined">light_mode</span>
-        {:else}
-          <span class="material-symbols-outlined">dark_mode</span>
-        {/if}
+    <div class="nav-links">
+      <a href="#pricing">Pricing</a>
+      <a href="#features">Features</a>
+      <a href="#gallery">Gallery</a>
+      <button class="theme-toggle" on:click={toggleTheme}>
+        <span class="material-symbols-outlined light-icon">dark_mode</span>
+        <span class="material-symbols-outlined dark-icon">light_mode</span>
       </button>
-      <a class="bg-primary text-white px-6 py-2.5 rounded-full font-semibold hover:opacity-90 transition-opacity" href="#book">Book Now</a>
+      <a href="#book" class="button-primary">Book Now</a>
     </div>
   </div>
 </nav>
 
 <style>
-  nav {
-    background-color: hsla(var(--background) / 0.8);
-    border-bottom: 1px solid var(--border-color);
+  .navbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background-color: rgba(255, 255, 255, 0.8);
     backdrop-filter: blur(10px);
+    border-bottom: 1px solid #e2e8f0;
+    transition: background-color 0.3s, border-color 0.3s;
   }
-  .bg-primary {
-    background-color: var(--primary);
+
+  .dark .navbar {
+    background-color: rgba(15, 23, 42, 0.8);
+    border-bottom: 1px solid #1e293b;
   }
-  .text-white {
-    color: white;
-  }
-  .hover\:text-primary:hover {
-    color: var(--primary);
-  }
-  .hover\:opacity-90:hover {
-    opacity: 0.9;
-  }
-  .max-w-7xl {
+
+  .container {
     max-width: 80rem;
-  }
-  .mx-auto {
-    margin-left: auto;
-    margin-right: auto;
-  }
-  .px-6 {
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-  }
-  .h-20 {
+    margin: 0 auto;
+    padding: 0 1.5rem;
     height: 5rem;
-  }
-  .flex {
     display: flex;
-  }
-  .items-center {
     align-items: center;
-  }
-  .justify-between {
     justify-content: space-between;
   }
-  .gap-2 {
+
+  .logo {
+    display: flex;
+    align-items: center;
     gap: 0.5rem;
   }
-  .w-10 {
+
+  .logo-icon {
     width: 2.5rem;
-  }
-  .h-10 {
     height: 2.5rem;
-  }
-  .rounded-lg {
-    border-radius: var(--radius-lg);
-  }
-  .justify-center {
+    background-color: #064e3b; /* primary color */
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
     justify-content: center;
+    color: white;
   }
-  .text-xl {
+
+  .logo-text {
     font-size: 1.25rem;
-  }
-  .font-extrabold {
     font-weight: 800;
+    letter-spacing: -0.05em;
   }
-  .tracking-tight {
-    letter-spacing: -0.025em;
+
+  .nav-links {
+    display: none; /* Hidden on mobile by default */
   }
-  .hidden {
-    display: none;
-  }
+
   @media (min-width: 768px) {
-    .md\:flex {
+    .nav-links {
       display: flex;
+      align-items: center;
+      gap: 2rem;
+      font-weight: 500;
     }
   }
-  .gap-8 {
-    gap: 2rem;
+
+  .nav-links a {
+    color: inherit;
+    text-decoration: none;
+    transition: color 0.3s;
   }
-  .font-medium {
-    font-weight: 500;
+
+  .nav-links a:hover {
+    color: #064e3b; /* primary color */
   }
-  .transition-colors {
-    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-duration: 150ms;
-  }
-  .p-2 {
+
+  .theme-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
     padding: 0.5rem;
-  }
-  .rounded-full {
     border-radius: 9999px;
+    transition: background-color 0.3s;
   }
-  .hover\:bg-surface:hover {
-    background-color: var(--surface);
+
+  .theme-toggle:hover {
+    background-color: #f1f5f9;
   }
-  .px-6 {
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
+
+  .dark .theme-toggle:hover {
+    background-color: #1e293b;
   }
-  .py-2\.5 {
-    padding-top: 0.625rem;
-    padding-bottom: 0.625rem;
+
+  .dark-icon {
+    display: none;
   }
-  .font-semibold {
+
+  .dark .light-icon {
+    display: none;
+  }
+
+  .dark .dark-icon {
+    display: block;
+  }
+
+  .button-primary {
+    background-color: #064e3b; /* primary color */
+    color: white;
+    padding: 0.625rem 1.5rem;
+    border-radius: 9999px;
     font-weight: 600;
+    transition: opacity 0.3s;
   }
-  .transition-opacity {
-    transition-property: opacity;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-duration: 150ms;
-  }
-  .sticky {
-    position: sticky;
-  }
-  .top-0 {
-    top: 0;
-  }
-  .z-50 {
-    z-index: 50;
+
+  .button-primary:hover {
+    opacity: 0.9;
   }
 </style>
