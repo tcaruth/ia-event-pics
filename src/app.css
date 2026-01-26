@@ -1,13 +1,14 @@
-@import url('https://fonts.googleapis.com/css2?family=Arvo:ital,wght@0,400;0,700;1,400;1,700&family=Bungee&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Lora:ital,wght@0,400..700;1,400..700&family=Outfit:wght@100..900&family=Pacifico&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Work+Sans:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0');
 
 :root {
 	--font-main: 'Inter', system-ui, -apple-system, sans-serif;
-	--font-heading: 'Outfit', var(--font-main);
+	--font-heading: 'Plus Jakarta Sans', var(--font-main);
 
-	--radius-sm: 8px;
-	--radius-md: 12px;
-	--radius-lg: 20px;
-	--radius-xl: 32px;
+	--radius-sm: 0.5rem;
+	--radius-md: 0.75rem;
+	--radius-lg: 1rem;
+	--radius-xl: 1.5rem;
 	--radius-round: 9999px;
 
 	--spacing-xs: 0.5rem;
@@ -37,34 +38,24 @@ body {
 	color: var(--text-surface-primary);
 }
 
-/* Theme Defaults (Dark) */
+/* Theme Defaults (Light) */
 :root {
-	--surface-primary: #000000;
-	--text-surface-primary: #ffffff;
-	--surface-secondary: #18181b;
-	--text-surface-secondary: #a1a1aa;
-
-	--color-primary: #ffffff;
-	--text-primary: #000000;
-	--color-secondary: #818cf8;
-	--text-secondary: #ffffff;
-
-	--border-color: #27272a;
+	--primary: #064e3b;
+	--background: #ffffff;
+	--surface: #f8fafc;
+	--text-primary: #0f172a;
+	--text-secondary: #64748b;
+	--border-color: #e2e8f0;
 }
 
-/* Light Theme Overrides */
-[data-theme='light'] {
-	--surface-primary: #ffffff;
-	--text-surface-primary: #1a1a1a;
-	--surface-secondary: #f4f4f5;
-	--text-surface-secondary: #71717a;
-
-	--color-primary: #000000;
-	--text-primary: #ffffff;
-	--color-secondary: #6366f1;
-	--text-secondary: #ffffff;
-
-	--border-color: #e4e4e7;
+/* Dark Theme Overrides */
+[data-theme='dark'] {
+	--primary: #34d399; /* A brighter green for dark mode */
+	--background: #0f172a;
+	--surface: #1e293b;
+	--text-primary: #f8fafc;
+	--text-secondary: #94a3b8;
+	--border-color: #334155;
 }
 
 a {
