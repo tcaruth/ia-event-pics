@@ -1,4 +1,4 @@
-import { getEvent } from '$lib/events.server';
+import { getEventPassword } from '$lib/events.server';
 import { MASTER_ADMIN_PASSWORD } from '$env/static/private';
 import { fail, redirect } from '@sveltejs/kit';
 
@@ -9,7 +9,7 @@ export const actions = {
         const data = await request.formData();
         const password = data.get('password');
         const eventSlug = params.slug;
-        const event = await getEvent(eventSlug);
+        const event = await getEventPassword(eventSlug);
 
         if (!event) {
             return fail(400, { error: 'Event not found' });

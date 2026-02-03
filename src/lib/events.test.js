@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { getEvent } from './events.server';
+import { getEvent, getEventPassword } from './events.server';
 import { client } from './sanity';
 
 vi.mock('./sanity', () => ({
@@ -68,6 +68,37 @@ describe('events.server.js', () => {
             const event = await getEvent('test-event', true);
             expect(event.images).toHaveLength(2);
             expect(event.images.map(i => i.name)).toContain('pibooth-capture.jpg');
+        });
+    });
+
+    describe('getEventPassword', () => {
+        it('returns event password when a valid slug is provided', async () => {
+            const mockData = { adminPassword: 'secret-password' };
+            client.fetch.mockResolvedValue(mockData);
+
+            const result = await getEventPassword('test-event');
+            expect(result).toEqual(mockData);
+            expect(client.fetch).toHaveBeenCalledWith(
+                expect.stringContaining('adminPassword'),
+                { slug: 'test-event' }
+            );
+        });
+
+        it('returns null when no slug is provided', async () => {
+            const result = await getEventPassword(null);
+            expect(result).toBeNull();
+        });
+
+        it('returns null when Sanity fetch fails', async () => {
+            client.fetch.mockRejectedValue(new Error('Sanity error'));
+            const result = await getEventPassword('some-slug');
+            expect(result).toBeNull();
+        });
+
+        it('returns null when event is not found', async () => {
+            client.fetch.mockResolvedValue(null);
+            const result = await getEventPassword('non-existent');
+            expect(result).toBeNull();
         });
     });
 });
