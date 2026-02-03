@@ -74,7 +74,7 @@ async function getEvent(slug, showAllImages = false) {
         fonts,
         colors,
         theme,
-        "images": gallery[]{
+        "images": gallery[$showAllImages == true || !defined(asset->originalFilename) || !(asset->originalFilename match "*pibooth*")]{
             "url": asset->url,
             "created": coalesce(created, _createdAt), 
             "key": _key,
@@ -86,8 +86,24 @@ async function getEvent(slug, showAllImages = false) {
         }
     }`;
 
-    try {
-        const event = await client.fetch(query, { slug: slug });
+	try {
+		const event = await client.fetch(query, { slug: slug, showAllImages: showAllImages });
+
+		return event;
+	} catch (error) {
+		console.error('Error fetching event from Sanity:', error);
+		return null;
+	}
+}
+
+/**
+ * @param {string} slug
+ * @returns {Promise<{ adminPassword?: string } | null>}
+ */
+async function getEventPassword(slug) {
+    if (!slug) {
+        return null;
+    }
 
         if (event && event.images && !showAllImages) {
             event.images = event.images.filter((/** @type {import('./events.server').EventImage} */ img) =>
