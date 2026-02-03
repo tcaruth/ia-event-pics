@@ -10,7 +10,7 @@
     </a>
 
     <h1 class="title">Terms of Service</h1>
-    <p class="last-updated">Last Updated: May 2024</p>
+    <p class="last-updated">Last Updated: January 2026</p>
 
     <div class="content">
       <p>Welcome to IA Event Pics. By using our services, you agree to the following terms and conditions.</p>
