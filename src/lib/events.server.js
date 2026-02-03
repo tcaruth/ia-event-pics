@@ -59,11 +59,11 @@ import groq from 'groq';
  * @returns {Promise<EventData | null>}
  */
 async function getEvent(slug, showAllImages = false) {
-    if (!slug) {
-        return null;
-    }
+	if (!slug) {
+		return null;
+	}
 
-    const query = groq`*[_type == "event" && slug.current == $slug][0]{
+	const query = groq`*[_type == "event" && slug.current == $slug][0]{
         title,
         description,
         "name": title,
@@ -86,20 +86,21 @@ async function getEvent(slug, showAllImages = false) {
         }
     }`;
 
-    try {
-        const event = await client.fetch(query, { slug: slug });
+	try {
+		const event = await client.fetch(query, { slug: slug });
 
-        if (event && event.images && !showAllImages) {
-            event.images = event.images.filter((/** @type {import('./events.server').EventImage} */ img) =>
-                !img.name || !img.name.toLowerCase().includes('pibooth')
-            );
-        }
+		if (event && event.images && !showAllImages) {
+			event.images = event.images.filter(
+				(/** @type {import('./events.server').EventImage} */ img) =>
+					!img.name || !img.name.toLowerCase().includes('pibooth')
+			);
+		}
 
-        return event;
-    } catch (error) {
-        console.error('Error fetching event from Sanity:', error);
-        return null;
-    }
+		return event;
+	} catch (error) {
+		console.error('Error fetching event from Sanity:', error);
+		return null;
+	}
 }
 
 /**
