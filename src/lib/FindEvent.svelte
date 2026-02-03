@@ -32,6 +32,7 @@
 <style>
   .find-event {
     padding: 6rem 0;
+    color: var(--text-color);
   }
 
   .container {
@@ -41,17 +42,12 @@
   }
 
   .card {
-    background-color: #f8fafc;
-    border: 1px solid #e2e8f0;
+    background-color: var(--surface-color);
+    border: 1px solid var(--border-color);
     border-radius: 0.75rem;
     padding: 2.5rem;
     text-align: center;
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  }
-
-  .dark .card {
-    background-color: #0f172a;
-    border-color: #1e293b;
   }
 
   .title {
@@ -61,12 +57,8 @@
   }
 
   .subtitle {
-    color: #475569;
+    color: var(--text-muted);
     margin-bottom: 2rem;
-  }
-
-  .dark .subtitle {
-    color: #94a3b8;
   }
 
   .form-container {
@@ -79,8 +71,9 @@
 
   .input {
     width: 100%;
-    background-color: white;
-    border: 1px solid #e2e8f0;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
     border-radius: 0.75rem;
     padding: 1rem 1.5rem;
     text-align: center;
@@ -91,26 +84,23 @@
     transition: border-color 0.3s, box-shadow 0.3s;
   }
 
-  .dark .input {
-    background-color: #1e293b;
-    border-color: #334155;
-  }
-
   .input::placeholder {
     text-transform: none;
     font-weight: 400;
     letter-spacing: normal;
+    color: var(--text-muted);
+    opacity: 0.5;
   }
 
   .input:focus {
     outline: none;
-    border-color: #064e3b; /* primary color */
+    border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(6, 78, 59, 0.2);
   }
 
   .button {
     width: 100%;
-    background-color: #064e3b; /* primary color */
+    background-color: var(--primary);
     color: white;
     padding: 1rem;
     border-radius: 0.75rem;

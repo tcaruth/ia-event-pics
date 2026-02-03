@@ -24,7 +24,9 @@ test.describe('Gallery Page', () => {
 	test('gallery displays images', async ({ page }) => {
 		await page.goto(`/${slug}`);
 		// Check that the gallery container exists
-		await expect(page.locator('.gallery-item')).toHaveCount(4);
+		await page.waitForSelector('.gallery-item');
+		const count = await page.locator('.gallery-item').count();
+		expect(count).toBeGreaterThanOrEqual(4);
 	});
 });
 

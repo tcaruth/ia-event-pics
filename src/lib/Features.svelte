@@ -1,7 +1,7 @@
 <script>
   const features = [
     {
-      icon: 'photo_print',
+      icon: 'print',
       title: 'Instant Prints',
       description: 'Get high-quality prints in seconds for a lasting physical memory of your night. Our optional printer addon makes it easy.',
     },
@@ -37,11 +37,8 @@
 <style>
   .features-section {
     padding: 5rem 0;
-    background-color: #f8fafc;
-  }
-
-  .dark .features-section {
-    background-color: rgba(15, 23, 42, 0.5);
+    background-color: var(--surface-color);
+    color: var(--text-color);
   }
 
   .container {
@@ -63,17 +60,12 @@
   }
 
   .card {
-    background-color: white;
+    background-color: var(--card-bg);
     padding: 2rem;
     border-radius: 0.75rem;
-    border: 1px solid #f1f5f9;
+    border: 1px solid var(--border-color);
     box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     transition: box-shadow 0.3s;
-  }
-
-  .dark .card {
-    background-color: #0f172a;
-    border-color: #1e293b;
   }
 
   .card:hover {
@@ -83,7 +75,7 @@
   .icon-container {
     width: 4rem;
     height: 4rem;
-    background-color: #ecfdf5;
+    background-color: var(--primary-light);
     border-radius: 0.75rem;
     display: flex;
     align-items: center;
@@ -92,17 +84,13 @@
     transition: background-color 0.3s;
   }
 
-  .dark .icon-container {
-    background-color: rgba(6, 78, 59, 0.2);
-  }
-
   .card:hover .icon-container {
-    background-color: #064e3b; /* primary color */
+    background-color: var(--primary);
   }
 
   .icon {
     font-size: 2rem;
-    color: #064e3b; /* primary color */
+    color: var(--primary);
     transition: color 0.3s;
   }
 
@@ -117,11 +105,7 @@
   }
 
   .description {
-    color: #475569;
+    color: var(--text-muted);
     line-height: 1.6;
-  }
-
-  .dark .description {
-    color: #94a3b8;
   }
 </style>

@@ -1,32 +1,41 @@
 :root {
   --primary: #064e3b;
-  --background-light: #ffffff;
-  --background-dark: #0f172a;
-  --surface-light: #f8fafc;
-  --surface-dark: #1e293b;
-  --text-light: #0f172a;
-  --text-dark: #f8fafc;
-  --text-muted-light: #64748b;
-  --text-muted-dark: #94a3b8;
+  --primary-light: #ecfdf5;
+  --primary-dark: #064e3b;
+
+  --bg-color: #ffffff;
+  --surface-color: #f8fafc;
+  --text-color: #0f172a;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+  --card-bg: #ffffff;
+  --navbar-bg: rgba(255, 255, 255, 0.8);
 
   --font-sans: 'Inter', sans-serif;
   --font-display: 'Plus Jakarta Sans', sans-serif;
 }
 
+html.dark {
+  --bg-color: #0f172a;
+  --surface-color: #1e293b;
+  --text-color: #f8fafc;
+  --text-muted: #94a3b8;
+  --border-color: #1e293b;
+  --card-bg: #0f172a;
+  --navbar-bg: rgba(15, 23, 42, 0.8);
+  --primary-light: rgba(6, 78, 59, 0.3);
+}
+
 body {
   font-family: var(--font-sans);
-  background-color: var(--background-light);
-  color: var(--text-light);
+  background-color: var(--bg-color);
+  color: var(--text-color);
   transition: background-color 0.3s, color 0.3s;
+  min-height: 100vh;
 }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
-}
-
-.dark body {
-  background-color: var(--background-dark);
-  color: var(--text-dark);
 }
 
 a {

@@ -1,15 +1,14 @@
 <script>
 	import '../app.css';
 	import { theme } from '$lib/stores.js';
+	import { onMount } from 'svelte';
+
+	$: if (typeof document !== 'undefined') {
+		document.documentElement.classList.toggle('dark', $theme === 'dark');
+	}
 </script>
 
-<div class:dark={$theme === 'dark'}>
-  <slot />
-</div>
+<slot />
 
 <style>
-	main {
-		background-color: var(--surface-primary);
-		min-height: 100vh;
-	}
 </style>

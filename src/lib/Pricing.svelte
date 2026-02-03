@@ -4,7 +4,6 @@
     <p class="subtitle">No hidden fees. Just great memories.</p>
     <div class="card-container">
       <div class="card">
-        <div class="popular-badge">Popular</div>
         <h3 class="card-title">All-Day Rental</h3>
         <div class="price">
           <span class="amount">$200</span>
@@ -41,11 +40,8 @@
 <style>
   .pricing {
     padding: 5rem 0;
-    background-color: #f8fafc;
-  }
-
-  .dark .pricing {
-    background-color: #1e293b;
+    background-color: var(--surface-color);
+    color: var(--text-color);
   }
 
   .container {
@@ -62,12 +58,8 @@
   }
 
   .subtitle {
-    color: #475569;
+    color: var(--text-muted);
     margin-bottom: 3rem;
-  }
-
-  .dark .subtitle {
-      color: #94a3b8;
   }
 
   .card-container {
@@ -76,31 +68,13 @@
   }
 
   .card {
-    background-color: white;
+    background-color: var(--card-bg);
     border-radius: 0.75rem;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-    border: 4px solid #064e3b; /* primary color */
+    border: 4px solid var(--primary);
     padding: 2rem;
     position: relative;
     overflow: hidden;
-  }
-
-  .dark .card {
-    background-color: #0f172a;
-  }
-
-  .popular-badge {
-    position: absolute;
-    top: 0;
-    right: 0;
-    background-color: #064e3b; /* primary color */
-    color: white;
-    padding: 0.25rem 1.5rem;
-    font-weight: 700;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    border-bottom-left-radius: 0.75rem;
   }
 
   .card-title {
@@ -120,11 +94,11 @@
   .amount {
     font-size: 3rem;
     font-weight: 800;
-    color: #064e3b; /* primary color */
+    color: var(--primary);
   }
 
   .period {
-    color: #64748b;
+    color: var(--text-muted);
     font-weight: 500;
   }
 
@@ -150,26 +124,19 @@
   }
 
   .optional {
-      color: #64748b;
-  }
-
-  .dark .optional {
-      color: #94a3b8;
+      color: var(--text-muted);
   }
 
   .info-icon, .wifi-icon {
-    color: #94a3b8;
-  }
-
-  .dark .info-icon, .dark .wifi-icon {
-      color: #475569;
+    color: var(--text-muted);
+    opacity: 0.6;
   }
 
   .button {
     display: block;
     width: 100%;
     padding: 1rem 0;
-    background-color: #064e3b; /* primary color */
+    background-color: var(--primary);
     color: white;
     border-radius: 0.5rem;
     font-weight: 700;

@@ -58,6 +58,7 @@
 <style>
   .gallery {
     padding: 6rem 0;
+    color: var(--text-color);
   }
   .container {
     max-width: 80rem;
@@ -85,11 +86,8 @@
   }
   .subtitle {
     font-size: 1.125rem;
-    color: #475569;
+    color: var(--text-muted);
     max-width: 40rem;
-  }
-  .dark .subtitle {
-    color: #94a3b8;
   }
   .navigation {
     display: flex;
@@ -97,21 +95,15 @@
   }
   .nav-button {
     padding: 0.5rem;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-color);
     border-radius: 0.5rem;
     background: none;
     cursor: pointer;
     transition: background-color 0.3s;
-  }
-  .dark .nav-button {
-    border-color: #334155;
-    color: #e2e8f0;
+    color: var(--text-color);
   }
   .nav-button:hover {
-    background-color: #f8fafc;
-  }
-  .dark .nav-button:hover {
-    background-color: #1e293b;
+    background-color: var(--surface-color);
   }
   .grid {
     display: grid;

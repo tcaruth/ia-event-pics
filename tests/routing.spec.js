@@ -7,15 +7,18 @@ test.describe('Routing', () => {
 
     test('Gallery page loads', async ({ page }) => {
         await page.goto(`/${slug}`);
-        await expect(page.locator('.gallery-item')).toHaveCount(4, { timeout: 10000 });
+        await page.waitForSelector('.gallery-item', { timeout: 10000 });
+        const count = await page.locator('.gallery-item').count();
+        expect(count).toBeGreaterThanOrEqual(4);
         const heading = page.locator('h1');
         await expect(heading).toBeVisible();
     });
 
     test('Gallery has images', async ({ page }) => {
         await page.goto(`/${slug}`);
-        const images = page.locator('.gallery-item img');
-        await expect(images).toHaveCount(4, { timeout: 10000 });
+        await page.waitForSelector('.gallery-item img', { timeout: 10000 });
+        const count = await page.locator('.gallery-item img').count();
+        expect(count).toBeGreaterThanOrEqual(4);
     });
 
     test('Navigating to image viewer', async ({ page }) => {

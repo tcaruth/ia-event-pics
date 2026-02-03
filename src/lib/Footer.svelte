@@ -11,6 +11,7 @@
         Premium photobooth rental service based in Waterloo, Iowa. Serving the entire Cedar Valley
         area with professional equipment and exceptional service.
       </p>
+      <!-- Socials commented out as requested
       <div class="socials">
         <a href="/" class="social-link" aria-label="Facebook">
           <svg class="icon" fill="currentColor" viewBox="0 0 24 24">
@@ -27,6 +28,7 @@
           </svg>
         </a>
       </div>
+      -->
     </div>
     <div>
       <h4 class="menu-title">Quick Links</h4>
@@ -56,150 +58,149 @@
     </div>
   </div>
   <div class="container sub-footer">
-    <p>© 2024 IA Event Pics. All rights reserved.</p>
+    <p>© {new Date().getFullYear()} IA Event Pics. All rights reserved.</p>
     <div class="legal-links">
-      <a href="/">Privacy Policy</a>
-      <a href="/">Terms of Service</a>
+      <a href="/privacy">Privacy Policy</a>
+      <a href="/terms">Terms of Service</a>
     </div>
   </div>
 </footer>
 
 <style>
   .footer {
-    background-color: #020617;
-    color: #94a3b8;
-    padding: 4rem 0 0;
-    border-top: 1px solid #0f172a;
+    background-color: var(--bg-color);
+    color: var(--text-muted);
+    padding: 4rem 0 2rem 0;
+    border-top: 1px solid var(--border-color);
   }
+
   .container {
     max-width: 80rem;
     margin: 0 auto;
     padding: 0 1.5rem;
   }
+
   .main-footer {
     display: grid;
     grid-template-columns: 1fr;
     gap: 3rem;
+    margin-bottom: 4rem;
   }
+
   @media (min-width: 768px) {
     .main-footer {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: 2fr 1fr 1fr;
     }
   }
+
   .about {
-    grid-column: span 1;
+    max-width: 24rem;
   }
-  @media (min-width: 768px) {
-    .about {
-      grid-column: span 2;
-    }
-  }
+
   .logo {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    color: white;
+    color: var(--text-color);
     margin-bottom: 1.5rem;
   }
+
   .logo-icon {
     width: 2rem;
     height: 2rem;
-    background-color: #064e3b; /* primary color */
+    background-color: var(--primary);
     border-radius: 0.5rem;
     display: flex;
     align-items: center;
     justify-content: center;
+    color: white;
   }
+
   .logo-icon .material-symbols-outlined {
-    font-size: 1rem;
+    font-size: 1.25rem;
   }
+
   .logo-text {
     font-size: 1.125rem;
     font-weight: 800;
   }
+
   .description {
-    max-width: 24rem;
+    line-height: 1.6;
     margin-bottom: 1.5rem;
   }
-  .socials {
-    display: flex;
-    gap: 1rem;
-  }
-  .social-link {
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: 9999px;
-    background-color: #0f172a;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #94a3b8;
-    transition: background-color 0.3s, color 0.3s;
-  }
-  .social-link:hover {
-    background-color: #064e3b; /* primary color */
-    color: white;
-  }
-  .social-link .icon {
-    width: 1.25rem;
-    height: 1.25rem;
-  }
+
+
   .menu-title {
-    color: white;
+    color: var(--text-color);
     font-weight: 700;
     margin-bottom: 1.5rem;
   }
-  .links,
-  .contact-info {
+
+  .links {
     list-style: none;
     padding: 0;
-    margin: 0;
     display: flex;
     flex-direction: column;
     gap: 1rem;
   }
+
   .links a {
     color: inherit;
-    text-decoration: none;
     transition: color 0.3s;
   }
+
   .links a:hover {
-    color: white;
+    color: var(--text-color);
   }
+
+  .contact-info {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
   .contact-item {
     display: flex;
     align-items: center;
     gap: 0.75rem;
   }
+
   .contact-item .icon {
-    color: #064e3b; /* primary color */
-    font-size: 0.875rem;
+    color: var(--primary);
+    font-size: 1.25rem;
   }
+
   .sub-footer {
-    padding-top: 4rem;
-    margin-top: 4rem;
-    border-top: 1px solid #0f172a;
-    font-size: 0.875rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    gap: 1rem;
+    gap: 1.5rem;
+    font-size: 0.875rem;
   }
+
   @media (min-width: 768px) {
     .sub-footer {
       flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
     }
   }
+
   .legal-links {
     display: flex;
     gap: 2rem;
   }
+
   .legal-links a {
     color: inherit;
-    text-decoration: none;
     transition: color 0.3s;
   }
+
   .legal-links a:hover {
-    color: white;
+    color: var(--text-color);
   }
 </style>
