@@ -19,7 +19,7 @@
       <p>We collect information you provide directly to us when you book a rental, such as your name, email address, phone number, and event details.</p>
 
       <h2>2. Event Photos</h2>
-      <p>Photos captured during your event are uploaded to a private or public gallery as requested. Guests can view and download photos from these galleries.</p>
+      <p>Photos captured during your event are uploaded to a public gallery protected by a passphrase as requested. Guests or other users with the passphrase can view and download photos from these galleries.</p>
 
       <h2>3. How We Use Information</h2>
       <p>We use your information to provide our services, process payments, and communicate with you about your event.</p>
