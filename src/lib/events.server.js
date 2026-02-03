@@ -86,14 +86,14 @@ async function getEvent(slug, showAllImages = false) {
         }
     }`;
 
-	try {
-		const event = await client.fetch(query, { slug: slug, showAllImages: showAllImages });
+    try {
+        const event = await client.fetch(query, { slug: slug, showAllImages: showAllImages });
 
-		return event;
-	} catch (error) {
-		console.error('Error fetching event from Sanity:', error);
-		return null;
-	}
+        return event;
+    } catch (error) {
+        console.error('Error fetching event from Sanity:', error);
+        return null;
+    }
 }
 
 /**
@@ -105,17 +105,16 @@ async function getEventPassword(slug) {
         return null;
     }
 
-        if (event && event.images && !showAllImages) {
-            event.images = event.images.filter((/** @type {import('./events.server').EventImage} */ img) =>
-                !img.name || !img.name.toLowerCase().includes('pibooth')
-            );
-        }
+    const query = groq`*[_type == "event" && slug.current == $slug][0]{
+        adminPassword
+    }`;
 
-        return event;
+    try {
+        return await client.fetch(query, { slug: slug });
     } catch (error) {
-        console.error('Error fetching event from Sanity:', error);
+        console.error('Error fetching event password from Sanity:', error);
         return null;
     }
 }
 
-export { getEvent };
+export { getEvent, getEventPassword };
