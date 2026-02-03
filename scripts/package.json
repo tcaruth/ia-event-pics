@@ -1,21 +1,21 @@
 {
-	"name": "ia-event-pics-uploader",
-	"version": "1.0.0",
-	"description": "Photobooth controller and Sanity uploader for IA Event Pics",
-	"main": "sanity-uploader.js",
-	"type": "module",
-	"scripts": {
-		"start": "node sanity-uploader.js"
-	},
-	"dependencies": {
-		"@sanity/client": "^6.15.0",
-		"chokidar": "^3.6.0",
-		"dotenv": "^16.6.1",
-		"ini": "^4.1.2",
-		"minimist": "^1.2.8",
-		"node-fetch": "^3.3.2",
-		"tinycolor2": "^1.6.0"
-	},
-	"author": "",
-	"license": "ISC"
+    "name": "ia-event-pics-uploader",
+    "version": "1.0.0",
+    "description": "Photobooth controller and Sanity uploader for IA Event Pics",
+    "main": "sanity-uploader.js",
+    "type": "module",
+    "scripts": {
+        "start": "node sanity-uploader.js"
+    },
+    "dependencies": {
+        "@sanity/client": "^6.15.0",
+        "chokidar": "^3.6.0",
+        "dotenv": "^16.6.1",
+        "ini": "^4.1.2",
+        "minimist": "^1.2.8",
+        "node-fetch": "^3.3.2",
+        "tinycolor2": "^1.6.0"
+    },
+    "author": "",
+    "license": "ISC"
 }

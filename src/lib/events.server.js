@@ -59,11 +59,11 @@ import groq from 'groq';
  * @returns {Promise<EventData | null>}
  */
 async function getEvent(slug, showAllImages = false) {
-	if (!slug) {
-		return null;
-	}
+    if (!slug) {
+        return null;
+    }
 
-	const query = groq`*[_type == "event" && slug.current == $slug][0]{
+    const query = groq`*[_type == "event" && slug.current == $slug][0]{
         title,
         description,
         "name": title,
@@ -74,7 +74,7 @@ async function getEvent(slug, showAllImages = false) {
         fonts,
         colors,
         theme,
-        "images": gallery[]{
+        "images": gallery[$showAllImages == true || !defined(asset->originalFilename) || !(asset->originalFilename match "*pibooth*")]{
             "url": asset->url,
             "created": coalesce(created, _createdAt), 
             "key": _key,
@@ -87,14 +87,7 @@ async function getEvent(slug, showAllImages = false) {
     }`;
 
 	try {
-		const event = await client.fetch(query, { slug: slug });
-
-		if (event && event.images && !showAllImages) {
-			event.images = event.images.filter(
-				(/** @type {import('./events.server').EventImage} */ img) =>
-					!img.name || !img.name.toLowerCase().includes('pibooth')
-			);
-		}
+		const event = await client.fetch(query, { slug: slug, showAllImages: showAllImages });
 
 		return event;
 	} catch (error) {
@@ -112,16 +105,17 @@ async function getEventPassword(slug) {
         return null;
     }
 
-    const query = groq`*[_type == "event" && slug.current == $slug][0]{
-        adminPassword
-    }`;
+        if (event && event.images && !showAllImages) {
+            event.images = event.images.filter((/** @type {import('./events.server').EventImage} */ img) =>
+                !img.name || !img.name.toLowerCase().includes('pibooth')
+            );
+        }
 
-    try {
-        return await client.fetch(query, { slug: slug });
+        return event;
     } catch (error) {
-        console.error('Error fetching event password from Sanity:', error);
+        console.error('Error fetching event from Sanity:', error);
         return null;
     }
 }
 
-export { getEvent, getEventPassword };
+export { getEvent };

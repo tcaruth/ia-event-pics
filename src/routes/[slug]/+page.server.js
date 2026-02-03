@@ -1,10 +1,12 @@
-export async function load({ params, parent }) {
-	console.log('Page load function called for slug:', params.slug);
-	const { event } = await parent();
+import { getEvent } from "$lib/events.server";
 
-	return {
-		images: event?.images || [],
-		event: event,
-		slug: params.slug
-	};
-}
+export async function load({ params }) {
+    console.log('Page load function called for slug:', params.slug);
+    const event = await getEvent(params.slug, false);
+
+    return {
+        images: event?.images || [],
+        event: event,
+        slug: params.slug
+    };
+};

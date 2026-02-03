@@ -28,6 +28,40 @@
 </div>
 
 <style>
+	@import url('https://fonts.googleapis.com/css2?family=Arvo:ital,wght@0,400;0,700;1,400;1,700&family=Bungee&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Lora:ital,wght@0,400..700;1,400..700&family=Outfit:wght@100..900&family=Pacifico&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Work+Sans:ital,wght@0,100..900;1,100..900&display=swap');
+
+	:global(:root) {
+		--font-main: 'Inter', system-ui, -apple-system, sans-serif;
+		--font-heading: 'Outfit', var(--font-main);
+
+		--radius-sm: 8px;
+		--radius-md: 12px;
+		--radius-lg: 20px;
+		--radius-xl: 32px;
+		--radius-round: 9999px;
+
+		--spacing-xs: 0.5rem;
+		--spacing-sm: 1rem;
+		--spacing-md: 1.5rem;
+		--spacing-lg: 2.5rem;
+		--spacing-xl: 4rem;
+
+		--transition-base: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+		--shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+		--shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+		--shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.15);
+	}
+
+	:global(body) {
+		margin: 0;
+		padding: 0;
+		font-family: var(--font-main);
+		-webkit-font-smoothing: antialiased;
+		-moz-osx-font-smoothing: grayscale;
+		background: var(--surface-primary);
+		color: var(--text-surface-primary);
+	}
+
 	.event-layout {
 		min-height: 100vh;
 		background: var(--surface-primary);

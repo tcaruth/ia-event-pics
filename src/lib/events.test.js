@@ -1,22 +1,22 @@
 import { describe, it, expect, vi } from 'vitest';
-import { getEvent, getEventPassword } from './events.server';
+import { getEvent } from './events.server';
 import { client } from './sanity';
 
 vi.mock('./sanity', () => ({
-	client: {
-		fetch: vi.fn()
-	}
+    client: {
+        fetch: vi.fn()
+    }
 }));
 
 describe('events.server.js', () => {
-	describe('getEvent', () => {
-		it('returns event data when a valid slug is provided', async () => {
-			const mockEvent = {
-				title: 'Aubri and Travis',
-				name: 'Aubri and Travis',
-				slug: 'aubri-and-travis'
-			};
-			client.fetch.mockResolvedValue(mockEvent);
+    describe('getEvent', () => {
+        it('returns event data when a valid slug is provided', async () => {
+            const mockEvent = {
+                title: 'Aubri and Travis',
+                name: 'Aubri and Travis',
+                slug: 'aubri-and-travis'
+            };
+            client.fetch.mockResolvedValue(mockEvent);
 
 			const event = await getEvent('aubri-and-travis');
 			expect(event.title).toBe('Aubri and Travis');
@@ -39,29 +39,51 @@ describe('events.server.js', () => {
 			const event = await getEvent('non-existent');
 			expect(event).toBeNull();
 		});
-		it('filters pibooth images when admin is false', async () => {
+		it('filters pibooth images via GROQ query when admin is false', async () => {
 			const mockEvent = {
 				title: 'Test Event',
-				images: [{ name: 'photo1.jpg' }, { name: 'pibooth-capture.jpg' }, { name: 'photo2.jpg' }]
+				// Mock what the DB would return (filtered list)
+				images: [{ name: 'photo1.jpg' }, { name: 'photo2.jpg' }]
 			};
 			client.fetch.mockResolvedValue(mockEvent);
 
 			const event = await getEvent('test-event', false);
+
+			// Verify correct params passed to Sanity
+			expect(client.fetch).toHaveBeenCalledWith(
+				expect.stringContaining('gallery[$showAllImages == true'),
+				expect.objectContaining({
+					slug: 'test-event',
+					showAllImages: false
+				})
+			);
+
+			// Verify result passes through
 			expect(event.images).toHaveLength(2);
 			expect(event.images.map((i) => i.name)).not.toContain('pibooth-capture.jpg');
 		});
 
-		it('shows all images when admin is true', async () => {
+		it('requests all images via GROQ query when admin is true', async () => {
 			const mockEvent = {
 				title: 'Test Event',
 				images: [{ name: 'photo1.jpg' }, { name: 'pibooth-capture.jpg' }]
 			};
 			client.fetch.mockResolvedValue(mockEvent);
 
-            const event = await getEvent('test-event', true);
-            expect(event.images).toHaveLength(2);
-            expect(event.images.map(i => i.name)).toContain('pibooth-capture.jpg');
-        });
+			const event = await getEvent('test-event', true);
+
+			// Verify correct params passed to Sanity
+			expect(client.fetch).toHaveBeenCalledWith(
+				expect.stringContaining('gallery[$showAllImages == true'),
+				expect.objectContaining({
+					slug: 'test-event',
+					showAllImages: true
+				})
+			);
+
+			expect(event.images).toHaveLength(2);
+			expect(event.images.map((i) => i.name)).toContain('pibooth-capture.jpg');
+		});
     });
 
     describe('getEventPassword', () => {
@@ -78,20 +100,50 @@ describe('events.server.js', () => {
         });
 
         it('returns null when no slug is provided', async () => {
-            const result = await getEventPassword(null);
-            expect(result).toBeNull();
+            const event = await getEvent(null);
+            expect(event).toBeNull();
         });
 
         it('returns null when Sanity fetch fails', async () => {
             client.fetch.mockRejectedValue(new Error('Sanity error'));
-            const result = await getEventPassword('some-slug');
-            expect(result).toBeNull();
+            const event = await getEvent('some-slug');
+            expect(event).toBeNull();
         });
 
         it('returns null when event is not found', async () => {
             client.fetch.mockResolvedValue(null);
-            const result = await getEventPassword('non-existent');
-            expect(result).toBeNull();
+            const event = await getEvent('non-existent');
+            expect(event).toBeNull();
+        });
+        it('filters pibooth images when admin is false', async () => {
+            const mockEvent = {
+                title: 'Test Event',
+                images: [
+                    { name: 'photo1.jpg' },
+                    { name: 'pibooth-capture.jpg' },
+                    { name: 'photo2.jpg' }
+                ]
+            };
+            client.fetch.mockResolvedValue(mockEvent);
+
+            const event = await getEvent('test-event', false);
+            expect(event.images).toHaveLength(2);
+            expect(event.images.map(i => i.name)).not.toContain('pibooth-capture.jpg');
+        });
+
+        it('shows all images when admin is true', async () => {
+            const mockEvent = {
+                title: 'Test Event',
+                images: [
+                    { name: 'photo1.jpg' },
+                    { name: 'pibooth-capture.jpg' }
+                ]
+            };
+            client.fetch.mockResolvedValue(mockEvent);
+
+            const event = await getEvent('test-event', true);
+            expect(event.images).toHaveLength(2);
+            expect(event.images.map(i => i.name)).toContain('pibooth-capture.jpg');
         });
     });
 });
