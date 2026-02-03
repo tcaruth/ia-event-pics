@@ -1,15 +1,17 @@
 <script>
-	import { enhance } from '$app/forms';
-	import heroImage from '$lib/assets/photobooth_hero_party.png';
-	export let form;
-
-	let loading = false;
+  import Navbar from '$lib/Navbar.svelte';
+  import Hero from '$lib/Hero.svelte';
+  import Pricing from '$lib/Pricing.svelte';
+  import FindEvent from '$lib/FindEvent.svelte';
+  import Features from '$lib/Features.svelte';
+  import Gallery from '$lib/Gallery.svelte';
+  import Footer from '$lib/Footer.svelte';
 </script>
 
 <div class="page-container" data-theme="dark">
 	<section class="hero">
 		<div class="hero-content">
-			<!-- <div class="badge">Professional Quality</div> -->
+			<div class="badge">Serving the Cedar Valley</div>
 			<h1 class="gradient-text">Capture the Magic at Your Next Event</h1>
 			<p class="subhead">
 				High-quality photobooth rentals for weddings, corporate events, and parties.
@@ -127,7 +129,7 @@
 		border-radius: var(--radius-round);
 		font-size: 0.875rem;
 		font-weight: 600;
-		color: var(--color-secondary);
+		color: white;
 		margin-bottom: 2rem;
 		text-transform: uppercase;
 		letter-spacing: 0.05em;

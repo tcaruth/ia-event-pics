@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 test.describe('Root Page', () => {
 	test('root page loads and displays welcome message', async ({ page }) => {
 		await page.goto('/');
-		await expect(page.locator('h1')).toContainText('Welcome to IA Event Pics');
+		await expect(page.locator('h1')).toContainText('Capture the Joy at Your Next Event');
 	});
 });
 
@@ -24,7 +24,9 @@ test.describe('Gallery Page', () => {
 	test('gallery displays images', async ({ page }) => {
 		await page.goto(`/${slug}`);
 		// Check that the gallery container exists
-		await expect(page.locator('.gallery')).toBeVisible();
+		await page.waitForSelector('.gallery-item');
+		const count = await page.locator('.gallery-item').count();
+		expect(count).toBeGreaterThanOrEqual(4);
 	});
 });
 

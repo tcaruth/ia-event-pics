@@ -59,11 +59,11 @@ import groq from 'groq';
  * @returns {Promise<EventData | null>}
  */
 async function getEvent(slug, showAllImages = false) {
-	if (!slug) {
-		return null;
-	}
+    if (!slug) {
+        return null;
+    }
 
-	const query = groq`*[_type == "event" && slug.current == $slug][0]{
+    const query = groq`*[_type == "event" && slug.current == $slug][0]{
         title,
         description,
         "name": title,
@@ -86,14 +86,14 @@ async function getEvent(slug, showAllImages = false) {
         }
     }`;
 
-	try {
-		const event = await client.fetch(query, { slug: slug, showAllImages: showAllImages });
+    try {
+        const event = await client.fetch(query, { slug: slug, showAllImages: showAllImages });
 
-		return event;
-	} catch (error) {
-		console.error('Error fetching event from Sanity:', error);
-		return null;
-	}
+        return event;
+    } catch (error) {
+        console.error('Error fetching event from Sanity:', error);
+        return null;
+    }
 }
 
 /**

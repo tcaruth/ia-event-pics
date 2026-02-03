@@ -5,7 +5,6 @@ This script serves as the master controller for the photobooth. It manages the s
 ## Prerequisites
 
 1. **Node.js**: Requires Node.js 18+.
-
    ```bash
    nvm install 18 && nvm use 18
    ```
@@ -22,7 +21,7 @@ This script serves as the master controller for the photobooth. It manages the s
    npm install
    chmod +x start.sh
    ```
-   _Note: Edit `start.sh` to ensure the `--photobooth` name and directories match your specific setup._
+   *Note: Edit `start.sh` to ensure the `--photobooth` name and directories match your specific setup.*
 3. Create a `.env` file:
    ```env
    SANITY_PROJECT_ID=your_id
@@ -39,7 +38,6 @@ node sanity-uploader.js --dir <photo_dir> [--event <slug> | --photobooth <name>]
 ```
 
 ### Arguments
-
 - `--dir`: Directory to watch for new photos (e.g., `/home/pi/Pictures/pibooth`).
 - `--photobooth`: (Recommended) Name of the photobooth document in Sanity. The script will look up the active event dynamically.
 - `--event`: (Manual Override) Directly specify event slug.
@@ -72,7 +70,6 @@ WantedBy=multi-user.target
 ```
 
 Enable it:
-
 ```bash
 sudo systemctl enable photobooth
 sudo systemctl start photobooth
@@ -92,13 +89,10 @@ sudo systemctl start photobooth
 ## Troubleshooting
 
 ### EAI_AGAIN / DNS Issues
-
 If you see `EAI_AGAIN` errors in the logs, it means the Pi is having trouble resolving the Sanity API address. This is usually transient. The updated `sanity-uploader.js` includes a robust check that waits for this to clear before proceeding.
 
 ### Video system not initialized (PyGame)
-
 This usually happens if the `photobooth` service is running in an environment without access to the X server. Ensure `DISPLAY=:0` and `XAUTHORITY` are correctly set in both `start.sh` and the `systemd` service file.
 
 ### Service Failures not Restarting
-
 If the script crashes but `systemctl status` shows it as "Succeeded", check your `start.sh`. Ensure it uses `set -e` and `set -o pipefail` so that pipe operations (like logging to `tee`) don't mask exit codes.
