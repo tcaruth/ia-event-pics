@@ -39,29 +39,51 @@ describe('events.server.js', () => {
 			const event = await getEvent('non-existent');
 			expect(event).toBeNull();
 		});
-		it('filters pibooth images when admin is false', async () => {
+		it('filters pibooth images via GROQ query when admin is false', async () => {
 			const mockEvent = {
 				title: 'Test Event',
-				images: [{ name: 'photo1.jpg' }, { name: 'pibooth-capture.jpg' }, { name: 'photo2.jpg' }]
+				// Mock what the DB would return (filtered list)
+				images: [{ name: 'photo1.jpg' }, { name: 'photo2.jpg' }]
 			};
 			client.fetch.mockResolvedValue(mockEvent);
 
 			const event = await getEvent('test-event', false);
+
+			// Verify correct params passed to Sanity
+			expect(client.fetch).toHaveBeenCalledWith(
+				expect.stringContaining('gallery[$showAllImages == true'),
+				expect.objectContaining({
+					slug: 'test-event',
+					showAllImages: false
+				})
+			);
+
+			// Verify result passes through
 			expect(event.images).toHaveLength(2);
 			expect(event.images.map((i) => i.name)).not.toContain('pibooth-capture.jpg');
 		});
 
-		it('shows all images when admin is true', async () => {
+		it('requests all images via GROQ query when admin is true', async () => {
 			const mockEvent = {
 				title: 'Test Event',
 				images: [{ name: 'photo1.jpg' }, { name: 'pibooth-capture.jpg' }]
 			};
 			client.fetch.mockResolvedValue(mockEvent);
 
-            const event = await getEvent('test-event', true);
-            expect(event.images).toHaveLength(2);
-            expect(event.images.map(i => i.name)).toContain('pibooth-capture.jpg');
-        });
+			const event = await getEvent('test-event', true);
+
+			// Verify correct params passed to Sanity
+			expect(client.fetch).toHaveBeenCalledWith(
+				expect.stringContaining('gallery[$showAllImages == true'),
+				expect.objectContaining({
+					slug: 'test-event',
+					showAllImages: true
+				})
+			);
+
+			expect(event.images).toHaveLength(2);
+			expect(event.images.map((i) => i.name)).toContain('pibooth-capture.jpg');
+		});
     });
 
     describe('getEventPassword', () => {
