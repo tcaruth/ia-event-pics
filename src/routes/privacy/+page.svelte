@@ -10,7 +10,7 @@
     </a>
 
     <h1 class="title">Privacy Policy</h1>
-    <p class="last-updated">Last Updated: May 2024</p>
+    <p class="last-updated">Last Updated: January 2026</p>
 
     <div class="content">
       <p>At IA Event Pics, we take your privacy seriously. This policy describes how we collect, use, and protect your personal information.</p>
