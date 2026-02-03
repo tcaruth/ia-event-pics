@@ -103,4 +103,25 @@ async function getEvent(slug, showAllImages = false) {
 	}
 }
 
-export { getEvent };
+/**
+ * @param {string} slug
+ * @returns {Promise<{ adminPassword?: string } | null>}
+ */
+async function getEventPassword(slug) {
+    if (!slug) {
+        return null;
+    }
+
+    const query = groq`*[_type == "event" && slug.current == $slug][0]{
+        adminPassword
+    }`;
+
+    try {
+        return await client.fetch(query, { slug: slug });
+    } catch (error) {
+        console.error('Error fetching event password from Sanity:', error);
+        return null;
+    }
+}
+
+export { getEvent, getEventPassword };
