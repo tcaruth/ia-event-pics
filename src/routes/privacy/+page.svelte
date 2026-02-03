@@ -28,7 +28,7 @@
       <p>We implement reasonable security measures to protect your information from unauthorized access.</p>
 
       <h2>5. Contact Us</h2>
-      <p>If you have any questions about this Privacy Policy, please contact us at hello@iaeventpics.com.</p>
+      <p>If you have any questions about this Privacy Policy, please contact us at us@smilewhale.com</p>
     </div>
   </div>
 </section>
