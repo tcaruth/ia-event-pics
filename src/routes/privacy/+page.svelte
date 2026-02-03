@@ -10,7 +10,7 @@
     </a>
 
     <h1 class="title">Privacy Policy</h1>
-    <p class="last-updated">Last Updated: January 2026</p>
+    <p class="last-updated">Last Updated: May 2024</p>
 
     <div class="content">
       <p>At IA Event Pics, we take your privacy seriously. This policy describes how we collect, use, and protect your personal information.</p>
@@ -19,7 +19,7 @@
       <p>We collect information you provide directly to us when you book a rental, such as your name, email address, phone number, and event details.</p>
 
       <h2>2. Event Photos</h2>
-      <p>Photos captured during your event are uploaded to a public gallery protected by a passphrase as requested. Guests or other users with the passphrase can view and download photos from these galleries.</p>
+      <p>Photos captured during your event are uploaded to a private or public gallery as requested. Guests can view and download photos from these galleries.</p>
 
       <h2>3. How We Use Information</h2>
       <p>We use your information to provide our services, process payments, and communicate with you about your event.</p>
@@ -28,7 +28,7 @@
       <p>We implement reasonable security measures to protect your information from unauthorized access.</p>
 
       <h2>5. Contact Us</h2>
-      <p>If you have any questions about this Privacy Policy, please contact us at us@smilewhale.com</p>
+      <p>If you have any questions about this Privacy Policy, please contact us at hello@iaeventpics.com.</p>
     </div>
   </div>
 </section>
