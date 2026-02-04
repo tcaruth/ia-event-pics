@@ -114,31 +114,14 @@ async function downloadImage(url, destPath) {
     const buffer = Buffer.from(arrayBuffer);
     fs.writeFileSync(destPath, buffer);
     console.log(`Downloaded image to ${destPath}`);
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`Failed to download image: ${res.statusText}`);
-    const arrayBuffer = await res.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    fs.writeFileSync(destPath, buffer);
-    console.log(`Downloaded image to ${destPath}`);
 }
 
 function hexToRgbTuple(hex) {
     const rgb = tinycolor(hex).toRgb();
     return `(${rgb.r}, ${rgb.g}, ${rgb.b})`;
-    const rgb = tinycolor(hex).toRgb();
-    return `(${rgb.r}, ${rgb.g}, ${rgb.b})`;
 }
 
 async function checkNetwork() {
-    return new Promise((resolve) => {
-        dns.lookup('2i1qgrlb.api.sanity.io', (err) => {
-            if (err) {
-                resolve(false);
-            } else {
-                resolve(true);
-            }
-        });
-    });
     return new Promise((resolve) => {
         dns.lookup('2i1qgrlb.api.sanity.io', (err) => {
             if (err) {
@@ -162,53 +145,30 @@ async function waitForNetwork() {
 async function updatePiboothConfig(baseConfig, configPath, event) {
     try {
         console.log(`Updating Pibooth config at ${configPath}...`);
-        try {
-            console.log(`Updating Pibooth config at ${configPath}...`);
 
-            let config = {};
-            if (fs.existsSync(baseConfig)) {
-                config = ini.parse(fs.readFileSync(baseConfig, 'utf-8'));
-            }
-            let config = {};
-            if (fs.existsSync(baseConfig)) {
-                config = ini.parse(fs.readFileSync(baseConfig, 'utf-8'));
-            }
+        let config = {};
+        if (fs.existsSync(baseConfig)) {
+            config = ini.parse(fs.readFileSync(baseConfig, 'utf-8'));
+        }
 
-            // Ensure sections exist
-            if (!config.WINDOW) config.WINDOW = {};
-            if (!config.PICTURE) config.PICTURE = {};
-            if (!config.QRCODE) config.QRCODE = {};
-            if (!config.CAMERA) config.CAMERA = {};
-            // Ensure sections exist
-            if (!config.WINDOW) config.WINDOW = {};
-            if (!config.PICTURE) config.PICTURE = {};
-            if (!config.QRCODE) config.QRCODE = {};
-            if (!config.CAMERA) config.CAMERA = {};
+        // Ensure sections exist
+        if (!config.WINDOW) config.WINDOW = {};
+        if (!config.PICTURE) config.PICTURE = {};
+        if (!config.QRCODE) config.QRCODE = {};
+        if (!config.CAMERA) config.CAMERA = {};
 
-            // Sync Colors
-            if (event.colors) {
-                console.log('Syncing window colors from Sanity...');
-
-                // Window Text -> Surface Text
-                if (event.colors.surfaceText) {
-                    config.WINDOW.text_color = hexToRgbTuple(event.colors.surfaceText);
-                }
-                // Window Background -> Surface
-                if (event.colors.surface) {
-                    config.WINDOW.background = hexToRgbTuple(event.colors.surface);
-                }
-            }
-            // Window Text -> Surface Text
+        // Sync Colors
+        if (event.colors) {
+            console.log('Syncing window colors from Sanity...');
             if (event.colors.surfaceText) {
                 config.WINDOW.text_color = hexToRgbTuple(event.colors.surfaceText);
             }
-            // Window Background -> Surface
             if (event.colors.surface) {
                 config.WINDOW.background = hexToRgbTuple(event.colors.surface);
             }
         }
 
-        //  ~/Pictures/pibooth/current_overlay.png
+        // Sync Overlay
         const overlayPath = path.resolve(path.dirname(configPath), 'current_overlay.png');
         if (event.overlay?.asset?.url) {
             console.log("Downloading overlay...");
@@ -217,21 +177,22 @@ async function updatePiboothConfig(baseConfig, configPath, event) {
                 config.PICTURE.overlays = overlayPath;
                 console.log(`Setting [PICTURE] overlays = ${overlayPath}`);
             } catch (err) {
-                console.error(`Failed to download overlay: ${err.message}`); config.PICTURE.overlays = "";
+                console.error(`Failed to download overlay: ${err.message}`);
+                config.PICTURE.overlays = "";
             }
         } else {
             console.log("No overlay found for event. Disabling overlay.");
             config.PICTURE.overlays = "";
         }
 
-        // captures
+        // Sync Captures
         if (event.captures) {
             console.log("Syncing captures from Sanity...");
             config.PICTURE.captures = `(${event.captures.join(',')})`;
             console.log(`Setting [PICTURE] captures = ${event.captures.join(',')}`);
         }
 
-        // template
+        // Sync Template
         const templatePath = path.resolve(path.dirname(configPath), 'picture_template.xml');
         if (event.template?.asset?.url) {
             console.log("Downloading template...");
@@ -240,45 +201,22 @@ async function updatePiboothConfig(baseConfig, configPath, event) {
                 config.PICTURE.template = templatePath;
                 console.log(`Setting [PICTURE] template = ${templatePath}`);
             } catch (err) {
-                console.error(`Failed to download template: ${err.message}`); config.PICTURE.template = "";
+                console.error(`Failed to download template: ${err.message}`);
+                config.PICTURE.template = "";
             }
         } else {
             console.log("No template found for event. Disabling template.");
             config.PICTURE.template = "";
         }
-        //  ~/Pictures/pibooth/current_overlay.png
-        const overlayPath = path.resolve(path.dirname(configPath), 'current_overlay.png');
-        if (event.overlay && event.overlay.asset && event.overlay.asset.url) {
-            console.log('Downloading overlay...');
-            try {
-                await downloadImage(event.overlay.asset.url, overlayPath);
-                config.PICTURE.overlays = overlayPath;
-                console.log(`Setting [PICTURE] overlays = ${overlayPath}`);
-            } catch (err) {
-                console.error(`Failed to download overlay: ${err.message}`);
-                config.PICTURE.overlays = '';
-            }
-        } else {
-            console.log('No overlay found for event. Disabling overlay.');
-            config.PICTURE.overlays = '';
-        }
 
+        // Sync QR Code
         config.QRCODE.prefix_url = `https://iaevent.pics/${event.slug.current}/{picture}`;
-        config.QRCODE.prefix_url = `https://iaevent.pics/${event.slug.current}/{picture}`;
-
-        // config.CAMERA.delete_internal_memory = true
-        // config.CAMERA.delete_internal_memory = true
 
         fs.writeFileSync(configPath, ini.stringify(config));
         console.log('Pibooth config updated successfully.');
     } catch (err) {
         console.error(`Warning: Failed to update pibooth config: ${err.message}`);
     }
-    fs.writeFileSync(configPath, ini.stringify(config));
-    console.log('Pibooth config updated successfully.');
-} catch (err) {
-    console.error(`Warning: Failed to update pibooth config: ${err.message}`);
-}
 }
 
 // --- Initialization Logic ---
@@ -286,8 +224,6 @@ async function updatePiboothConfig(baseConfig, configPath, event) {
 let currentEvent = null;
 
 async function initialize() {
-    // 1. Wait for Network
-    await waitForNetwork();
     // 1. Wait for Network
     await waitForNetwork();
 
@@ -308,33 +244,16 @@ async function initialize() {
     } else {
         console.log(`Target Event: ${eventSlug}`);
     }
-    if (!booth || !booth.activeEvent || !booth.activeEvent.slug) {
-        console.error(`Error: Photobooth "${photoboothName}" not found or has no active event.`);
+
+    // 3. Fetch Event Details
+    currentEvent = await getEventDetails(eventSlug);
+    if (!currentEvent) {
+        console.error(`Error: Event "${eventSlug}" not found in Sanity.`);
         process.exit(1);
     }
-    eventSlug = booth.activeEvent.slug.current;
-    console.log(`Resolved Event Slug: ${eventSlug}`);
-} else {
-    console.log(`Target Event: ${eventSlug}`);
-}
 
-// 2. Fetch Event Details
-currentEvent = await getEventDetails(eventSlug);
-if (!currentEvent) {
-    console.error(`Error: Event "${eventSlug}" not found in Sanity.`);
-    process.exit(1);
-}
-// 2. Fetch Event Details
-currentEvent = await getEventDetails(eventSlug);
-if (!currentEvent) {
-    console.error(`Error: Event "${eventSlug}" not found in Sanity.`);
-    process.exit(1);
-}
-
-// 3. Update Config
-await updatePiboothConfig(baseConfig, configPath, currentEvent);
-// 3. Update Config
-await updatePiboothConfig(baseConfig, configPath, currentEvent);
+    // 4. Update Config
+    await updatePiboothConfig(baseConfig, configPath, currentEvent);
 }
 
 // Prepare before watching
@@ -344,26 +263,16 @@ console.log("Starting Pibooth application...");
 const pibooth = spawn('pibooth', [], {
     stdio: 'inherit',
     detached: true,
-    cwd: os.homedir() // Good practice to run from home
-    stdio: 'inherit',
-    detached: true,
-    cwd: os.homedir() // Good practice to run from home
+    cwd: os.homedir()
 });
-pibooth.unref(); // Allow script to continue and exit independently if needed (though we want to keep watching)
+pibooth.unref();
 console.log(`Pibooth started (PID: ${pibooth.pid})`);
 
 // Watch for NEW files
 const watcher = chokidar.watch(watchDir, {
-    ignored: /(^|[\/\\])\../, // ignore dotfiles
+    ignored: /(^|[\/\\])\../,
     persistent: true,
-    ignoreInitial: true, // Don't upload existing files on start
-    awaitWriteFinish: {
-        stabilityThreshold: 2000,
-        pollInterval: 100
-    }
-    ignored: /(^|[\/\\])\../, // ignore dotfiles
-    persistent: true,
-    ignoreInitial: true, // Don't upload existing files on start
+    ignoreInitial: true,
     awaitWriteFinish: {
         stabilityThreshold: 2000,
         pollInterval: 100
@@ -372,18 +281,12 @@ const watcher = chokidar.watch(watchDir, {
 
 watcher.on('add', async (filePath) => {
     const fileName = path.basename(filePath);
-    const fileName = path.basename(filePath);
 
     // Basic image check
     if (!/\.(jpg|jpeg|png|webp)$/i.test(fileName)) {
         return;
     }
-    // Basic image check
-    if (!/\.(jpg|jpeg|png|webp)$/i.test(fileName)) {
-        return;
-    }
 
-    console.log(`New file detected: ${fileName}. Uploading...`);
     console.log(`New file detected: ${fileName}. Uploading...`);
 
     try {
@@ -391,58 +294,32 @@ watcher.on('add', async (filePath) => {
         const asset = await client.assets.upload('image', fs.createReadStream(filePath), {
             filename: fileName
         });
-        try {
-            // 1. Upload the image asset
-            const asset = await client.assets.upload('image', fs.createReadStream(filePath), {
-                filename: fileName
-            });
 
-            console.log(`Asset uploaded: ${asset._id}. Finding event...`);
-            console.log(`Asset uploaded: ${asset._id}. Finding event...`);
+        console.log(`Asset uploaded: ${asset._id}. Finding event...`);
 
-            // 2. Use the already fetched event ID (avoids re-fetching)
-            if (!currentEvent || !currentEvent._id) {
-                console.error('Error: Current event check failed.');
-                return;
-            }
-
-            // 3. Append to the gallery array
-            await client
-                .patch(currentEvent._id)
-                .setIfMissing({ gallery: [] })
-                .append('gallery', [
-                    {
-                        _type: 'image',
-                        _key: Math.random().toString(36).substring(2, 9), // Simple unique key
-                        asset: {
-                            _type: 'reference',
-                            _ref: asset._id
-                        },
-                        created: new Date().toISOString()
-                    }
-                ])
-                .commit();
-            // 3. Append to the gallery array
-            await client
-                .patch(currentEvent._id)
-                .setIfMissing({ gallery: [] })
-                .append('gallery', [
-                    {
-                        _type: 'image',
-                        _key: Math.random().toString(36).substring(2, 9), // Simple unique key
-                        asset: {
-                            _type: 'reference',
-                            _ref: asset._id
-                        },
-                        created: new Date().toISOString()
-                    }
-                ])
-                .commit();
-
-            console.log(`Successfully added ${fileName} to event "${eventSlug}"`);
-        } catch (error) {
-            console.error(`Failed to upload ${fileName}:`, error.message);
+        // 2. Use the already fetched event ID
+        if (!currentEvent || !currentEvent._id) {
+            console.error('Error: Current event check failed.');
+            return;
         }
+
+        // 3. Append to the gallery array
+        await client
+            .patch(currentEvent._id)
+            .setIfMissing({ gallery: [] })
+            .append('gallery', [
+                {
+                    _type: 'image',
+                    _key: Math.random().toString(36).substring(2, 9),
+                    asset: {
+                        _type: 'reference',
+                        _ref: asset._id
+                    },
+                    created: new Date().toISOString()
+                }
+            ])
+            .commit();
+
         console.log(`Successfully added ${fileName} to event "${eventSlug}"`);
     } catch (error) {
         console.error(`Failed to upload ${fileName}:`, error.message);
@@ -450,8 +327,6 @@ watcher.on('add', async (filePath) => {
 });
 
 process.on('SIGINT', () => {
-    watcher.close();
-    process.exit(0);
     watcher.close();
     process.exit(0);
 });
