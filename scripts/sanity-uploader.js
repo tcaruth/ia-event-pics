@@ -31,7 +31,9 @@ const {
 } = process.env;
 
 if (!SANITY_PROJECT_ID || !SANITY_DATASET || !SANITY_API_TOKEN) {
-    console.error('Error: SANITY_PROJECT_ID, SANITY_DATASET, and SANITY_API_TOKEN must be set in .env');
+    console.error(
+        'Error: SANITY_PROJECT_ID, SANITY_DATASET, and SANITY_API_TOKEN must be set in .env'
+    );
     process.exit(1);
 }
 
@@ -40,7 +42,7 @@ const client = createClient({
     dataset: SANITY_DATASET,
     token: SANITY_API_TOKEN,
     useCdn: false,
-    apiVersion: '2023-05-03',
+    apiVersion: '2023-05-03'
 });
 
 // Parse CLI arguments
@@ -52,7 +54,9 @@ const configPath = args.config || path.join(os.homedir(), '.config/pibooth/piboo
 const baseConfig = path.join(process.cwd(), 'base.cfg');
 
 if (!watchDir || (!eventSlug && !photoboothName)) {
-    console.error('Usage: node sanity-uploader.js --dir <directory> [--event <event-slug> | --photobooth <booth-name>] [--config <pibooth-cfg>]');
+    console.error(
+        'Usage: node sanity-uploader.js --dir <directory> [--event <event-slug> | --photobooth <booth-name>] [--config <pibooth-cfg>]'
+    );
     process.exit(1);
 }
 
@@ -60,20 +64,47 @@ console.log(`Starting watcher on: ${path.resolve(watchDir)}`);
 
 // --- Helper Functions ---
 
+/**
+ * Get event details from Sanity
+ * @param {string} slug - Event slug
+ * @returns {Promise<{
+ *  _id: string,
+ *  title: string,
+ *  date: string,
+ *  location: string,
+ *  slug: string,
+ *  colors: {
+ *      surfaceText: string,
+ *      surface: string
+ *  },
+ *  template: string,
+ *  captures: number[],
+ *  overlay: {
+ *      asset: {
+ *          url: string
+ *      }
+ *  }
+ * }>} Event details
+ */
 async function getEventDetails(slug) {
-    return client.fetch(`*[_type == "event" && slug.current == $slug][0]{
+    return client.fetch(
+        `*[_type == "event" && slug.current == $slug][0]{
         _id,
         title,
         date,
         location,
         slug,
         colors,
+        template,
+        captures,
         overlay {
             asset->{
                 url
             }
         }
-    }`, { slug });
+    }`,
+        { slug }
+    );
 }
 
 async function downloadImage(url, destPath) {
@@ -83,9 +114,17 @@ async function downloadImage(url, destPath) {
     const buffer = Buffer.from(arrayBuffer);
     fs.writeFileSync(destPath, buffer);
     console.log(`Downloaded image to ${destPath}`);
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Failed to download image: ${res.statusText}`);
+    const arrayBuffer = await res.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    fs.writeFileSync(destPath, buffer);
+    console.log(`Downloaded image to ${destPath}`);
 }
 
 function hexToRgbTuple(hex) {
+    const rgb = tinycolor(hex).toRgb();
+    return `(${rgb.r}, ${rgb.g}, ${rgb.b})`;
     const rgb = tinycolor(hex).toRgb();
     return `(${rgb.r}, ${rgb.g}, ${rgb.b})`;
 }
@@ -100,36 +139,65 @@ async function checkNetwork() {
             }
         });
     });
+    return new Promise((resolve) => {
+        dns.lookup('2i1qgrlb.api.sanity.io', (err) => {
+            if (err) {
+                resolve(false);
+            } else {
+                resolve(true);
+            }
+        });
+    });
 }
 
 async function waitForNetwork() {
-    console.log("Checking network connection...");
+    console.log('Checking network connection...');
     while (!(await checkNetwork())) {
-        console.log("Network unavailable. Retrying in 10 seconds...");
-        await new Promise(resolve => setTimeout(resolve, 10000));
+        console.log('Network unavailable. Retrying in 10 seconds...');
+        await new Promise((resolve) => setTimeout(resolve, 10000));
     }
-    console.log("Network connected!");
+    console.log('Network connected!');
 }
 
 async function updatePiboothConfig(baseConfig, configPath, event) {
     try {
         console.log(`Updating Pibooth config at ${configPath}...`);
+        try {
+            console.log(`Updating Pibooth config at ${configPath}...`);
 
-        let config = {};
-        if (fs.existsSync(baseConfig)) {
-            config = ini.parse(fs.readFileSync(baseConfig, 'utf-8'));
-        }
+            let config = {};
+            if (fs.existsSync(baseConfig)) {
+                config = ini.parse(fs.readFileSync(baseConfig, 'utf-8'));
+            }
+            let config = {};
+            if (fs.existsSync(baseConfig)) {
+                config = ini.parse(fs.readFileSync(baseConfig, 'utf-8'));
+            }
 
-        // Ensure sections exist
-        if (!config.WINDOW) config.WINDOW = {};
-        if (!config.PICTURE) config.PICTURE = {};
-        if (!config.QRCODE) config.QRCODE = {};
-        if (!config.CAMERA) config.CAMERA = {};
+            // Ensure sections exist
+            if (!config.WINDOW) config.WINDOW = {};
+            if (!config.PICTURE) config.PICTURE = {};
+            if (!config.QRCODE) config.QRCODE = {};
+            if (!config.CAMERA) config.CAMERA = {};
+            // Ensure sections exist
+            if (!config.WINDOW) config.WINDOW = {};
+            if (!config.PICTURE) config.PICTURE = {};
+            if (!config.QRCODE) config.QRCODE = {};
+            if (!config.CAMERA) config.CAMERA = {};
 
-        // Sync Colors
-        if (event.colors) {
-            console.log("Syncing window colors from Sanity...");
+            // Sync Colors
+            if (event.colors) {
+                console.log('Syncing window colors from Sanity...');
 
+                // Window Text -> Surface Text
+                if (event.colors.surfaceText) {
+                    config.WINDOW.text_color = hexToRgbTuple(event.colors.surfaceText);
+                }
+                // Window Background -> Surface
+                if (event.colors.surface) {
+                    config.WINDOW.background = hexToRgbTuple(event.colors.surface);
+                }
+            }
             // Window Text -> Surface Text
             if (event.colors.surfaceText) {
                 config.WINDOW.text_color = hexToRgbTuple(event.colors.surfaceText);
@@ -142,7 +210,7 @@ async function updatePiboothConfig(baseConfig, configPath, event) {
 
         //  ~/Pictures/pibooth/current_overlay.png
         const overlayPath = path.resolve(path.dirname(configPath), 'current_overlay.png');
-        if (event.overlay && event.overlay.asset && event.overlay.asset.url) {
+        if (event.overlay?.asset?.url) {
             console.log("Downloading overlay...");
             try {
                 await downloadImage(event.overlay.asset.url, overlayPath);
@@ -156,8 +224,49 @@ async function updatePiboothConfig(baseConfig, configPath, event) {
             config.PICTURE.overlays = "";
         }
 
+        // captures
+        if (event.captures) {
+            console.log("Syncing captures from Sanity...");
+            config.PICTURE.captures = `(${event.captures.join(',')})`;
+            console.log(`Setting [PICTURE] captures = ${event.captures.join(',')}`);
+        }
+
+        // template
+        const templatePath = path.resolve(path.dirname(configPath), 'picture_template.xml');
+        if (event.template?.asset?.url) {
+            console.log("Downloading template...");
+            try {
+                await downloadImage(event.template.asset.url, templatePath);
+                config.PICTURE.template = templatePath;
+                console.log(`Setting [PICTURE] template = ${templatePath}`);
+            } catch (err) {
+                console.error(`Failed to download template: ${err.message}`); config.PICTURE.template = "";
+            }
+        } else {
+            console.log("No template found for event. Disabling template.");
+            config.PICTURE.template = "";
+        }
+        //  ~/Pictures/pibooth/current_overlay.png
+        const overlayPath = path.resolve(path.dirname(configPath), 'current_overlay.png');
+        if (event.overlay && event.overlay.asset && event.overlay.asset.url) {
+            console.log('Downloading overlay...');
+            try {
+                await downloadImage(event.overlay.asset.url, overlayPath);
+                config.PICTURE.overlays = overlayPath;
+                console.log(`Setting [PICTURE] overlays = ${overlayPath}`);
+            } catch (err) {
+                console.error(`Failed to download overlay: ${err.message}`);
+                config.PICTURE.overlays = '';
+            }
+        } else {
+            console.log('No overlay found for event. Disabling overlay.');
+            config.PICTURE.overlays = '';
+        }
+
+        config.QRCODE.prefix_url = `https://iaevent.pics/${event.slug.current}/{picture}`;
         config.QRCODE.prefix_url = `https://iaevent.pics/${event.slug.current}/{picture}`;
 
+        // config.CAMERA.delete_internal_memory = true
         // config.CAMERA.delete_internal_memory = true
 
         fs.writeFileSync(configPath, ini.stringify(config));
@@ -165,6 +274,11 @@ async function updatePiboothConfig(baseConfig, configPath, event) {
     } catch (err) {
         console.error(`Warning: Failed to update pibooth config: ${err.message}`);
     }
+    fs.writeFileSync(configPath, ini.stringify(config));
+    console.log('Pibooth config updated successfully.');
+} catch (err) {
+    console.error(`Warning: Failed to update pibooth config: ${err.message}`);
+}
 }
 
 // --- Initialization Logic ---
@@ -174,11 +288,16 @@ let currentEvent = null;
 async function initialize() {
     // 1. Wait for Network
     await waitForNetwork();
+    // 1. Wait for Network
+    await waitForNetwork();
 
     // 2. Resolve Slug
     if (!eventSlug && photoboothName) {
         console.log(`Looking up active event for photobooth: "${photoboothName}"...`);
-        const booth = await client.fetch(`*[_type == "photobooth" && name == $name][0]{ activeEvent->{slug} }`, { name: photoboothName });
+        const booth = await client.fetch(
+            `*[_type == "photobooth" && name == $name][0]{ activeEvent->{slug} }`,
+            { name: photoboothName }
+        );
 
         if (!booth || !booth.activeEvent || !booth.activeEvent.slug) {
             console.error(`Error: Photobooth "${photoboothName}" not found or has no active event.`);
@@ -189,16 +308,33 @@ async function initialize() {
     } else {
         console.log(`Target Event: ${eventSlug}`);
     }
-
-    // 2. Fetch Event Details
-    currentEvent = await getEventDetails(eventSlug);
-    if (!currentEvent) {
-        console.error(`Error: Event "${eventSlug}" not found in Sanity.`);
+    if (!booth || !booth.activeEvent || !booth.activeEvent.slug) {
+        console.error(`Error: Photobooth "${photoboothName}" not found or has no active event.`);
         process.exit(1);
     }
+    eventSlug = booth.activeEvent.slug.current;
+    console.log(`Resolved Event Slug: ${eventSlug}`);
+} else {
+    console.log(`Target Event: ${eventSlug}`);
+}
 
-    // 3. Update Config
-    await updatePiboothConfig(baseConfig, configPath, currentEvent);
+// 2. Fetch Event Details
+currentEvent = await getEventDetails(eventSlug);
+if (!currentEvent) {
+    console.error(`Error: Event "${eventSlug}" not found in Sanity.`);
+    process.exit(1);
+}
+// 2. Fetch Event Details
+currentEvent = await getEventDetails(eventSlug);
+if (!currentEvent) {
+    console.error(`Error: Event "${eventSlug}" not found in Sanity.`);
+    process.exit(1);
+}
+
+// 3. Update Config
+await updatePiboothConfig(baseConfig, configPath, currentEvent);
+// 3. Update Config
+await updatePiboothConfig(baseConfig, configPath, currentEvent);
 }
 
 // Prepare before watching
@@ -206,6 +342,9 @@ await initialize();
 
 console.log("Starting Pibooth application...");
 const pibooth = spawn('pibooth', [], {
+    stdio: 'inherit',
+    detached: true,
+    cwd: os.homedir() // Good practice to run from home
     stdio: 'inherit',
     detached: true,
     cwd: os.homedir() // Good practice to run from home
@@ -222,16 +361,29 @@ const watcher = chokidar.watch(watchDir, {
         stabilityThreshold: 2000,
         pollInterval: 100
     }
+    ignored: /(^|[\/\\])\../, // ignore dotfiles
+    persistent: true,
+    ignoreInitial: true, // Don't upload existing files on start
+    awaitWriteFinish: {
+        stabilityThreshold: 2000,
+        pollInterval: 100
+    }
 });
 
 watcher.on('add', async (filePath) => {
+    const fileName = path.basename(filePath);
     const fileName = path.basename(filePath);
 
     // Basic image check
     if (!/\.(jpg|jpeg|png|webp)$/i.test(fileName)) {
         return;
     }
+    // Basic image check
+    if (!/\.(jpg|jpeg|png|webp)$/i.test(fileName)) {
+        return;
+    }
 
+    console.log(`New file detected: ${fileName}. Uploading...`);
     console.log(`New file detected: ${fileName}. Uploading...`);
 
     try {
@@ -239,32 +391,58 @@ watcher.on('add', async (filePath) => {
         const asset = await client.assets.upload('image', fs.createReadStream(filePath), {
             filename: fileName
         });
+        try {
+            // 1. Upload the image asset
+            const asset = await client.assets.upload('image', fs.createReadStream(filePath), {
+                filename: fileName
+            });
 
-        console.log(`Asset uploaded: ${asset._id}. Finding event...`);
+            console.log(`Asset uploaded: ${asset._id}. Finding event...`);
+            console.log(`Asset uploaded: ${asset._id}. Finding event...`);
 
-        // 2. Use the already fetched event ID (avoids re-fetching)
-        if (!currentEvent || !currentEvent._id) {
-            console.error("Error: Current event check failed.");
-            return;
+            // 2. Use the already fetched event ID (avoids re-fetching)
+            if (!currentEvent || !currentEvent._id) {
+                console.error('Error: Current event check failed.');
+                return;
+            }
+
+            // 3. Append to the gallery array
+            await client
+                .patch(currentEvent._id)
+                .setIfMissing({ gallery: [] })
+                .append('gallery', [
+                    {
+                        _type: 'image',
+                        _key: Math.random().toString(36).substring(2, 9), // Simple unique key
+                        asset: {
+                            _type: 'reference',
+                            _ref: asset._id
+                        },
+                        created: new Date().toISOString()
+                    }
+                ])
+                .commit();
+            // 3. Append to the gallery array
+            await client
+                .patch(currentEvent._id)
+                .setIfMissing({ gallery: [] })
+                .append('gallery', [
+                    {
+                        _type: 'image',
+                        _key: Math.random().toString(36).substring(2, 9), // Simple unique key
+                        asset: {
+                            _type: 'reference',
+                            _ref: asset._id
+                        },
+                        created: new Date().toISOString()
+                    }
+                ])
+                .commit();
+
+            console.log(`Successfully added ${fileName} to event "${eventSlug}"`);
+        } catch (error) {
+            console.error(`Failed to upload ${fileName}:`, error.message);
         }
-
-        // 3. Append to the gallery array
-        await client
-            .patch(currentEvent._id)
-            .setIfMissing({ gallery: [] })
-            .append('gallery', [
-                {
-                    _type: 'image',
-                    _key: Math.random().toString(36).substring(2, 9), // Simple unique key
-                    asset: {
-                        _type: 'reference',
-                        _ref: asset._id
-                    },
-                    created: new Date().toISOString()
-                }
-            ])
-            .commit();
-
         console.log(`Successfully added ${fileName} to event "${eventSlug}"`);
     } catch (error) {
         console.error(`Failed to upload ${fileName}:`, error.message);
@@ -272,6 +450,8 @@ watcher.on('add', async (filePath) => {
 });
 
 process.on('SIGINT', () => {
+    watcher.close();
+    process.exit(0);
     watcher.close();
     process.exit(0);
 });
