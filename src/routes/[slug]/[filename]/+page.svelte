@@ -230,6 +230,7 @@
 		background: transparent;
 		color: var(--text-surface-primary);
 		transition: var(--transition-base);
+		cursor: pointer;
 	}
 
 	.action-btn.primary {
