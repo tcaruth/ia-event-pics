@@ -74,7 +74,7 @@ async function getEvent(slug, showAllImages = false) {
         fonts,
         colors,
         theme,
-        "images": gallery[$showAllImages == true || !defined(asset->originalFilename) || !(asset->originalFilename match "*pibooth*")]{
+        "images": gallery[$showAllImages == true || !defined(asset->originalFilename) || !(asset->originalFilename match "pibooth*")]{
             "url": asset->url,
             "created": coalesce(created, _createdAt), 
             "key": _key,
