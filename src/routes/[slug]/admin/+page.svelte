@@ -390,6 +390,7 @@
 		width: 90%;
 		background: var(--surface-primary);
 		color: var(--text-surface-primary);
+		place-self: center;
 	}
 
 	.confirm-dialog::backdrop {
