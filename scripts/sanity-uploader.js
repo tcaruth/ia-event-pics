@@ -95,13 +95,9 @@ async function getEventDetails(slug) {
         location,
         slug,
         colors,
-        template,
+        "templateURL": template.asset->url,
         captures,
-        overlay {
-            asset->{
-                url
-            }
-        }
+        "overlayURL": overlay.asset->url
     }`,
         { slug }
     );
@@ -170,10 +166,12 @@ async function updatePiboothConfig(baseConfig, configPath, event) {
 
         // Sync Overlay
         const overlayPath = path.resolve(path.dirname(configPath), 'current_overlay.png');
-        if (event.overlay?.asset?.url) {
+        console.log({ overlay: event.overlayURL })
+
+        if (event.overlayURL) {
             console.log("Downloading overlay...");
             try {
-                await downloadImage(event.overlay.asset.url, overlayPath);
+                await downloadImage(`${event.overlayURL}?dl=current_overlay.png`, overlayPath);
                 config.PICTURE.overlays = overlayPath;
                 console.log(`Setting [PICTURE] overlays = ${overlayPath}`);
             } catch (err) {
@@ -194,10 +192,11 @@ async function updatePiboothConfig(baseConfig, configPath, event) {
 
         // Sync Template
         const templatePath = path.resolve(path.dirname(configPath), 'picture_template.xml');
-        if (event.template?.asset?.url) {
+        console.log({ template: event.templateURL })
+        if (event.templateURL) {
             console.log("Downloading template...");
             try {
-                await downloadImage(event.template.asset.url, templatePath);
+                await downloadImage(`${event.templateURL}?dl=picture_template.xml`, templatePath);
                 config.PICTURE.template = templatePath;
                 console.log(`Setting [PICTURE] template = ${templatePath}`);
             } catch (err) {
