@@ -1,5 +1,6 @@
 <script>
   import { theme } from '$lib/stores.js';
+  import { BOOKING_MAILTO_URL } from './config.js';
 
   function toggleTheme() {
     theme.update(current => (current === 'light' ? 'dark' : 'light'));
@@ -22,7 +23,7 @@
         <span class="material-symbols-outlined light-icon">dark_mode</span>
         <span class="material-symbols-outlined dark-icon">light_mode</span>
       </button>
-      <a href="mailto:us@smilewhale.com?subject=Photobooth Booking Inquiry&body=Hi!%0A%0AName:%20%0AEvent%20Date:%20%0A%0APlease%20contact%20me%20regarding%20booking%20a%20photobooth.%0A%0AYou%20can%20reach%20me%20at:%0AEmail:%20%0APhone:%20" class="button-primary">Book Now</a>
+      <a href={BOOKING_MAILTO_URL} class="button-primary">Book Now</a>
     </div>
   </div>
 </nav>
