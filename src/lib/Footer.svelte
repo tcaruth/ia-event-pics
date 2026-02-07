@@ -36,7 +36,7 @@
         <li><a href="#pricing">Pricing Details</a></li>
         <li><a href="#gallery">Event Gallery</a></li>
         <li><a href="#find">Find Photos</a></li>
-        <li><a href="mailto:us@smilewhale.com">Booking Form</a></li>
+        <li><a href="mailto:us@smilewhale.com">Book Now</a></li>
       </ul>
     </div>
     <div>
