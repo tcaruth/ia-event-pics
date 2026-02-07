@@ -10,7 +10,7 @@
 				service for memories that last a lifetime.
 			</p>
 			<div class="actions">
-				<a href="mailto:us@smilewhale.com" class="button-primary">Book Your Date</a>
+				<a href="mailto:us@smilewhale.com?subject=Photobooth Booking Inquiry&body=Hi!%0A%0AName:%20%0AEvent%20Date:%20%0A%0APlease%20contact%20me%20regarding%20booking%20a%20photobooth.%0A%0AYou%20can%20reach%20me%20at:%0AEmail:%20%0APhone:%20" class="button-primary">Book Your Date</a>
 				<a href="#find" class="button-secondary">Find Photos</a>
 			</div>
 		</div>
