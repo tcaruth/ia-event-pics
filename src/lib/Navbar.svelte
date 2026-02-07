@@ -22,7 +22,7 @@
         <span class="material-symbols-outlined light-icon">dark_mode</span>
         <span class="material-symbols-outlined dark-icon">light_mode</span>
       </button>
-      <a href="#book" class="button-primary">Book Now</a>
+      <a href="mailto:us@smilewhale.com" class="button-primary">Book Now</a>
     </div>
   </div>
 </nav>

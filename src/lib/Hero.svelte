@@ -10,7 +10,7 @@
 				service for memories that last a lifetime.
 			</p>
 			<div class="actions">
-				<a href="#book" class="button-primary">Book Your Date</a>
+				<a href="mailto:us@smilewhale.com" class="button-primary">Book Your Date</a>
 				<a href="#find" class="button-secondary">Find Photos</a>
 			</div>
 		</div>
