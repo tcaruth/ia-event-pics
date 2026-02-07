@@ -1,3 +1,7 @@
+<script>
+  import { BOOKING_MAILTO_URL } from './config.js';
+</script>
+
 <header class="hero">
 	<div class="container">
 		<div class="content">
@@ -10,7 +14,7 @@
 				service for memories that last a lifetime.
 			</p>
 			<div class="actions">
-				<a href="mailto:us@smilewhale.com" class="button-primary">Book Your Date</a>
+				<a href={BOOKING_MAILTO_URL} class="button-primary">Book Your Date</a>
 				<a href="#find" class="button-secondary">Find Photos</a>
 			</div>
 		</div>

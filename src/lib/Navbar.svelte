@@ -1,5 +1,6 @@
 <script>
   import { theme } from '$lib/stores.js';
+  import { BOOKING_MAILTO_URL } from './config.js';
 
   function toggleTheme() {
     theme.update(current => (current === 'light' ? 'dark' : 'light'));
@@ -22,7 +23,7 @@
         <span class="material-symbols-outlined light-icon">dark_mode</span>
         <span class="material-symbols-outlined dark-icon">light_mode</span>
       </button>
-      <a href="mailto:us@smilewhale.com" class="button-primary">Book Now</a>
+      <a href={BOOKING_MAILTO_URL} class="button-primary">Book Now</a>
     </div>
   </div>
 </nav>

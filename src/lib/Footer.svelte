@@ -1,3 +1,7 @@
+<script>
+  import { BOOKING_MAILTO_URL } from './config.js';
+</script>
+
 <footer class="footer">
   <div class="container main-footer">
     <div class="about">
@@ -36,7 +40,7 @@
         <li><a href="#pricing">Pricing Details</a></li>
         <li><a href="#gallery">Event Gallery</a></li>
         <li><a href="#find">Find Photos</a></li>
-        <li><a href="mailto:us@smilewhale.com">Booking Form</a></li>
+        <li><a href={BOOKING_MAILTO_URL}>Book Now</a></li>
       </ul>
     </div>
     <div>
