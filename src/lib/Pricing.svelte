@@ -31,7 +31,7 @@
             <span>Hotspot fee: $25 (if no WiFi available)</span>
           </li>
         </ul>
-        <a href="#book" class="button">Reserve Your Booth</a>
+        <a href="mailto:us@smilewhale.com" class="button">Reserve Your Booth</a>
       </div>
     </div>
   </div>

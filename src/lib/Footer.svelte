@@ -36,7 +36,7 @@
         <li><a href="#pricing">Pricing Details</a></li>
         <li><a href="#gallery">Event Gallery</a></li>
         <li><a href="#find">Find Photos</a></li>
-        <li><a href="#book">Booking Form</a></li>
+        <li><a href="mailto:us@smilewhale.com">Booking Form</a></li>
       </ul>
     </div>
     <div>
@@ -44,11 +44,11 @@
       <ul class="contact-info">
         <li class="contact-item">
           <span class="material-symbols-outlined icon">mail</span>
-          hello@iaeventpics.com
+          us@smilewhale.com
         </li>
         <li class="contact-item">
           <span class="material-symbols-outlined icon">call</span>
-          (319) 555-0123
+          (515) 981-6543
         </li>
         <li class="contact-item">
           <span class="material-symbols-outlined icon">location_on</span>
