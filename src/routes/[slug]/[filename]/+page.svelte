@@ -163,6 +163,10 @@
 						</figure>
 					{/await}
 				</div>
+
+				<div class="attribution">
+					<p>Powered by <a href="/" target="_blank">IA Event Pics</a></p>
+				</div>
 			{/if}
 		</main>
 	</div>
