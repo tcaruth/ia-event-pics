@@ -173,6 +173,10 @@
 </div>
 
 <style>
+	.attribution a {
+		text-decoration: underline;
+	}
+	
 	.image-viewer {
 		position: fixed;
 		inset: 0;

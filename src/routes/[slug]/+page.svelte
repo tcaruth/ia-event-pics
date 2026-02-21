@@ -146,6 +146,16 @@
 		min-height: 100vh;
 	}
 
+	.attribution {
+		width: 100%;
+		text-align: center;
+		margin-block-start: 3rem;
+	}
+
+	.attribution a {
+		text-decoration: underline;
+	}
+
 	.event-header {
 		background: var(--color-primary);
 		color: var(--text-primary);
