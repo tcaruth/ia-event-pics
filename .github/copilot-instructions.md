@@ -124,7 +124,7 @@ This project uses **Svelte 5**, not Svelte 4. Key differences:
 
 ### Photobooth Hardware
 - Raspberry Pi running pibooth software
-- SSH access: `pi:pi@pibooth.local`
+- SSH access details available in `.agent/workflows/deploy.md`
 - Working directory: `/home/pi/pibooth`
 - Config: `/home/pi/.config/pibooth/pibooth.cfg`
 - Uploader script watches for new photos and uploads to Sanity
