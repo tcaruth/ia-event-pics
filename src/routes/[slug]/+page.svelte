@@ -1,12 +1,14 @@
 <script>
-	import { onMount, onDestroy } from 'svelte';
+	import { onMount, onDestroy, tick } from 'svelte';
 	import { invalidateAll } from '$app/navigation';
-	
+
 	let { data } = $props();
 
 	let autoRefreshEnabled = $state(false);
 	/** @type {ReturnType<typeof setInterval> | null} */
 	let refreshInterval = null;
+
+	const REFRESH_INTERVAL_MS = 5000; // Refresh every 5 seconds
 
 	/** @param {string} dateStr */
 	function formatTime(dateStr) {
@@ -28,22 +30,34 @@
 
 	async function refreshGallery() {
 		await invalidateAll();
-		// Small delay to ensure DOM is updated before scrolling
-		setTimeout(scrollToLastImage, 100);
+		// Wait for Svelte to update DOM with new data before scrolling
+		await tick();
+		scrollToLastImage();
+	}
+
+	function startAutoRefresh() {
+		if (!autoRefreshEnabled) {
+			autoRefreshEnabled = true;
+			localStorage.setItem('autoRefreshEnabled', 'true');
+		}
+		refreshGallery();
+		refreshInterval = setInterval(refreshGallery, REFRESH_INTERVAL_MS);
+	}
+
+	function stopAutoRefresh() {
+		autoRefreshEnabled = false;
+		localStorage.setItem('autoRefreshEnabled', 'false');
+		if (refreshInterval) {
+			clearInterval(refreshInterval);
+			refreshInterval = null;
+		}
 	}
 
 	function toggleAutoRefresh() {
-		autoRefreshEnabled = !autoRefreshEnabled;
-		localStorage.setItem('autoRefreshEnabled', autoRefreshEnabled.toString());
-		
 		if (autoRefreshEnabled) {
-			refreshGallery();
-			refreshInterval = setInterval(refreshGallery, 5000); // Refresh every 5 seconds
+			stopAutoRefresh();
 		} else {
-			if (refreshInterval) {
-				clearInterval(refreshInterval);
-				refreshInterval = null;
-			}
+			startAutoRefresh();
 		}
 	}
 
@@ -51,8 +65,7 @@
 		// Restore state from localStorage
 		const savedState = localStorage.getItem('autoRefreshEnabled');
 		if (savedState === 'true') {
-			autoRefreshEnabled = true;
-			refreshInterval = setInterval(refreshGallery, 5000);
+			startAutoRefresh();
 		}
 	});
 
@@ -78,11 +91,7 @@
 		<div class="gallery">
 			{#each data.event?.images || [] as image, index}
 				{@const isLastImage = index === (data.event?.images || []).length - 1}
-				<a 
-					href="/{data.slug}/{image.name}" 
-					class="gallery-item"
-					data-last-image={isLastImage}
-				>
+				<a href="/{data.slug}/{image.name}" class="gallery-item" data-last-image={isLastImage}>
 					<figure>
 						<div class="img-container">
 							<img
@@ -109,8 +118,8 @@
 		<div class="auto-refresh-control">
 			<label class="switch-container">
 				<span class="switch-label">Auto-load new images</span>
-				<button 
-					class="switch" 
+				<button
+					class="switch"
 					role="switch"
 					aria-label="Toggle auto-load new images"
 					aria-checked={autoRefreshEnabled}
@@ -122,7 +131,7 @@
 				</button>
 			</label>
 			{#if autoRefreshEnabled}
-				<p class="refresh-status">Refreshing every 5 seconds...</p>
+				<p class="refresh-status">Refreshing every {REFRESH_INTERVAL_MS / 1000} seconds...</p>
 			{/if}
 		</div>
 	</main>
@@ -286,7 +295,7 @@
 		transform: translateX(24px);
 	}
 
-	.switch[aria-checked="true"] .switch-track {
+	.switch[aria-checked='true'] .switch-track {
 		background-color: var(--color-primary);
 	}
 
