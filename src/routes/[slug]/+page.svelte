@@ -1,5 +1,14 @@
 <script>
-	export let data;
+	import { onMount, onDestroy, tick } from 'svelte';
+	import { invalidateAll } from '$app/navigation';
+
+	let { data } = $props();
+
+	let autoRefreshEnabled = $state(false);
+	/** @type {ReturnType<typeof setInterval> | null} */
+	let refreshInterval = null;
+
+	const REFRESH_INTERVAL_MS = 5000; // Refresh every 5 seconds
 
 	/** @param {string} dateStr */
 	function formatTime(dateStr) {
@@ -11,6 +20,60 @@
 			timeStyle: 'short'
 		}).format(date);
 	}
+
+	function scrollToLastImage() {
+		const lastImage = document.querySelector('[data-last-image="true"]');
+		if (lastImage) {
+			lastImage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+		}
+	}
+
+	async function refreshGallery() {
+		await invalidateAll();
+		// Wait for Svelte to update DOM with new data before scrolling
+		await tick();
+		scrollToLastImage();
+	}
+
+	function startAutoRefresh() {
+		if (!autoRefreshEnabled) {
+			autoRefreshEnabled = true;
+			localStorage.setItem('autoRefreshEnabled', 'true');
+		}
+		refreshGallery();
+		refreshInterval = setInterval(refreshGallery, REFRESH_INTERVAL_MS);
+	}
+
+	function stopAutoRefresh() {
+		autoRefreshEnabled = false;
+		localStorage.setItem('autoRefreshEnabled', 'false');
+		if (refreshInterval) {
+			clearInterval(refreshInterval);
+			refreshInterval = null;
+		}
+	}
+
+	function toggleAutoRefresh() {
+		if (autoRefreshEnabled) {
+			stopAutoRefresh();
+		} else {
+			startAutoRefresh();
+		}
+	}
+
+	onMount(() => {
+		// Restore state from localStorage
+		const savedState = localStorage.getItem('autoRefreshEnabled');
+		if (savedState === 'true') {
+			startAutoRefresh();
+		}
+	});
+
+	onDestroy(() => {
+		if (refreshInterval) {
+			clearInterval(refreshInterval);
+		}
+	});
 </script>
 
 <div class="gallery-page">
@@ -26,8 +89,9 @@
 
 	<main class="gallery-wrapper">
 		<div class="gallery">
-			{#each data.event?.images || [] as image}
-				<a href="/{data.slug}/{image.name}" class="gallery-item">
+			{#each data.event?.images || [] as image, index}
+				{@const isLastImage = index === (data.event?.images || []).length - 1}
+				<a href="/{data.slug}/{image.name}" class="gallery-item" data-last-image={isLastImage}>
 					<figure>
 						<div class="img-container">
 							<img
@@ -50,6 +114,26 @@
 				<img src={data.event?.primary_image} alt={data.event?.name} />
 			</div>
 		{/if}
+
+		<div class="auto-refresh-control">
+			<label class="switch-container">
+				<span class="switch-label">Auto-load new images</span>
+				<button
+					class="switch"
+					role="switch"
+					aria-label="Toggle auto-load new images"
+					aria-checked={autoRefreshEnabled}
+					onclick={toggleAutoRefresh}
+				>
+					<span class="switch-track">
+						<span class="switch-thumb" class:active={autoRefreshEnabled}></span>
+					</span>
+				</button>
+			</label>
+			{#if autoRefreshEnabled}
+				<p class="refresh-status">Refreshing every {REFRESH_INTERVAL_MS / 1000} seconds...</p>
+			{/if}
+		</div>
 	</main>
 </div>
 
@@ -150,6 +234,76 @@
 			max-width: 100%;
 			box-shadow: var(--shadow-lg);
 		}
+	}
+
+	.auto-refresh-control {
+		margin-top: var(--spacing-lg);
+		padding: var(--spacing-md);
+		background: var(--surface-secondary);
+		border-radius: var(--radius-md);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--spacing-sm);
+	}
+
+	.switch-container {
+		display: flex;
+		align-items: center;
+		gap: var(--spacing-sm);
+		cursor: pointer;
+	}
+
+	.switch-label {
+		font-size: 1rem;
+		font-weight: 600;
+		color: var(--text-surface-secondary);
+	}
+
+	.switch {
+		position: relative;
+		display: inline-block;
+		width: 52px;
+		height: 28px;
+		background: none;
+		border: none;
+		padding: 0;
+		cursor: pointer;
+	}
+
+	.switch-track {
+		position: absolute;
+		inset: 0;
+		background-color: #ccc;
+		border-radius: 28px;
+		transition: background-color 0.3s;
+	}
+
+	.switch-thumb {
+		position: absolute;
+		top: 2px;
+		left: 2px;
+		width: 24px;
+		height: 24px;
+		background-color: white;
+		border-radius: 50%;
+		transition: transform 0.3s;
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+	}
+
+	.switch-thumb.active {
+		transform: translateX(24px);
+	}
+
+	.switch[aria-checked='true'] .switch-track {
+		background-color: var(--color-primary);
+	}
+
+	.refresh-status {
+		font-size: 0.875rem;
+		color: var(--text-surface-secondary);
+		margin: 0;
+		opacity: 0.8;
 	}
 
 	@media (max-width: 600px) {
