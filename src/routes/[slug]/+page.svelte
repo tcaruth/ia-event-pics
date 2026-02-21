@@ -109,6 +109,10 @@
 			{/each}
 		</div>
 
+		<div class="attribution">
+			<p>Powered by <a href="/" target="_blank">IA Event Pics</a></p>
+		</div>
+
 		{#if data.event?.primary_image}
 			<div class="primary-image-section">
 				<img src={data.event?.primary_image} alt={data.event?.name} />
@@ -140,6 +144,16 @@
 <style>
 	.gallery-page {
 		min-height: 100vh;
+	}
+
+	.attribution {
+		width: 100%;
+		text-align: center;
+		margin-block-start: 3rem;
+	}
+
+	.attribution a {
+		text-decoration: underline;
 	}
 
 	.event-header {

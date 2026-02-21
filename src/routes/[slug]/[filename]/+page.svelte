@@ -163,12 +163,20 @@
 						</figure>
 					{/await}
 				</div>
+
+				<div class="attribution">
+					<p>Powered by <a href="/" target="_blank">IA Event Pics</a></p>
+				</div>
 			{/if}
 		</main>
 	</div>
 </div>
 
 <style>
+	.attribution a {
+		text-decoration: underline;
+	}
+	
 	.image-viewer {
 		position: fixed;
 		inset: 0;
