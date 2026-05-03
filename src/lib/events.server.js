@@ -1,4 +1,4 @@
-import { client } from './sanity';
+import { client, urlFor } from './sanity';
 import groq from 'groq';
 
 /**
@@ -69,7 +69,7 @@ async function getEvent(slug, showAllImages = false) {
         "name": title,
         date,
         location,
-        "primary_image": primaryImage.asset->url,
+        "primary_image": primaryImage,
         adminPassword,
         fonts,
         colors,
@@ -88,6 +88,10 @@ async function getEvent(slug, showAllImages = false) {
 
     try {
         const event = await client.fetch(query, { slug: slug, showAllImages: showAllImages });
+
+        if (event && event.primary_image) {
+            event.primary_image = urlFor(event.primary_image).width(1600).height(900).fit('crop').auto('format').url();
+        }
 
         return event;
     } catch (error) {

@@ -95,6 +95,7 @@ export default defineType({
               { title: 'Plus Jakarta Sans (Professional)', value: '"Plus Jakarta Sans", sans-serif' },
               { title: 'Bungee (Bold Display)', value: '"Bungee", cursive' },
               { title: 'Cormorant Garamond (Fine Serif)', value: '"Cormorant Garamond", serif' },
+              { title: 'Romantically (Script)', value: '"Romantically", "Cormorant Garamond", serif' },
             ],
           },
           initialValue: '"Inter", sans-serif',

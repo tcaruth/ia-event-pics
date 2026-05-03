@@ -30,6 +30,14 @@
 <style>
 	@import url('https://fonts.googleapis.com/css2?family=Arvo:ital,wght@0,400;0,700;1,400;1,700&family=Bungee&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Lora:ital,wght@0,400..700;1,400..700&family=Outfit:wght@100..900&family=Pacifico&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Work+Sans:ital,wght@0,100..900;1,100..900&display=swap');
 
+	@font-face {
+		font-family: 'Romantically';
+		src: url('/fonts/romantically.woff2') format('woff2');
+		font-weight: normal;
+		font-style: normal;
+		font-display: block;
+	}
+
 	:global(:root) {
 		--font-main: 'Inter', system-ui, -apple-system, sans-serif;
 		--font-heading: 'Outfit', var(--font-main);

@@ -109,15 +109,15 @@
 			{/each}
 		</div>
 
-		<div class="attribution">
-			<p>Powered by <a href="/" target="_blank">IA Event Pics</a></p>
-		</div>
-
 		{#if data.event?.primary_image}
 			<div class="primary-image-section">
 				<img src={data.event?.primary_image} alt={data.event?.name} />
 			</div>
 		{/if}
+
+		<div class="attribution">
+			<p>Powered by <a href="/" target="_blank">IA Event Pics</a></p>
+		</div>
 
 		<div class="auto-refresh-control">
 			<label class="switch-container">
@@ -245,7 +245,9 @@
 		text-align: center;
 		img {
 			border-radius: var(--radius-lg);
+			width: 100%;
 			max-width: 100%;
+			height: auto;
 			box-shadow: var(--shadow-lg);
 		}
 	}
