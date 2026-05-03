@@ -44,7 +44,7 @@ import groq from 'groq';
  * @property {string} name
  * @property {string} [date]
  * @property {string} [location]
- * @property {string | any} [primary_image]
+ * @property {string} [primary_image]
  * @property {string} [adminPassword]
  * @property {EventFonts} [fonts]
  * @property {EventColors} [colors]
@@ -90,7 +90,7 @@ async function getEvent(slug, showAllImages = false) {
         const event = await client.fetch(query, { slug: slug, showAllImages: showAllImages });
 
         if (event && event.primary_image) {
-            event.primary_image = urlFor(event.primary_image).width(1600).height(900).url();
+            event.primary_image = urlFor(event.primary_image).width(1600).height(900).fit('crop').auto('format').url();
         }
 
         return event;
