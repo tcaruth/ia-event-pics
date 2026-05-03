@@ -1,0 +1,18 @@
+Current Environment:
+SHELL=/bin/bash
+LANGUAGE=en_US.UTF-8
+PWD=/home/pi/sanity-controller
+LOGNAME=pi
+XDG_SESSION_TYPE=x11
+XAUTHORITY=/home/pi/.Xauthority
+HOME=/home/pi
+LANG=en_US.UTF-8
+INVOCATION_ID=714e33ead99e40139eb543733b2c6f16
+USER=pi
+SDL_VIDEODRIVER=x11
+DISPLAY=:0
+SHLVL=1
+XDG_RUNTIME_DIR=/run/user/1000
+JOURNAL_STREAM=8:29679
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+_=/usr/bin/env
