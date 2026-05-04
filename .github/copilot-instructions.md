@@ -17,20 +17,17 @@ IA Event Pics is a SvelteKit 5 web application that provides instant digital pho
 ## Key Architecture Points
 
 ### Data Model
-
 - Images are stored as a `gallery` array within `event` documents in Sanity
 - Each event has dynamic branding (colors, fonts) managed through Sanity CMS
 - Images include metadata: asset reference, created timestamp, and alt text
 
 ### Critical Features
-
 1. **Optimistic Loading**: QR codes are shown before upload completes - the frontend polls every 3 seconds for up to 3 minutes using HEAD requests
 2. **Event-Specific Branding**: CSS variables are injected based on Sanity data
 3. **Admin Dashboard**: Per-event admin pages at `/[slug]/admin` for image management
 4. **Batch Download**: ZIP generation for downloading all event photos
 
 ### Important Files
-
 - `src/lib/events.server.js`: Event data fetching via GROQ queries
 - `src/lib/sanity.js`: Sanity client configuration
 - `src/routes/[slug]/[filename]/+page.svelte`: Image viewer with polling mechanism
@@ -40,32 +37,26 @@ IA Event Pics is a SvelteKit 5 web application that provides instant digital pho
 ## Development Guidelines
 
 ### Environment Setup
-
 Always check `.env.example` for required environment variables:
-
 - `VITE_SANITY_PROJECT_ID`: Sanity project ID (public)
 - `VITE_SANITY_DATASET`: Dataset name (typically "production")
 - `SANITY_API_TOKEN`: Write token for admin operations
 - `MASTER_ADMIN_PASSWORD`: Admin authentication
 
 ### Code Style
-
 - **ALWAYS** use Prettier configuration (tabs, single quotes, no trailing commas, 100 char width)
 - Svelte files use the svelte parser via prettier-plugin-svelte
 - Run `npm run format` before committing
 - Run `npm run lint` to check formatting
 
 ### Svelte 5 Runes (Important!)
-
 This project uses **Svelte 5**, not Svelte 4. Key differences:
-
 - Use `$state()` for reactive state instead of `let` declarations
 - Use `$derived()` for computed values instead of `$:` reactive statements
 - Use `$effect()` for side effects instead of `onMount` (though onMount is still valid)
 - Component props use runes like `let { propName } = $props()`
 
 ### Testing
-
 - **Integration tests**: Playwright (run with `npm run test:integration`)
 - **Unit tests**: Vitest (run with `npm run test:unit`)
 - **Full test suite**: `npm test` (runs both)
@@ -73,7 +64,6 @@ This project uses **Svelte 5**, not Svelte 4. Key differences:
 - Keep tests focused and minimal - only test changed functionality
 
 ### Building and Running
-
 - `npm run dev`: Start development server
 - `npm run build`: Build for production
 - `npm run preview`: Preview production build
@@ -81,7 +71,6 @@ This project uses **Svelte 5**, not Svelte 4. Key differences:
 - Deployment is handled automatically via Netlify
 
 ### SvelteKit Routing Conventions
-
 - `+page.svelte`: Page component
 - `+page.server.js`: Server-side load function and form actions
 - `+layout.svelte`: Layout component (wraps pages)
@@ -90,7 +79,6 @@ This project uses **Svelte 5**, not Svelte 4. Key differences:
 - Routes use filesystem-based routing
 
 ### Sanity Studio
-
 - Located in `/studio` directory
 - Has its own package.json and dependencies
 - Run with `npm run studio:dev`
@@ -100,27 +88,23 @@ This project uses **Svelte 5**, not Svelte 4. Key differences:
 ## Common Tasks
 
 ### Adding a New Feature
-
 1. Check if changes affect event branding or image loading
 2. Test with multiple event slugs if route-based
 3. Consider impact on mobile users (primary use case)
 4. Update documentation in `/docs` if architecture changes
 
 ### Modifying Image Display
-
 - Changes to image loading affect `src/routes/[slug]/[filename]/+page.svelte`
 - Polling logic is critical - don't remove it
 - HEAD requests are used to check existence without downloading
 - Error states should be user-friendly (attendees may panic if photos don't load)
 
 ### API Changes
-
 - Server-side code runs on Netlify Functions
 - Keep API responses minimal (consider bandwidth)
 - Always validate admin authentication for write operations
 
 ### Styling Changes
-
 - CSS variables are set dynamically per event
 - Check `src/routes/[slug]/+layout.svelte` for variable injection
 - Maintain light/dark theme support via `data-theme` attribute
@@ -139,7 +123,6 @@ This project uses **Svelte 5**, not Svelte 4. Key differences:
 ## External Integrations
 
 ### Photobooth Hardware
-
 - Raspberry Pi running pibooth software
 - SSH access details available in `.agent/workflows/deploy.md`
 - Working directory: `/home/pi/pibooth`
@@ -147,7 +130,6 @@ This project uses **Svelte 5**, not Svelte 4. Key differences:
 - Uploader script watches for new photos and uploads to Sanity
 
 ### Sanity.io
-
 - Images served via Sanity CDN with automatic optimization (WebP, resize)
 - GROQ queries used for data fetching
 - Write operations require SANITY_API_TOKEN

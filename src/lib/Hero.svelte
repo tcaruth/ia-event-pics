@@ -1,5 +1,5 @@
 <script>
-	import { BOOKING_MAILTO_URL } from './config.js';
+  import { BOOKING_MAILTO_URL } from './config.js';
 </script>
 
 <header class="hero">

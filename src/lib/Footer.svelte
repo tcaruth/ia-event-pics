@@ -1,21 +1,21 @@
 <script>
-	import { BOOKING_MAILTO_URL } from './config.js';
+  import { BOOKING_MAILTO_URL } from './config.js';
 </script>
 
 <footer class="footer">
-	<div class="container main-footer">
-		<div class="about">
-			<div class="logo">
-				<div class="logo-icon">
-					<span class="material-symbols-outlined">camera</span>
-				</div>
-				<span class="logo-text">IA Event Pics</span>
-			</div>
-			<p class="description">
-				Premium photobooth rental service based in Waterloo, Iowa. Serving the entire Cedar Valley
-				area with professional equipment and exceptional service.
-			</p>
-			<!-- Socials commented out as requested
+  <div class="container main-footer">
+    <div class="about">
+      <div class="logo">
+        <div class="logo-icon">
+          <span class="material-symbols-outlined">camera</span>
+        </div>
+        <span class="logo-text">IA Event Pics</span>
+      </div>
+      <p class="description">
+        Premium photobooth rental service based in Waterloo, Iowa. Serving the entire Cedar Valley
+        area with professional equipment and exceptional service.
+      </p>
+      <!-- Socials commented out as requested
       <div class="socials">
         <a href="/" class="social-link" aria-label="Facebook">
           <svg class="icon" fill="currentColor" viewBox="0 0 24 24">
@@ -33,177 +33,178 @@
         </a>
       </div>
       -->
-		</div>
-		<div>
-			<h4 class="menu-title">Quick Links</h4>
-			<ul class="links">
-				<li><a href="#pricing">Pricing Details</a></li>
-				<li><a href="#gallery">Event Gallery</a></li>
-				<li><a href="#find">Find Photos</a></li>
-				<li><a href={BOOKING_MAILTO_URL}>Book Now</a></li>
-			</ul>
-		</div>
-		<div>
-			<h4 class="menu-title">Contact</h4>
-			<ul class="contact-info">
-				<li class="contact-item">
-					<span class="material-symbols-outlined icon">mail</span>
-					us@smilewhale.com
-				</li>
-				<li class="contact-item">
-					<span class="material-symbols-outlined icon">call</span>
-					(515) 981-6543
-				</li>
-				<li class="contact-item">
-					<span class="material-symbols-outlined icon">location_on</span>
-					Waterloo, IA 50701
-				</li>
-			</ul>
-		</div>
-	</div>
-	<div class="container sub-footer">
-		<p>© {new Date().getFullYear()} IA Event Pics. All rights reserved.</p>
-		<div class="legal-links">
-			<a href="/privacy">Privacy Policy</a>
-			<a href="/terms">Terms of Service</a>
-		</div>
-	</div>
+    </div>
+    <div>
+      <h4 class="menu-title">Quick Links</h4>
+      <ul class="links">
+        <li><a href="#pricing">Pricing Details</a></li>
+        <li><a href="#gallery">Event Gallery</a></li>
+        <li><a href="#find">Find Photos</a></li>
+        <li><a href={BOOKING_MAILTO_URL}>Book Now</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4 class="menu-title">Contact</h4>
+      <ul class="contact-info">
+        <li class="contact-item">
+          <span class="material-symbols-outlined icon">mail</span>
+          us@smilewhale.com
+        </li>
+        <li class="contact-item">
+          <span class="material-symbols-outlined icon">call</span>
+          (515) 981-6543
+        </li>
+        <li class="contact-item">
+          <span class="material-symbols-outlined icon">location_on</span>
+          Waterloo, IA 50701
+        </li>
+      </ul>
+    </div>
+  </div>
+  <div class="container sub-footer">
+    <p>© {new Date().getFullYear()} IA Event Pics. All rights reserved.</p>
+    <div class="legal-links">
+      <a href="/privacy">Privacy Policy</a>
+      <a href="/terms">Terms of Service</a>
+    </div>
+  </div>
 </footer>
 
 <style>
-	.footer {
-		background-color: var(--bg-color);
-		color: var(--text-muted);
-		padding: 4rem 0 2rem 0;
-		border-top: 1px solid var(--border-color);
-	}
+  .footer {
+    background-color: var(--bg-color);
+    color: var(--text-muted);
+    padding: 4rem 0 2rem 0;
+    border-top: 1px solid var(--border-color);
+  }
 
-	.container {
-		max-width: 80rem;
-		margin: 0 auto;
-		padding: 0 1.5rem;
-	}
+  .container {
+    max-width: 80rem;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
 
-	.main-footer {
-		display: grid;
-		grid-template-columns: 1fr;
-		gap: 3rem;
-		margin-bottom: 4rem;
-	}
+  .main-footer {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 3rem;
+    margin-bottom: 4rem;
+  }
 
-	@media (min-width: 768px) {
-		.main-footer {
-			grid-template-columns: 2fr 1fr 1fr;
-		}
-	}
+  @media (min-width: 768px) {
+    .main-footer {
+      grid-template-columns: 2fr 1fr 1fr;
+    }
+  }
 
-	.about {
-		max-width: 24rem;
-	}
+  .about {
+    max-width: 24rem;
+  }
 
-	.logo {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		color: var(--text-color);
-		margin-bottom: 1.5rem;
-	}
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-color);
+    margin-bottom: 1.5rem;
+  }
 
-	.logo-icon {
-		width: 2rem;
-		height: 2rem;
-		background-color: var(--primary);
-		border-radius: 0.5rem;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		color: white;
-	}
+  .logo-icon {
+    width: 2rem;
+    height: 2rem;
+    background-color: var(--primary);
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+  }
 
-	.logo-icon .material-symbols-outlined {
-		font-size: 1.25rem;
-	}
+  .logo-icon .material-symbols-outlined {
+    font-size: 1.25rem;
+  }
 
-	.logo-text {
-		font-size: 1.125rem;
-		font-weight: 800;
-	}
+  .logo-text {
+    font-size: 1.125rem;
+    font-weight: 800;
+  }
 
-	.description {
-		line-height: 1.6;
-		margin-bottom: 1.5rem;
-	}
+  .description {
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+  }
 
-	.menu-title {
-		color: var(--text-color);
-		font-weight: 700;
-		margin-bottom: 1.5rem;
-	}
 
-	.links {
-		list-style: none;
-		padding: 0;
-		display: flex;
-		flex-direction: column;
-		gap: 1rem;
-	}
+  .menu-title {
+    color: var(--text-color);
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+  }
 
-	.links a {
-		color: inherit;
-		transition: color 0.3s;
-	}
+  .links {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
 
-	.links a:hover {
-		color: var(--text-color);
-	}
+  .links a {
+    color: inherit;
+    transition: color 0.3s;
+  }
 
-	.contact-info {
-		list-style: none;
-		padding: 0;
-		display: flex;
-		flex-direction: column;
-		gap: 1rem;
-	}
+  .links a:hover {
+    color: var(--text-color);
+  }
 
-	.contact-item {
-		display: flex;
-		align-items: center;
-		gap: 0.75rem;
-	}
+  .contact-info {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
 
-	.contact-item .icon {
-		color: var(--primary);
-		font-size: 1.25rem;
-	}
+  .contact-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
 
-	.sub-footer {
-		padding-top: 2rem;
-		border-top: 1px solid var(--border-color);
-		display: flex;
-		flex-direction: column;
-		gap: 1.5rem;
-		font-size: 0.875rem;
-	}
+  .contact-item .icon {
+    color: var(--primary);
+    font-size: 1.25rem;
+  }
 
-	@media (min-width: 768px) {
-		.sub-footer {
-			flex-direction: row;
-			justify-content: space-between;
-			align-items: center;
-		}
-	}
+  .sub-footer {
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    font-size: 0.875rem;
+  }
 
-	.legal-links {
-		display: flex;
-		gap: 2rem;
-	}
+  @media (min-width: 768px) {
+    .sub-footer {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+    }
+  }
 
-	.legal-links a {
-		color: inherit;
-		transition: color 0.3s;
-	}
+  .legal-links {
+    display: flex;
+    gap: 2rem;
+  }
 
-	.legal-links a:hover {
-		color: var(--text-color);
-	}
+  .legal-links a {
+    color: inherit;
+    transition: color 0.3s;
+  }
+
+  .legal-links a:hover {
+    color: var(--text-color);
+  }
 </style>

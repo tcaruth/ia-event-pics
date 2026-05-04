@@ -61,38 +61,45 @@
 
 			let completed = 0;
 			const CONCURRENCY_LIMIT = 5;
+			const failedDownloads = [];
 			const imageIterator = images.entries();
 			const workers = Array(CONCURRENCY_LIMIT)
 				.fill(null)
 				.map(async () => {
 					for (const [_, image] of imageIterator) {
-						const imgRes = await fetch(image.url);
-						if (!imgRes.ok) {
-							console.error(`Failed to download ${image.name}`);
+						try {
+							const imgRes = await fetch(image.url);
+							if (!imgRes.ok) {
+								console.error(`Failed to download ${image.name}`);
+								failedDownloads.push(image.name || 'Unknown image');
+								continue;
+							}
+							const blob = await imgRes.blob();
+
+							// Improved filename: event-name_timestamp_suffix.jpg
+							const timestamp = new Date(image.created)
+								.toISOString()
+								.replace(/[:.]/g, '-')
+								.replace('T', '_')
+								.split('Z')[0];
+
+							// Determine suffix based on name or presence of 'raw'
+							let suffix = '';
+							if (image.name) {
+								suffix = image.name.toLowerCase().includes('raw') ? '_raw' : '_overlaid';
+							}
+
+							const ext = image.name?.split('.').pop() || 'jpg';
+							const friendlyName = `${eventSlug}_${timestamp}${suffix}.${ext}`;
+
+							zip.file(friendlyName, blob);
+						} catch (err) {
+							console.error(`Network error downloading ${image.name}`, err);
+							failedDownloads.push(image.name || 'Unknown image');
+						} finally {
 							completed++;
-							continue;
+							downloadProgress = `Downloading image ${completed} of ${total}...`;
 						}
-						const blob = await imgRes.blob();
-
-						// Improved filename: event-name_timestamp_suffix.jpg
-						const timestamp = new Date(image.created)
-							.toISOString()
-							.replace(/[:.]/g, '-')
-							.replace('T', '_')
-							.split('Z')[0];
-
-						// Determine suffix based on name or presence of 'raw'
-						let suffix = '';
-						if (image.name) {
-							suffix = image.name.toLowerCase().includes('raw') ? '_raw' : '_overlaid';
-						}
-
-						const ext = image.name?.split('.').pop() || 'jpg';
-						const friendlyName = `${eventSlug}_${timestamp}${suffix}.${ext}`;
-
-						zip.file(friendlyName, blob);
-						completed++;
-						downloadProgress = `Downloading image ${completed} of ${total}...`;
 					}
 				});
 
@@ -107,10 +114,15 @@
 			link.download = `${eventSlug}_${dateStr}.zip`;
 			link.click();
 
-			downloadProgress = 'Download complete!';
-			setTimeout(() => {
-				downloadProgress = '';
-			}, 3000);
+			if (failedDownloads.length > 0) {
+				alert(`Download completed with errors. Failed to download:\n${failedDownloads.join('\n')}`);
+				downloadProgress = `Downloaded with ${failedDownloads.length} error(s).`;
+			} else {
+				downloadProgress = 'Download complete!';
+				setTimeout(() => {
+					downloadProgress = '';
+				}, 3000);
+			}
 		} catch (error) {
 			console.error('Batch download failed:', error);
 			alert(
