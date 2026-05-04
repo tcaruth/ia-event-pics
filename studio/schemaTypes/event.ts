@@ -1,4 +1,4 @@
-import { defineField, defineType } from 'sanity'
+import {defineField, defineType} from 'sanity'
 
 export default defineType({
   name: 'event',
@@ -53,7 +53,7 @@ export default defineType({
       name: 'captures',
       title: 'Captures',
       type: 'array',
-      of: [{ type: 'number' }],
+      of: [{type: 'number'}],
       initialValue: [1, 4],
       validation: (Rule) => Rule.unique().required().max(2),
       description: 'The number of captures for this event.',
@@ -87,15 +87,18 @@ export default defineType({
           type: 'string',
           options: {
             list: [
-              { title: 'Inter (Standard)', value: '"Inter", sans-serif' },
-              { title: 'Outfit (Modern Sans)', value: '"Outfit", sans-serif' },
-              { title: 'Playfair Display (Elegant Serif)', value: '"Playfair Display", serif' },
-              { title: 'Pacifico (Fun Script)', value: '"Pacifico", cursive' },
-              { title: 'Arvo (Classic Slab)', value: '"Arvo", serif' },
-              { title: 'Plus Jakarta Sans (Professional)', value: '"Plus Jakarta Sans", sans-serif' },
-              { title: 'Bungee (Bold Display)', value: '"Bungee", cursive' },
-              { title: 'Cormorant Garamond (Fine Serif)', value: '"Cormorant Garamond", serif' },
-              { title: 'Romantically (Script)', value: '"Romantically", "Cormorant Garamond", serif' },
+              {title: 'Inter (Standard)', value: '"Inter", sans-serif'},
+              {title: 'Outfit (Modern Sans)', value: '"Outfit", sans-serif'},
+              {title: 'Playfair Display (Elegant Serif)', value: '"Playfair Display", serif'},
+              {title: 'Pacifico (Fun Script)', value: '"Pacifico", cursive'},
+              {title: 'Arvo (Classic Slab)', value: '"Arvo", serif'},
+              {title: 'Plus Jakarta Sans (Professional)', value: '"Plus Jakarta Sans", sans-serif'},
+              {title: 'Bungee (Bold Display)', value: '"Bungee", cursive'},
+              {title: 'Cormorant Garamond (Fine Serif)', value: '"Cormorant Garamond", serif'},
+              {
+                title: 'Romantically (Script)',
+                value: '"Romantically", "Cormorant Garamond", serif',
+              },
             ],
           },
           initialValue: '"Inter", sans-serif',
@@ -106,10 +109,10 @@ export default defineType({
           type: 'string',
           options: {
             list: [
-              { title: 'Inter (Clean)', value: '"Inter", sans-serif' },
-              { title: 'Plus Jakarta Sans (Modern)', value: '"Plus Jakarta Sans", sans-serif' },
-              { title: 'Lora (Classic Serif)', value: '"Lora", serif' },
-              { title: 'Work Sans (Reliable)', value: '"Work Sans", sans-serif' },
+              {title: 'Inter (Clean)', value: '"Inter", sans-serif'},
+              {title: 'Plus Jakarta Sans (Modern)', value: '"Plus Jakarta Sans", sans-serif'},
+              {title: 'Lora (Classic Serif)', value: '"Lora", serif'},
+              {title: 'Work Sans (Reliable)', value: '"Work Sans", sans-serif'},
             ],
           },
           initialValue: '"Inter", sans-serif',
@@ -122,12 +125,42 @@ export default defineType({
       type: 'object',
       group: 'design',
       fields: [
-        defineField({ name: 'primary', title: 'Primary Color', type: 'string', initialValue: '#0153A4' }),
-        defineField({ name: 'primaryText', title: 'Primary Text Color', type: 'string', initialValue: 'white' }),
-        defineField({ name: 'secondary', title: 'Secondary Color', type: 'string', initialValue: '#fe6100' }),
-        defineField({ name: 'secondaryText', title: 'Secondary Text Color', type: 'string', initialValue: 'black' }),
-        defineField({ name: 'surface', title: 'Surface Color', type: 'string', initialValue: 'black' }),
-        defineField({ name: 'surfaceText', title: 'Surface Text Color', type: 'string', initialValue: 'white' }),
+        defineField({
+          name: 'primary',
+          title: 'Primary Color',
+          type: 'string',
+          initialValue: '#0153A4',
+        }),
+        defineField({
+          name: 'primaryText',
+          title: 'Primary Text Color',
+          type: 'string',
+          initialValue: 'white',
+        }),
+        defineField({
+          name: 'secondary',
+          title: 'Secondary Color',
+          type: 'string',
+          initialValue: '#fe6100',
+        }),
+        defineField({
+          name: 'secondaryText',
+          title: 'Secondary Text Color',
+          type: 'string',
+          initialValue: 'black',
+        }),
+        defineField({
+          name: 'surface',
+          title: 'Surface Color',
+          type: 'string',
+          initialValue: 'black',
+        }),
+        defineField({
+          name: 'surfaceText',
+          title: 'Surface Text Color',
+          type: 'string',
+          initialValue: 'white',
+        }),
       ],
     }),
     defineField({
@@ -136,8 +169,8 @@ export default defineType({
       type: 'string',
       options: {
         list: [
-          { title: 'Light', value: 'light' },
-          { title: 'Dark', value: 'dark' },
+          {title: 'Light', value: 'light'},
+          {title: 'Dark', value: 'dark'},
         ],
         layout: 'radio',
       },
@@ -155,11 +188,12 @@ export default defineType({
       name: 'template',
       title: 'Photo Template',
       type: 'file',
-      description: 'Upload a XML template for this event. Be sure the XML matches the number of captures above.',
+      description:
+        'Upload a XML template for this event. Be sure the XML matches the number of captures above.',
       group: 'event',
       options: {
         accept: '.xml',
-      }
+      },
     }),
     defineField({
       name: 'gallery',
@@ -182,7 +216,7 @@ export default defineType({
               name: 'created',
               type: 'datetime',
               title: 'Created At',
-            }
+            },
           ],
         },
       ],

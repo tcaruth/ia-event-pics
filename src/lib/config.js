@@ -5,15 +5,15 @@ export const BOOKING_EMAIL = 'us@smilewhale.com';
 // Subject: Photobooth Booking Inquiry
 // Body:
 //   Hi!
-//   
-//   Name: 
-//   Event Date: 
-//   
+//
+//   Name:
+//   Event Date:
+//
 //   Please contact me regarding booking a photobooth.
-//   
+//
 //   You can reach me at:
-//   Email: 
-//   Phone: 
+//   Email:
+//   Phone:
 
 const emailSubject = 'Photobooth Booking Inquiry';
 const emailBody = `Hi!

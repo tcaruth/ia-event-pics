@@ -61,20 +61,16 @@
 
 			let completed = 0;
 			const CONCURRENCY_LIMIT = 5;
-			const chunks = [];
-
-			for (let i = 0; i < images.length; i += CONCURRENCY_LIMIT) {
-				chunks.push(images.slice(i, i + CONCURRENCY_LIMIT));
-			}
-
-			for (const chunk of chunks) {
-				await Promise.all(
-					chunk.map(async (/** @type {import('$lib/events.server').EventImage} */ image) => {
+			const imageIterator = images.entries();
+			const workers = Array(CONCURRENCY_LIMIT)
+				.fill(null)
+				.map(async () => {
+					for (const [_, image] of imageIterator) {
 						const imgRes = await fetch(image.url);
 						if (!imgRes.ok) {
 							console.error(`Failed to download ${image.name}`);
 							completed++;
-							return;
+							continue;
 						}
 						const blob = await imgRes.blob();
 
@@ -97,9 +93,10 @@
 						zip.file(friendlyName, blob);
 						completed++;
 						downloadProgress = `Downloading image ${completed} of ${total}...`;
-					})
-				);
-			}
+					}
+				});
+
+			await Promise.all(workers);
 
 			downloadProgress = 'Generating ZIP file...';
 			const content = await zip.generateAsync({ type: 'blob' });

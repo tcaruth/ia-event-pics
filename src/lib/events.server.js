@@ -59,11 +59,11 @@ import groq from 'groq';
  * @returns {Promise<EventData | null>}
  */
 async function getEvent(slug, showAllImages = false) {
-    if (!slug) {
-        return null;
-    }
+	if (!slug) {
+		return null;
+	}
 
-    const query = groq`*[_type == "event" && slug.current == $slug][0]{
+	const query = groq`*[_type == "event" && slug.current == $slug][0]{
         title,
         description,
         "name": title,
@@ -86,18 +86,23 @@ async function getEvent(slug, showAllImages = false) {
         }
     }`;
 
-    try {
-        const event = await client.fetch(query, { slug: slug, showAllImages: showAllImages });
+	try {
+		const event = await client.fetch(query, { slug: slug, showAllImages: showAllImages });
 
-        if (event && event.primary_image) {
-            event.primary_image = urlFor(event.primary_image).width(1600).height(900).fit('crop').auto('format').url();
-        }
+		if (event && event.primary_image) {
+			event.primary_image = urlFor(event.primary_image)
+				.width(1600)
+				.height(900)
+				.fit('crop')
+				.auto('format')
+				.url();
+		}
 
-        return event;
-    } catch (error) {
-        console.error('Error fetching event from Sanity:', error);
-        return null;
-    }
+		return event;
+	} catch (error) {
+		console.error('Error fetching event from Sanity:', error);
+		return null;
+	}
 }
 
 /**
@@ -105,20 +110,20 @@ async function getEvent(slug, showAllImages = false) {
  * @returns {Promise<{ adminPassword?: string } | null>}
  */
 async function getEventPassword(slug) {
-    if (!slug) {
-        return null;
-    }
+	if (!slug) {
+		return null;
+	}
 
-    const query = groq`*[_type == "event" && slug.current == $slug][0]{
+	const query = groq`*[_type == "event" && slug.current == $slug][0]{
         adminPassword
     }`;
 
-    try {
-        return await client.fetch(query, { slug: slug });
-    } catch (error) {
-        console.error('Error fetching event password from Sanity:', error);
-        return null;
-    }
+	try {
+		return await client.fetch(query, { slug: slug });
+	} catch (error) {
+		console.error('Error fetching event password from Sanity:', error);
+		return null;
+	}
 }
 
 export { getEvent, getEventPassword };
