@@ -39,6 +39,9 @@ The repository is structured into three main components:
 * **Svelte Conventions:**
   * **Strict Svelte 5 Runes:** Always use Svelte 5 reactive runes (`$state`, `$derived`, `$props`, `$effect`) for all component reactivity. Avoid Svelte 4 legacy syntax (`let x = 0`, `$: ...`, `export let ...`).
 
+* **Linux Script Executable Mode:**
+  * Always ensure shell scripts (`.sh`) tracked in Git retain executable file modes by running `git update-index --chmod=+x <script.sh>` before committing.
+
 ---
 
 ## ⚙️ Environment Variables
@@ -68,13 +71,14 @@ ADMIN_PASSWORD="your-master-admin-password"
   * SSH Target: `pi:pi@pibooth.local`
   * Working Directory on Pi: `/home/pi/sanity-controller`
   * Daemon GitHub Repository: [`tcaruth/pibooth-sanity-controller`](https://github.com/tcaruth/pibooth-sanity-controller) (Remote alias: `daemon`)
+  * **CUPS Printing Standard:** Standard CUPS on Raspberry Pi OS exposes `/usr/bin/lp`. When spawning print commands from Node.js daemons, resolve `/usr/bin/lp` explicitly and pass `PATH: '/usr/bin:/usr/sbin:/usr/local/bin'`.
   * **Daemon Deployment Workflow:**
     1. Edit scripts locally in `/scripts/` and commit changes.
     2. Push subtree to daemon repository: `git subtree push --prefix scripts daemon main`
     3. On Pi (`/home/pi/sanity-controller`): `git pull && sudo systemctl restart photobooth`
 
 * **Sanity Studio Deployment:**
-  * Deploy schema changes via `bun run studio:deploy`.
+  * Deploy schema changes via `bun run studio:deploy` after adding or updating fields in `studio/schemaTypes/`.
 
 ---
 
