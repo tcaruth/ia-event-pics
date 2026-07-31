@@ -62,5 +62,44 @@ export const actions = {
             console.error('Sanity Delete All Error:', e);
             return { success: false, error: e instanceof Error ? e.message : 'An unknown error occurred' };
         }
+    },
+    print: async ({ request, params }) => {
+        const data = await request.formData();
+        const key = data.get('fullPath');
+        const assetUrl = data.get('assetUrl');
+        const imageName = data.get('imageName');
+        const eventSlug = params.slug;
+
+        if (!key || !assetUrl) {
+            return { success: false, error: 'Image details are required for printing' };
+        }
+
+        try {
+            const event = await client.fetch(`*[_type == "event" && slug.current == $slug][0]{_id}`, { slug: eventSlug });
+
+            if (!event) {
+                return { success: false, error: 'Event not found' };
+            }
+
+            const printTask = {
+                _key: `print_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+                imageKey: String(key),
+                assetUrl: String(assetUrl),
+                imageName: String(imageName || ''),
+                status: 'pending',
+                requestedAt: new Date().toISOString()
+            };
+
+            await client
+                .patch(event._id)
+                .setIfMissing({ printQueue: [] })
+                .append('printQueue', [printTask])
+                .commit();
+
+            return { success: true, message: `Print job queued for ${imageName || 'photo'}` };
+        } catch (e) {
+            console.error('Sanity Print Queue Error:', e);
+            return { success: false, error: e instanceof Error ? e.message : 'Failed to queue print job' };
+        }
     }
 };

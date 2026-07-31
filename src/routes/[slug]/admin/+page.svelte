@@ -14,8 +14,12 @@
 	let deleteDialog;
 	/** @type {HTMLDialogElement} */
 	let deleteAllDialog;
+	/** @type {HTMLDialogElement} */
+	let printDialog;
 	/** @type {import('$lib/events.server').EventImage | null} */
 	let imageToDelete = null;
+	/** @type {import('$lib/events.server').EventImage | null} */
+	let imageToPrint = null;
 
 	/** @param {import('$lib/events.server').EventImage} image */
 	function confirmDelete(image) {
@@ -26,6 +30,17 @@
 	function closeDeleteDialog() {
 		deleteDialog.close();
 		imageToDelete = null;
+	}
+
+	/** @param {import('$lib/events.server').EventImage} image */
+	function confirmPrint(image) {
+		imageToPrint = image;
+		printDialog.showModal();
+	}
+
+	function closePrintDialog() {
+		printDialog.close();
+		imageToPrint = null;
 	}
 
 	function confirmDeleteAll() {
@@ -164,6 +179,9 @@
 				<div class="card-content">
 					<p class="image-name" title={image.name}>{image.name}</p>
 					<div class="card-actions">
+						<button type="button" class="print-btn" on:click={() => confirmPrint(image)}>
+							Print
+						</button>
 						<button type="button" class="delete-btn" on:click={() => confirmDelete(image)}>
 							Delete
 						</button>
@@ -225,6 +243,35 @@
 				>
 					<!-- svelte-ignore a11y_autofocus -->
 					<button type="submit" class="btn-danger" autofocus>Yes, Delete All</button>
+				</form>
+			</div>
+		</div>
+	</dialog>
+
+	<dialog bind:this={printDialog} class="confirm-dialog">
+		<div class="dialog-content">
+			<h2>Confirm Print Job</h2>
+			<p>Are you sure you want to send <strong>{imageToPrint?.name}</strong> to the photobooth printer?</p>
+
+			<div class="dialog-actions">
+				<button type="button" class="btn-secondary" on:click={closePrintDialog}>Cancel</button>
+				<form
+					method="POST"
+					action="?/print"
+					use:enhance={() => {
+						return async ({ result, update }) => {
+							closePrintDialog();
+							if (result.type === 'success') {
+								await update();
+							}
+						};
+					}}
+				>
+					<input type="hidden" name="fullPath" value={imageToPrint?.fullPath} />
+					<input type="hidden" name="assetUrl" value={imageToPrint?.url} />
+					<input type="hidden" name="imageName" value={imageToPrint?.name} />
+					<!-- svelte-ignore a11y_autofocus -->
+					<button type="submit" class="btn-primary" autofocus>Yes, Print</button>
 				</form>
 			</div>
 		</div>
@@ -364,17 +411,35 @@
 		margin-bottom: 1rem;
 	}
 
+	.card-actions {
+		display: flex;
+		gap: 0.5rem;
+	}
+
+	.print-btn,
 	.delete-btn {
-		width: 100%;
+		flex: 1;
 		padding: 0.5rem;
-		background-color: #dc2626;
-		color: white;
 		border: none;
 		border-radius: 0.375rem;
 		font-weight: 600;
 		font-size: 0.875rem;
 		cursor: pointer;
 		transition: background-color 0.2s;
+	}
+
+	.print-btn {
+		background-color: var(--color-primary, #0153a4);
+		color: white;
+	}
+
+	.print-btn:hover {
+		filter: brightness(1.15);
+	}
+
+	.delete-btn {
+		background-color: #dc2626;
+		color: white;
 	}
 
 	.delete-btn:hover {
@@ -423,6 +488,7 @@
 	}
 
 	.btn-secondary,
+	.btn-primary,
 	.btn-danger {
 		padding: 0.625rem 1.25rem;
 		border-radius: 0.5rem;
@@ -441,6 +507,15 @@
 	.btn-secondary:hover {
 		background: var(--surface-primary);
 		color: var(--text-surface-primary);
+	}
+
+	.btn-primary {
+		background: var(--color-primary, #0153a4);
+		color: white;
+	}
+
+	.btn-primary:hover {
+		filter: brightness(1.15);
 	}
 
 	.btn-danger {

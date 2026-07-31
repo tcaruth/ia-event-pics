@@ -85,6 +85,7 @@ sudo systemctl start photobooth
    - **QR Codes**: Automatically updates the QR code prefix URL to point to the correct event page.
 3. **Launch Pibooth**: Spawns the `pibooth` application in the background with appropriate GUI environment variables.
 4. **Watch & Upload**: Monitors the photo directory and instantly uploads new images to the Event's gallery in Sanity.
+5. **Print Queue Processing**: Periodically polls Sanity for pending print tasks triggered from the Admin Gallery UI, downloads high-res composite assets, and executes `lpr` system print commands locally to the CUPS printer.
 
 ## Troubleshooting
 
