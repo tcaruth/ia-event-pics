@@ -255,8 +255,89 @@ async function initialize() {
     await updatePiboothConfig(baseConfig, configPath, currentEvent);
 }
 
+/**
+ * Poll Sanity for pending print tasks and process them via `lpr` system command.
+ */
+async function processPrintQueue() {
+    if (!currentEvent || !currentEvent._id) return;
+
+    try {
+        const eventDoc = await client.fetch(
+            `*[_type == "event" && _id == $eventId][0]{
+                _id,
+                printQueue
+            }`,
+            { eventId: currentEvent._id }
+        );
+
+        if (!eventDoc || !eventDoc.printQueue || !Array.isArray(eventDoc.printQueue)) {
+            return;
+        }
+
+        const pendingTasks = eventDoc.printQueue.filter((/** @type {any} */ task) => task.status === 'pending');
+
+        for (const task of pendingTasks) {
+            console.log(`Processing print task for image: ${task.imageName || task.imageKey}`);
+
+            try {
+                // Download image asset locally to a temp file
+                const urlParts = task.assetUrl ? task.assetUrl.split('/') : [];
+                const rawName = urlParts.length > 0 ? urlParts[urlParts.length - 1] : 'image.jpg';
+                const tempFilePath = path.join(os.tmpdir(), `reprint_${task._key}_${rawName}`);
+
+                const response = await fetch(task.assetUrl);
+                if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+
+                const buffer = await response.buffer();
+                await fs.promises.writeFile(tempFilePath, buffer);
+
+                // Execute lpr command to print directly to CUPS printer
+                console.log(`Executing print command: lpr ${tempFilePath}`);
+                await new Promise((resolve, reject) => {
+                    const lpr = spawn('lpr', [tempFilePath]);
+                    lpr.on('close', (code) => {
+                        if (code === 0) resolve(true);
+                        else reject(new Error(`lpr exited with code ${code}`));
+                    });
+                    lpr.on('error', reject);
+                });
+
+                // Update status in Sanity
+                console.log(`Print job succeeded. Updating Sanity status...`);
+                await client
+                    .patch(currentEvent._id)
+                    .set({
+                        [`printQueue[_key=="${task._key}"].status`]: 'completed',
+                        [`printQueue[_key=="${task._key}"].completedAt`]: new Date().toISOString()
+                    })
+                    .commit();
+
+                // Clean up temp file
+                fs.unlink(tempFilePath, () => {});
+            } catch (err) {
+                console.error(`Failed print task ${task._key}:`, err.message);
+                await client
+                    .patch(currentEvent._id)
+                    .set({
+                        [`printQueue[_key=="${task._key}"].status`]: 'failed',
+                        [`printQueue[_key=="${task._key}"].errorMessage`]: err.message
+                    })
+                    .commit();
+            }
+        }
+    } catch (error) {
+        console.error('Error processing print queue:', error.message);
+    }
+}
+
 // Prepare before watching
 await initialize();
+
+// Poll print queue every 5 seconds
+const PRINT_QUEUE_POLL_INTERVAL = 5000;
+setInterval(processPrintQueue, PRINT_QUEUE_POLL_INTERVAL);
+// Initial check
+processPrintQueue();
 
 console.log("Starting Pibooth application...");
 const pibooth = spawn('pibooth', [], {

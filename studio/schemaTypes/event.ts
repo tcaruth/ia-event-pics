@@ -187,5 +187,27 @@ export default defineType({
         },
       ],
     }),
+    defineField({
+      name: 'printQueue',
+      title: 'Print Queue',
+      group: 'admin',
+      type: 'array',
+      of: [
+        {
+          type: 'object',
+          name: 'printTask',
+          title: 'Print Task',
+          fields: [
+            defineField({ name: 'imageKey', title: 'Image Key', type: 'string' }),
+            defineField({ name: 'assetUrl', title: 'Asset URL', type: 'string' }),
+            defineField({ name: 'imageName', title: 'Image Name', type: 'string' }),
+            defineField({ name: 'status', title: 'Status', type: 'string', initialValue: 'pending' }),
+            defineField({ name: 'requestedAt', title: 'Requested At', type: 'datetime' }),
+            defineField({ name: 'completedAt', title: 'Completed At', type: 'datetime' }),
+            defineField({ name: 'errorMessage', title: 'Error Message', type: 'string' }),
+          ],
+        },
+      ],
+    }),
   ],
 })
