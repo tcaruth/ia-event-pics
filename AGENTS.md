@@ -60,7 +60,7 @@ ADMIN_PASSWORD="your-master-admin-password"
 ## 🌐 Hardware & Deployment Workflows
 
 * **Photobooth Remote Access (`/deploy` Workflow):**
-  * SSH Target: `pi:pi@pibooth.local`
+  * SSH Target: `pi:pi@pibooth.local` (If `pibooth.local` is unresolvable, ask user for Pi IP address or power state)
   * Working Directory: `/home/pi/pibooth`
   * Configuration File: `/home/pi/.config/pibooth/pibooth.cfg`
 
