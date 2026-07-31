@@ -21,11 +21,11 @@
 		<div class="image-container">
 			<div class="blur-circle"></div>
 			<img
-				alt="Happy people at a photobooth"
+				alt="Happy guests posing inside IA Event Pics photobooth"
 				class="main-image"
-				src="https://lh3.googleusercontent.com/aida-public/AB6AXuAtzeR67qz3UC6xi6eKqDOg4OiVmoNS1sIsrUQllzNLbTnLtNPMVqSH1MNuL_L-LiCcj-RahdP_Fvxhnei3Gh6REXLIPGOyjk63ysHazzZVD7ETQUayBV-PYYWFL82G40nD4dGiRGN8HazxIc-5m4VBsZC3RKt3WOWSVJtP5FDNO4S08BKiELfuKhGWNBJ7w9p0RslL4JGmRcMJ7FxJOjwzf8zOB7V121cKD326BhjH74SSpEnNNCvy-TZy05NFE2DQcxXn2wm3ITY"
+				src="/images/hero_photobooth.jpg"
 			/>
-			<div class="card">
+			<div class="card animate-float">
 				<div class="card-icon">
 					<span class="material-symbols-outlined">verified</span>
 				</div>

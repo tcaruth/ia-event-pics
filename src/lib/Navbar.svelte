@@ -9,17 +9,17 @@
 
 <nav class="navbar">
   <div class="container">
-    <div class="logo">
+    <a href="/" class="logo">
       <div class="logo-icon">
         <span class="material-symbols-outlined">camera</span>
       </div>
       <span class="logo-text">IA Event Pics</span>
-    </div>
+    </a>
     <div class="nav-links">
       <a href="#pricing">Pricing</a>
       <a href="#features">Features</a>
       <a href="#gallery">Gallery</a>
-      <button class="theme-toggle" on:click={toggleTheme}>
+      <button class="theme-toggle" onclick={toggleTheme} aria-label="Toggle dark mode">
         <span class="material-symbols-outlined light-icon">dark_mode</span>
         <span class="material-symbols-outlined dark-icon">light_mode</span>
       </button>
