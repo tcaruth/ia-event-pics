@@ -274,7 +274,9 @@ async function processPrintQueue() {
             return;
         }
 
-        const pendingTasks = eventDoc.printQueue.filter((/** @type {any} */ task) => task.status === 'pending');
+        const pendingTasks = eventDoc.printQueue.filter(
+            (/** @type {any} */ task) => task.status === 'pending' || (task.status === 'failed' && task.errorMessage && task.errorMessage.includes('ENOENT'))
+        );
 
         for (const task of pendingTasks) {
             console.log(`Processing print task for image: ${task.imageName || task.imageKey}`);
@@ -291,15 +293,26 @@ async function processPrintQueue() {
                 const buffer = await response.buffer();
                 await fs.promises.writeFile(tempFilePath, buffer);
 
-                // Execute lpr command to print directly to CUPS printer
-                console.log(`Executing print command: lpr ${tempFilePath}`);
+                // Execute print command to print directly to CUPS printer
+                const printBin = fs.existsSync('/usr/bin/lp')
+                    ? '/usr/bin/lp'
+                    : fs.existsSync('/usr/bin/lpr')
+                    ? '/usr/bin/lpr'
+                    : 'lp';
+
+                console.log(`Executing print command: ${printBin} ${tempFilePath}`);
                 await new Promise((resolve, reject) => {
-                    const lpr = spawn('lpr', [tempFilePath]);
-                    lpr.on('close', (code) => {
-                        if (code === 0) resolve(true);
-                        else reject(new Error(`lpr exited with code ${code}`));
+                    const printProc = spawn(printBin, [tempFilePath], {
+                        env: {
+                            ...process.env,
+                            PATH: `${process.env.PATH || ''}:/usr/bin:/usr/sbin:/usr/local/bin`
+                        }
                     });
-                    lpr.on('error', reject);
+                    printProc.on('close', (code) => {
+                        if (code === 0) resolve(true);
+                        else reject(new Error(`${printBin} exited with code ${code}`));
+                    });
+                    printProc.on('error', reject);
                 });
 
                 // Update status in Sanity
