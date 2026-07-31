@@ -350,8 +350,8 @@ async function processPrintQueue() {
 // Prepare before watching
 await initialize();
 
-// Poll print queue every 5 seconds
-const PRINT_QUEUE_POLL_INTERVAL = 5000;
+// Poll print queue every 15 seconds
+const PRINT_QUEUE_POLL_INTERVAL = 15000;
 setInterval(processPrintQueue, PRINT_QUEUE_POLL_INTERVAL);
 // Initial check
 processPrintQueue();
