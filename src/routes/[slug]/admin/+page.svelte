@@ -195,9 +195,15 @@
 		{#each photoGroups.groups as group}
 			{@const image = group.composite}
 			<div class="image-card">
-				<div class="image-wrapper">
+				<a
+					href={image.url}
+					target="_blank"
+					rel="noopener noreferrer"
+					class="image-wrapper"
+					title="Open direct Sanity image"
+				>
 					<img src={image.url} alt={image.name} loading="lazy" />
-				</div>
+				</a>
 				<div class="card-content">
 					<p class="image-name" title={image.name}>{image.name}</p>
 					<div class="card-actions">
@@ -226,9 +232,15 @@
 
 		{#each photoGroups.standaloneRaws as rawImage}
 			<div class="image-card standalone-raw">
-				<div class="image-wrapper">
+				<a
+					href={rawImage.url}
+					target="_blank"
+					rel="noopener noreferrer"
+					class="image-wrapper"
+					title="Open direct Sanity image"
+				>
 					<img src={rawImage.url} alt={rawImage.name} loading="lazy" />
-				</div>
+				</a>
 				<div class="card-content">
 					<p class="image-name" title={rawImage.name}>{rawImage.name}</p>
 					<span class="standalone-badge">Standalone Raw</span>
@@ -344,9 +356,15 @@
 			<div class="raw-photos-grid">
 				{#each selectedGroupForRaws?.rawPhotos || [] as rawImg}
 					<div class="raw-photo-card">
-						<div class="raw-img-wrapper">
+						<a
+							href={rawImg.url}
+							target="_blank"
+							rel="noopener noreferrer"
+							class="raw-img-wrapper"
+							title="Open direct Sanity image"
+						>
 							<img src={rawImg.url} alt={rawImg.name} loading="lazy" />
-						</div>
+						</a>
 						<div class="raw-card-body">
 							<p class="raw-name" title={rawImg.name}>{rawImg.name}</p>
 							<div class="card-actions">
@@ -481,14 +499,21 @@
 	}
 
 	.image-wrapper {
+		display: block;
 		width: 100%;
 		height: 200px;
+		cursor: pointer;
 	}
 
 	.image-wrapper img {
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
+		transition: opacity 0.2s ease;
+	}
+
+	.image-wrapper:hover img {
+		opacity: 0.9;
 	}
 
 	.card-content {
@@ -642,14 +667,21 @@
 	}
 
 	.raw-img-wrapper {
+		display: block;
 		width: 100%;
 		height: 130px;
+		cursor: pointer;
 	}
 
 	.raw-img-wrapper img {
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
+		transition: opacity 0.2s ease;
+	}
+
+	.raw-img-wrapper:hover img {
+		opacity: 0.9;
 	}
 
 	.raw-card-body {
