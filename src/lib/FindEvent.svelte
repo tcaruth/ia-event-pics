@@ -6,11 +6,17 @@
 
 	const sampleCodes = ['SMITH-WEDDING', 'CEDAR-FALLS-GALA'];
 
+	/**
+	 * @param {string} code
+	 */
 	function setSampleCode(code) {
 		eventCode = code;
 		errorMsg = '';
 	}
 
+	/**
+	 * @param {SubmitEvent} e
+	 */
 	function handleSubmit(e) {
 		e.preventDefault();
 		const trimmed = eventCode.trim();
