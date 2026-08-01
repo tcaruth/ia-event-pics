@@ -83,6 +83,78 @@ export function isCompositePhoto(name) {
 }
 
 /**
+ * Groups raw capture frames under their parent composite photobooth picture.
+ * Matching is performed by:
+ * 1. Timestamp string in filename (e.g. "2026-07-31-17-08-26")
+ * 2. Proximity of ISO creation timestamp (within +/- 60 seconds)
+ *
+ * @param {Array<any>} images
+ * @returns {{ groups: Array<{ composite: any, rawPhotos: any[] }>, standaloneRaws: any[] }}
+ */
+export function groupPhotosByComposite(images = []) {
+	if (!Array.isArray(images) || images.length === 0) {
+		return { groups: [], standaloneRaws: [] };
+	}
+
+	const composites = images.filter((img) => isCompositePhoto(img?.name));
+	const raws = images.filter((img) => !isCompositePhoto(img?.name));
+
+	const assignedRawKeys = new Set();
+
+	// Helper to extract YYYY-MM-DD-HH-MM-SS or date pattern from filename
+	const getDateKey = (filename = '') => {
+		const match = filename.match(/\d{4}-\d{2}-\d{2}[-_]\d{2}[-_]\d{2}[-_]\d{2}/);
+		return match ? match[0].replace(/[_]/g, '-') : null;
+	};
+
+	const groups = composites.map((composite) => {
+		const compTime = composite.created ? new Date(composite.created).getTime() : null;
+		const compDateKey = getDateKey(composite.name);
+
+		const matchingRaws = raws.filter((raw) => {
+			const identifier = raw.key || raw.id || raw.url || raw.fullPath;
+			if (assignedRawKeys.has(identifier)) return false;
+
+			// Check 1: Filename date key match
+			const rawDateKey = getDateKey(raw.name);
+			if (compDateKey && rawDateKey && compDateKey === rawDateKey) {
+				assignedRawKeys.add(identifier);
+				return true;
+			}
+
+			// Check 2: Timestamp proximity (within +/- 60 seconds)
+			if (compTime && raw.created) {
+				const rawTime = new Date(raw.created).getTime();
+				if (!isNaN(rawTime) && Math.abs(compTime - rawTime) <= 60000) {
+					assignedRawKeys.add(identifier);
+					return true;
+				}
+			}
+
+			return false;
+		});
+
+		// Sort raw photos in order e.g. pibooth000.jpg, pibooth001.jpg, pibooth002.jpg
+		matchingRaws.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+		return {
+			composite,
+			rawPhotos: matchingRaws
+		};
+	});
+
+	const standaloneRaws = raws.filter((raw) => {
+		const identifier = raw.key || raw.id || raw.url || raw.fullPath;
+		return !assignedRawKeys.has(identifier);
+	});
+
+	return {
+		groups,
+		standaloneRaws
+	};
+}
+
+/**
  * Parses image list into valid sorted dates
  * @param {Array<{ created?: string }>} images
  * @returns {Date[]}
