@@ -1,5 +1,6 @@
 <script>
-	export let form;
+	/** @type {{ form: import('./$types').ActionData }} */
+	let { form } = $props();
 	console.log('login page');
 </script>
 

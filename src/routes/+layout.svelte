@@ -1,11 +1,14 @@
 <script>
 	import '../app.css';
 	import { theme } from '$lib/stores.js';
-	import { onMount } from 'svelte';
 
-	$: if (typeof document !== 'undefined') {
-		document.documentElement.classList.toggle('dark', $theme === 'dark');
-	}
+	let { children } = $props();
+
+	$effect(() => {
+		if (typeof document !== 'undefined') {
+			document.documentElement.classList.toggle('dark', $theme === 'dark');
+		}
+	});
 </script>
 
 <svelte:head>
@@ -19,7 +22,7 @@
 	/>
 </svelte:head>
 
-<slot />
+{@render children?.()}
 
 <style>
 </style>

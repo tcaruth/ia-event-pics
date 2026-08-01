@@ -9,15 +9,25 @@
 </script>
 
 <svelte:head>
-	<title>IA Event Pics - Photobooth Rentals</title>
-	<link
-		href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@700;800&display=swap"
-		rel="stylesheet"
+	<title>IA Event Pics | Modern Photobooth Rentals in Waterloo & Cedar Valley</title>
+	<meta
+		name="description"
+		content="Premium, affordable photobooth rentals in Waterloo, Cedar Falls, and the Cedar Valley area. Unlimited digital photos, instant print add-ons, and live online guest galleries."
 	/>
-	<link
-		href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
-		rel="stylesheet"
-	/>
+	<meta name="keywords" content="photobooth rental, Waterloo Iowa photobooth, Cedar Falls photobooth, wedding photobooth, corporate photobooth" />
+	
+	<!-- Open Graph / Facebook -->
+	<meta property="og:type" content="website" />
+	<meta property="og:url" content="https://iaevent.pics/" />
+	<meta property="og:title" content="IA Event Pics | Photobooth Rentals" />
+	<meta property="og:description" content="Capture the joy at your next event with high-quality photobooth rentals in the Cedar Valley." />
+	<meta property="og:image" content="/images/hero_photobooth.jpg" />
+
+	<!-- Twitter -->
+	<meta property="twitter:card" content="summary_large_image" />
+	<meta property="twitter:title" content="IA Event Pics | Photobooth Rentals" />
+	<meta property="twitter:description" content="High-quality photobooth rentals for weddings, corporate galas, and celebrations." />
+	<meta property="twitter:image" content="/images/hero_photobooth.jpg" />
 </svelte:head>
 
 <div class="page-wrapper">

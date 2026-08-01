@@ -1,12 +1,12 @@
 <script>
-	import { onMount } from 'svelte';
+	let { data, children } = $props();
+	let theme = $derived(data.event?.theme || 'dark');
 
-	export let data;
-	$: theme = data.event?.theme || 'dark';
-
-	$: if (typeof document !== 'undefined') {
-		document.body.setAttribute('data-theme', theme);
-	}
+	$effect(() => {
+		if (typeof document !== 'undefined') {
+			document.body.setAttribute('data-theme', theme);
+		}
+	});
 </script>
 
 <div
@@ -24,7 +24,7 @@
 		font-family: var(--body-font);
 	"
 >
-	<slot />
+	{@render children?.()}
 </div>
 
 <style>
