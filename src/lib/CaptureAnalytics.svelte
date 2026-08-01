@@ -4,7 +4,7 @@
 	/** @type {{ images?: Array<{ created?: string, name?: string }> }} */
 	let { images = [] } = $props();
 
-	let selectedInterval = $state(30);
+	let selectedInterval = $state(15);
 
 	/** @type {import('./analytics').TimelineBucket | null} */
 	let hoveredBucket = $state(null);
@@ -14,53 +14,14 @@
 	let maxBucketCount = $derived(
 		stats.timelineBuckets.reduce((max, b) => Math.max(max, b.count), 0) || 1
 	);
-
-	let maxHourlyCount = $derived(
-		stats.hourlyDistribution.reduce((max, h) => Math.max(max, h.count), 0) || 1
-	);
-
-	/** @param {number} mins */
-	function setInterval(mins) {
-		selectedInterval = mins;
-	}
 </script>
 
 <div class="analytics-card">
 	<div class="analytics-header">
 		<div class="header-info">
 			<h2>Capture Analytics</h2>
-			<p class="subtitle">Activity distribution & performance over time</p>
+			<p class="subtitle">Activity distribution & performance over time (15-min intervals)</p>
 		</div>
-
-		{#if images.length > 0}
-			<div class="interval-selector">
-				<span class="selector-label">Bucket:</span>
-				<button
-					type="button"
-					class="interval-btn"
-					class:active={selectedInterval === 15}
-					onclick={() => setInterval(15)}
-				>
-					15m
-				</button>
-				<button
-					type="button"
-					class="interval-btn"
-					class:active={selectedInterval === 30}
-					onclick={() => setInterval(30)}
-				>
-					30m
-				</button>
-				<button
-					type="button"
-					class="interval-btn"
-					class:active={selectedInterval === 60}
-					onclick={() => setInterval(60)}
-				>
-					1h
-				</button>
-			</div>
-		{/if}
 	</div>
 
 	{#if images.length === 0}
@@ -146,31 +107,6 @@
 				</div>
 			</div>
 		</div>
-
-		<!-- 24-Hour Distribution Section -->
-		<div class="hourly-section">
-			<h3>24-Hour Activity Profile</h3>
-			<div class="hourly-grid">
-				{#each stats.hourlyDistribution as hourSlot}
-					{@const heightPercent = Math.max((hourSlot.count / maxHourlyCount) * 100, hourSlot.count > 0 ? 12 : 3)}
-					{@const isPeakHour = hourSlot.count > 0 && hourSlot.count === stats.peakHourCount}
-					<div
-						class="hourly-col"
-						title="{hourSlot.label}: {hourSlot.count} capture{hourSlot.count === 1 ? '' : 's'}"
-					>
-						<div
-							class="hourly-bar"
-							class:active={hourSlot.count > 0}
-							class:peak={isPeakHour}
-							style="height: {heightPercent}%;"
-						></div>
-						{#if hourSlot.hour % 3 === 0}
-							<span class="hourly-label">{hourSlot.label}</span>
-						{/if}
-					</div>
-				{/each}
-			</div>
-		</div>
 	{/if}
 </div>
 
@@ -204,44 +140,6 @@
 		font-size: 0.875rem;
 		color: var(--text-surface-secondary, #9ca3af);
 		margin: 0.25rem 0 0 0;
-	}
-
-	.interval-selector {
-		display: flex;
-		align-items: center;
-		gap: 0.375rem;
-		background: var(--surface-primary, #111827);
-		padding: 0.25rem;
-		border-radius: 0.5rem;
-		border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
-	}
-
-	.selector-label {
-		font-size: 0.75rem;
-		color: var(--text-surface-secondary, #9ca3af);
-		padding: 0 0.5rem;
-		font-weight: 500;
-	}
-
-	.interval-btn {
-		background: transparent;
-		border: none;
-		color: var(--text-surface-secondary, #9ca3af);
-		padding: 0.25rem 0.625rem;
-		border-radius: 0.375rem;
-		font-size: 0.75rem;
-		font-weight: 600;
-		cursor: pointer;
-		transition: all 0.2s ease;
-	}
-
-	.interval-btn:hover {
-		color: #ffffff;
-	}
-
-	.interval-btn.active {
-		background: var(--color-primary, #0153a4);
-		color: #ffffff;
 	}
 
 	.empty-analytics {
@@ -309,7 +207,6 @@
 		border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
 		border-radius: 0.75rem;
 		padding: 1.25rem;
-		margin-bottom: 1.5rem;
 	}
 
 	.chart-header {
@@ -320,8 +217,7 @@
 		min-height: 1.75rem;
 	}
 
-	.chart-header h3,
-	.hourly-section h3 {
+	.chart-header h3 {
 		font-size: 0.9375rem;
 		font-weight: 700;
 		margin: 0;
@@ -421,58 +317,6 @@
 		font-size: 0.6875rem;
 		color: var(--text-surface-secondary, #9ca3af);
 		margin-top: 0.5rem;
-		white-space: nowrap;
-	}
-
-	.hourly-section {
-		background: var(--surface-primary, #111827);
-		border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
-		border-radius: 0.75rem;
-		padding: 1.25rem;
-	}
-
-	.hourly-grid {
-		display: flex;
-		align-items: flex-end;
-		height: 80px;
-		gap: 2px;
-		margin-top: 1rem;
-		border-bottom: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
-		padding-bottom: 0.25rem;
-	}
-
-	.hourly-col {
-		flex: 1;
-		height: 100%;
-		display: flex;
-		flex-direction: column;
-		justify-content: flex-end;
-		align-items: center;
-		position: relative;
-	}
-
-	.hourly-bar {
-		width: 100%;
-		background: rgba(255, 255, 255, 0.05);
-		border-radius: 2px 2px 0 0;
-		transition: height 0.3s ease;
-	}
-
-	.hourly-bar.active {
-		background: var(--color-primary, #0153a4);
-		opacity: 0.7;
-	}
-
-	.hourly-bar.peak {
-		background: #f59e0b;
-		opacity: 1;
-	}
-
-	.hourly-label {
-		position: absolute;
-		bottom: -1.25rem;
-		font-size: 0.625rem;
-		color: var(--text-surface-secondary, #9ca3af);
 		white-space: nowrap;
 	}
 

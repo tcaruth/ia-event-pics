@@ -84,22 +84,30 @@ export function isCompositePhoto(name) {
 
 /**
  * Groups raw capture frames under their parent composite photobooth picture.
- * Matching is performed by:
- * 1. Timestamp string in filename (e.g. "2026-07-31-17-08-26")
- * 2. Proximity of ISO creation timestamp (within +/- 60 seconds)
+ * Uses sequential session boundaries and Sanity event capture settings for precision grouping.
  *
  * @param {Array<any>} images
+ * @param {number[]} [eventCaptures] Optional capture count options from Sanity event configuration (e.g. [1, 4])
  * @returns {{ groups: Array<{ composite: any, rawPhotos: any[] }>, standaloneRaws: any[] }}
  */
-export function groupPhotosByComposite(images = []) {
+export function groupPhotosByComposite(images = [], eventCaptures = []) {
 	if (!Array.isArray(images) || images.length === 0) {
 		return { groups: [], standaloneRaws: [] };
 	}
 
-	const composites = images.filter((img) => isCompositePhoto(img?.name));
-	const raws = images.filter((img) => !isCompositePhoto(img?.name));
+	// 1. Separate composites and raws, sorted chronologically by creation timestamp
+	const getTimestamp = (img) => (img?.created ? new Date(img.created).getTime() : 0);
+
+	const composites = images
+		.filter((img) => isCompositePhoto(img?.name))
+		.sort((a, b) => getTimestamp(a) - getTimestamp(b));
+
+	const raws = images
+		.filter((img) => !isCompositePhoto(img?.name))
+		.sort((a, b) => getTimestamp(a) - getTimestamp(b));
 
 	const assignedRawKeys = new Set();
+	const getIdentifier = (raw) => raw.key || raw.id || raw.url || raw.fullPath;
 
 	// Helper to extract YYYY-MM-DD-HH-MM-SS or date pattern from filename
 	const getDateKey = (filename = '') => {
@@ -107,46 +115,83 @@ export function groupPhotosByComposite(images = []) {
 		return match ? match[0].replace(/[_]/g, '-') : null;
 	};
 
-	const groups = composites.map((composite) => {
-		const compTime = composite.created ? new Date(composite.created).getTime() : null;
-		const compDateKey = getDateKey(composite.name);
+	const compositeRawMap = new Map();
+	for (const comp of composites) {
+		compositeRawMap.set(comp, []);
+	}
 
-		const matchingRaws = raws.filter((raw) => {
-			const identifier = raw.key || raw.id || raw.url || raw.fullPath;
-			if (assignedRawKeys.has(identifier)) return false;
+	// Pass 1: Direct Filename Date Key Matching (e.g. 2026-07-31-17-08-26_pibooth_1.jpg matching 2026-07-31-17-08-26_pibooth.jpg)
+	for (const comp of composites) {
+		const compDateKey = getDateKey(comp.name);
+		if (!compDateKey) continue;
 
-			// Check 1: Filename date key match
+		for (const raw of raws) {
+			const id = getIdentifier(raw);
+			if (assignedRawKeys.has(id)) continue;
+
 			const rawDateKey = getDateKey(raw.name);
-			if (compDateKey && rawDateKey && compDateKey === rawDateKey) {
-				assignedRawKeys.add(identifier);
-				return true;
+			if (rawDateKey && rawDateKey === compDateKey) {
+				assignedRawKeys.add(id);
+				compositeRawMap.get(comp).push(raw);
 			}
+		}
+	}
 
-			// Check 2: Timestamp proximity (within +/- 60 seconds)
-			if (compTime && raw.created) {
-				const rawTime = new Date(raw.created).getTime();
-				if (!isNaN(rawTime) && Math.abs(compTime - rawTime) <= 60000) {
-					assignedRawKeys.add(identifier);
-					return true;
-				}
-			}
+	// Pass 2: Sequential Time-Session Window Matching
+	// Photobooth takes raw photos sequentially, THEN generates the composite photo at the end of the session.
+	// So raw photos for composite C[i] occur between C[i-1].created and C[i].created (+ buffer).
+	for (let i = 0; i < composites.length; i++) {
+		const comp = composites[i];
+		const compTime = getTimestamp(comp);
+		const prevCompTime = i > 0 ? getTimestamp(composites[i - 1]) : 0;
 
-			return false;
+		// Session window: strictly after previous composite, up to current composite (+ 5s upload latency buffer)
+		const candidateRaws = raws.filter((raw) => {
+			const id = getIdentifier(raw);
+			if (assignedRawKeys.has(id)) return false;
+
+			const rawTime = getTimestamp(raw);
+			if (!rawTime) return false;
+
+			// Must be after previous composite (minus 2s overlap buffer)
+			const isAfterPrev = prevCompTime === 0 || rawTime >= prevCompTime - 2000;
+			// Must be before or slightly at current composite time (+ 5000ms buffer)
+			const isBeforeComp = rawTime <= compTime + 5000;
+
+			return isAfterPrev && isBeforeComp;
 		});
 
-		// Sort raw photos in order e.g. pibooth000.jpg, pibooth001.jpg, pibooth002.jpg
-		matchingRaws.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+		// Determine maximum expected captures if specified in eventCaptures
+		let maxAllowed = Infinity;
+		if (Array.isArray(eventCaptures) && eventCaptures.length > 0) {
+			const maxConfigured = Math.max(...eventCaptures);
+			if (maxConfigured > 0) {
+				maxAllowed = maxConfigured;
+			}
+		}
+
+		// Take candidate raws up to maxAllowed limit (prioritizing those closest to current composite)
+		const selectedRaws = candidateRaws.slice(-maxAllowed);
+		for (const raw of selectedRaws) {
+			assignedRawKeys.add(getIdentifier(raw));
+			compositeRawMap.get(comp).push(raw);
+		}
+	}
+
+	// Build final groups
+	const groups = composites.map((composite) => {
+		const rawPhotos = compositeRawMap.get(composite) || [];
+		// Sort raw photos in filename sequence order e.g. pibooth000.jpg, pibooth001.jpg
+		rawPhotos.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
 		return {
 			composite,
-			rawPhotos: matchingRaws
+			rawPhotos
 		};
 	});
 
-	const standaloneRaws = raws.filter((raw) => {
-		const identifier = raw.key || raw.id || raw.url || raw.fullPath;
-		return !assignedRawKeys.has(identifier);
-	});
+	// Any unassigned raw photos become standalone raws
+	const standaloneRaws = raws.filter((raw) => !assignedRawKeys.has(getIdentifier(raw)));
 
 	return {
 		groups,
@@ -171,10 +216,10 @@ export function getSortedCaptureDates(images) {
  * Calculates capture statistics and histogram time buckets from an array of images,
  * strictly counting composite photobooth captures (e.g., 2026-07-31-17-08-26_pibooth.jpg).
  * @param {Array<{ created?: string, name?: string }>} images
- * @param {number} [intervalMinutes=30]
+ * @param {number} [intervalMinutes=15]
  * @returns {CaptureStats}
  */
-export function calculateCaptureStats(images = [], intervalMinutes = 30) {
+export function calculateCaptureStats(images = [], intervalMinutes = 15) {
 	const emptyResult = {
 		totalCaptures: 0,
 		firstCaptureTime: null,

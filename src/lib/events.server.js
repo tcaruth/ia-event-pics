@@ -69,6 +69,7 @@ async function getEvent(slug, showAllImages = false) {
         "name": title,
         date,
         location,
+        captures,
         "primary_image": primaryImage,
         adminPassword,
         fonts,
