@@ -19,6 +19,14 @@ describe('analytics.js', () => {
 	it('identifies composite photobooth pictures vs raw frames', () => {
 		expect(isCompositePhoto('2026-07-31-17-08-26_pibooth.jpg')).toBe(true);
 		expect(isCompositePhoto('2026-07-31-17-08-26_pibooth.png')).toBe(true);
+
+		// Raw frame formats
+		expect(isCompositePhoto('pibooth000.jpg')).toBe(false);
+		expect(isCompositePhoto('pibooth001.jpg')).toBe(false);
+		expect(isCompositePhoto('pibooth002.jpg')).toBe(false);
+		expect(isCompositePhoto('pibooth003.jpg')).toBe(false);
+
+		// Other raw formats
 		expect(isCompositePhoto('2026-07-31-17-08-26_pibooth_1.jpg')).toBe(false);
 		expect(isCompositePhoto('2026-07-31-17-08-26_pibooth_2.jpg')).toBe(false);
 		expect(isCompositePhoto('2026-07-31-17-08-26_pibooth_raw.jpg')).toBe(false);
@@ -37,11 +45,12 @@ describe('analytics.js', () => {
 		expect(result.hourlyDistribution.length).toBe(24);
 	});
 
-	it('filters out raw frames and counts only composite captures', () => {
+	it('filters out pibooth000.jpg raw frames and counts only composite captures', () => {
 		const mockImages = [
 			{ name: '2026-07-31-18-00-00_pibooth.jpg', created: '2026-07-31T18:00:00.000Z' },
-			{ name: '2026-07-31-18-00-00_pibooth_1.jpg', created: '2026-07-31T18:00:01.000Z' },
-			{ name: '2026-07-31-18-00-00_pibooth_2.jpg', created: '2026-07-31T18:00:02.000Z' },
+			{ name: 'pibooth000.jpg', created: '2026-07-31T18:00:01.000Z' },
+			{ name: 'pibooth001.jpg', created: '2026-07-31T18:00:02.000Z' },
+			{ name: 'pibooth002.jpg', created: '2026-07-31T18:00:03.000Z' },
 			{ name: '2026-07-31-18-15-00_pibooth.jpg', created: '2026-07-31T18:15:00.000Z' },
 			{ name: '2026-07-31-18-45-00_pibooth.jpg', created: '2026-07-31T18:45:00.000Z' },
 			{ name: '2026-07-31-19-15-00_pibooth.jpg', created: '2026-07-31T19:15:00.000Z' }
@@ -49,10 +58,10 @@ describe('analytics.js', () => {
 
 		const stats = calculateCaptureStats(mockImages, 30);
 
-		// Only 4 composite photos, 2 raw frames
+		// Only 4 composite photos, 3 raw frames (pibooth000, pibooth001, pibooth002)
 		expect(stats.totalCaptures).toBe(4);
 		expect(stats.overlaidCount).toBe(4);
-		expect(stats.rawCount).toBe(2);
+		expect(stats.rawCount).toBe(3);
 
 		expect(stats.firstCaptureTime).toEqual(new Date('2026-07-31T18:00:00.000Z'));
 		expect(stats.lastCaptureTime).toEqual(new Date('2026-07-31T19:15:00.000Z'));

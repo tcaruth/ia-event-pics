@@ -56,7 +56,8 @@ export function formatHourLabel(hour) {
 
 /**
  * Determines whether a file represents a composite photobooth capture (and not a raw frame/individual shot).
- * Composite filename format example: 2026-07-31-17-08-26_pibooth.jpg
+ * Composite format example: 2026-07-31-17-08-26_pibooth.jpg
+ * Raw format examples: pibooth000.jpg, pibooth001.jpg, pibooth_1.jpg, pibooth_raw.jpg
  * @param {string} [name]
  * @returns {boolean}
  */
@@ -67,12 +68,15 @@ export function isCompositePhoto(name) {
 	// Exclude explicit raw indicators
 	if (lower.includes('raw')) return false;
 
-	// Exclude numbered frames like _pibooth_1.jpg, _pibooth_2.jpg, _pibooth_3.jpg
+	// Exclude raw frame patterns e.g. pibooth000.jpg, pibooth001.jpg, pibooth12.png
+	if (/pibooth\d+\.(jpg|jpeg|png|webp)$/i.test(lower)) return false;
+
+	// Exclude numbered frames after _pibooth like _pibooth_1.jpg, _pibooth_001.jpg
 	if (/_pibooth_\d+/i.test(lower)) return false;
 
-	// If the name contains pibooth, ensure it ends with _pibooth.<ext> or pibooth.<ext>
+	// If the name contains pibooth, ensure it ends with _pibooth.<ext> (preceded by timestamp)
 	if (lower.includes('pibooth')) {
-		return /_pibooth\.(jpg|jpeg|png|webp)$/i.test(lower) || /pibooth\.(jpg|jpeg|png|webp)$/i.test(lower);
+		return /_pibooth\.(jpg|jpeg|png|webp)$/i.test(lower);
 	}
 
 	return true;
