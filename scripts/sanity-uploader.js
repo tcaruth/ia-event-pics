@@ -300,9 +300,11 @@ async function processPrintQueue() {
                     ? '/usr/bin/lpr'
                     : 'lp';
 
-                console.log(`Executing print command: ${printBin} ${tempFilePath}`);
+                // Use -c flag for lp to copy file to CUPS spool directory before printing
+                const printArgs = printBin.endsWith('lp') ? ['-c', tempFilePath] : [tempFilePath];
+                console.log(`Executing print command: ${printBin} ${printArgs.join(' ')}`);
                 await new Promise((resolve, reject) => {
-                    const printProc = spawn(printBin, [tempFilePath], {
+                    const printProc = spawn(printBin, printArgs, {
                         env: {
                             ...process.env,
                             PATH: `${process.env.PATH || ''}:/usr/bin:/usr/sbin:/usr/local/bin`
@@ -325,8 +327,10 @@ async function processPrintQueue() {
                     })
                     .commit();
 
-                // Clean up temp file
-                fs.unlink(tempFilePath, () => {});
+                // Clean up temp file after 60s delay so CUPS finishes reading/spooling
+                setTimeout(() => {
+                    fs.unlink(tempFilePath, () => {});
+                }, 60000);
             } catch (err) {
                 console.error(`Failed print task ${task._key}:`, err.message);
                 await client
@@ -346,8 +350,8 @@ async function processPrintQueue() {
 // Prepare before watching
 await initialize();
 
-// Poll print queue every 5 seconds
-const PRINT_QUEUE_POLL_INTERVAL = 5000;
+// Poll print queue every 15 seconds
+const PRINT_QUEUE_POLL_INTERVAL = 15000;
 setInterval(processPrintQueue, PRINT_QUEUE_POLL_INTERVAL);
 // Initial check
 processPrintQueue();

@@ -32,12 +32,14 @@
 	}
 
 	.login-card {
-		background: white;
+		background: var(--surface-secondary, #1e293b);
 		padding: 2.5rem;
 		border-radius: 1rem;
-		box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+		border: 1px solid var(--border-color, rgba(255, 255, 255, 0.12));
+		box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
 		width: 100%;
 		max-width: 400px;
+		color: var(--text-surface-primary, #f8fafc);
 	}
 
 	h1 {
@@ -45,13 +47,13 @@
 		margin-bottom: 2rem;
 		text-align: center;
 		font-size: 1.75rem;
-		color: var(--color-primary);
+		color: var(--text-surface-primary, #f8fafc);
 	}
 
 	.error-message {
-		background-color: #fee2e2;
+		background-color: rgba(239, 68, 68, 0.2);
 		border: 1px solid #ef4444;
-		color: #b91c1c;
+		color: #ef4444;
 		padding: 0.75rem 1rem;
 		border-radius: 0.5rem;
 		margin-bottom: 1.5rem;
@@ -67,31 +69,31 @@
 		font-size: 0.875rem;
 		font-weight: 600;
 		margin-bottom: 0.5rem;
-		color: #374151;
+		color: var(--text-surface-secondary, #cbd5e1);
 	}
 
 	input {
 		width: 100%;
 		padding: 0.75rem;
-		border: 1px solid #d1d5db;
+		background: var(--surface-primary, #0f172a);
+		color: var(--text-surface-primary, #f8fafc);
+		border: 1px solid #475569;
 		border-radius: 0.5rem;
 		font-size: 1rem;
 		box-sizing: border-box;
-		transition:
-			border-color 0.2s,
-			ring 0.2s;
+		transition: border-color 0.2s;
 	}
 
 	input:focus {
 		outline: none;
-		border-color: var(--color-primary);
-		box-shadow: 0 0 0 3px rgba(1, 83, 164, 0.1);
+		border-color: var(--color-primary, #3b82f6);
+		box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 	}
 
 	button {
 		width: 100%;
 		padding: 0.75rem;
-		background-color: var(--color-primary);
+		background-color: var(--color-primary, #3b82f6);
 		color: white;
 		border: none;
 		border-radius: 0.5rem;

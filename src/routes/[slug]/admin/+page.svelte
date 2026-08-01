@@ -6,6 +6,8 @@
 	export let form;
 	import { enhance } from '$app/forms';
 	import JSZip from 'jszip';
+	import CaptureAnalytics from '$lib/CaptureAnalytics.svelte';
+	import { groupPhotosByComposite } from '$lib/analytics';
 
 	let isDownloading = false;
 	let downloadProgress = '';
@@ -16,10 +18,17 @@
 	let deleteAllDialog;
 	/** @type {HTMLDialogElement} */
 	let printDialog;
+	/** @type {HTMLDialogElement} */
+	let rawPhotosDialog;
+
 	/** @type {import('$lib/events.server').EventImage | null} */
 	let imageToDelete = null;
 	/** @type {import('$lib/events.server').EventImage | null} */
 	let imageToPrint = null;
+	/** @type {any | null} */
+	let selectedGroupForRaws = null;
+
+	$: photoGroups = groupPhotosByComposite(data.images || []);
 
 	/** @param {import('$lib/events.server').EventImage} image */
 	function confirmDelete(image) {
@@ -49,6 +58,17 @@
 
 	function closeDeleteAllDialog() {
 		deleteAllDialog.close();
+	}
+
+	/** @param {any} group */
+	function openRawPhotos(group) {
+		selectedGroupForRaws = group;
+		rawPhotosDialog.showModal();
+	}
+
+	function closeRawPhotos() {
+		rawPhotosDialog.close();
+		selectedGroupForRaws = null;
 	}
 
 	async function downloadAll() {
@@ -144,6 +164,8 @@
 <div class="admin-container">
 	<h1>Admin Dashboard</h1>
 
+	<CaptureAnalytics images={data.images} />
+
 	{#if form?.error}
 		<div class="alert alert-error">
 			{form.error}
@@ -171,7 +193,8 @@
 	</div>
 
 	<div class="image-grid">
-		{#each data.images as image}
+		{#each photoGroups.groups as group}
+			{@const image = group.composite}
 			<div class="image-card">
 				<div class="image-wrapper">
 					<img src={image.url} alt={image.name} loading="lazy" />
@@ -183,6 +206,36 @@
 							Print
 						</button>
 						<button type="button" class="delete-btn" on:click={() => confirmDelete(image)}>
+							Delete
+						</button>
+					</div>
+
+					{#if group.rawPhotos.length > 0}
+						<button
+							type="button"
+							class="raw-shots-btn"
+							on:click={() => openRawPhotos(group)}
+						>
+							📷 Raw Shots ({group.rawPhotos.length})
+						</button>
+					{/if}
+				</div>
+			</div>
+		{/each}
+
+		{#each photoGroups.standaloneRaws as rawImage}
+			<div class="image-card standalone-raw">
+				<div class="image-wrapper">
+					<img src={rawImage.url} alt={rawImage.name} loading="lazy" />
+				</div>
+				<div class="card-content">
+					<p class="image-name" title={rawImage.name}>{rawImage.name}</p>
+					<span class="standalone-badge">Standalone Raw</span>
+					<div class="card-actions">
+						<button type="button" class="print-btn" on:click={() => confirmPrint(rawImage)}>
+							Print
+						</button>
+						<button type="button" class="delete-btn" on:click={() => confirmDelete(rawImage)}>
 							Delete
 						</button>
 					</div>
@@ -276,6 +329,41 @@
 			</div>
 		</div>
 	</dialog>
+
+	<dialog bind:this={rawPhotosDialog} class="confirm-dialog raw-modal">
+		<div class="dialog-content raw-dialog-content">
+			<div class="modal-header">
+				<h2>Raw Captures ({selectedGroupForRaws?.rawPhotos?.length || 0})</h2>
+				<button type="button" class="close-btn" on:click={closeRawPhotos}>✕</button>
+			</div>
+			<p class="modal-sub">Nested under {selectedGroupForRaws?.composite?.name}</p>
+
+			<div class="raw-photos-grid">
+				{#each selectedGroupForRaws?.rawPhotos || [] as rawImg}
+					<div class="raw-photo-card">
+						<div class="raw-img-wrapper">
+							<img src={rawImg.url} alt={rawImg.name} loading="lazy" />
+						</div>
+						<div class="raw-card-body">
+							<p class="raw-name" title={rawImg.name}>{rawImg.name}</p>
+							<div class="card-actions">
+								<button type="button" class="print-btn" on:click={() => confirmPrint(rawImg)}>
+									Print
+								</button>
+								<button type="button" class="delete-btn" on:click={() => confirmDelete(rawImg)}>
+									Delete
+								</button>
+							</div>
+						</div>
+					</div>
+				{/each}
+			</div>
+
+			<div class="dialog-actions">
+				<button type="button" class="btn-secondary" on:click={closeRawPhotos}>Close</button>
+			</div>
+		</div>
+	</dialog>
 </div>
 
 <style>
@@ -287,7 +375,7 @@
 		font-size: 2rem;
 		font-weight: 700;
 		margin-bottom: 2rem;
-		color: var(--color-primary);
+		color: var(--text-surface-primary, #f8fafc);
 	}
 
 	.admin-actions {
@@ -446,6 +534,36 @@
 		background-color: #b91c1c;
 	}
 
+	.raw-shots-btn {
+		width: 100%;
+		margin-top: 0.75rem;
+		padding: 0.5rem;
+		background: rgba(255, 255, 255, 0.06);
+		border: 1px dashed var(--border-color, rgba(255, 255, 255, 0.2));
+		border-radius: 0.375rem;
+		color: var(--text-surface-primary, #f8fafc);
+		font-size: 0.8125rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.2s ease;
+	}
+
+	.raw-shots-btn:hover {
+		background: rgba(59, 130, 246, 0.2);
+		border-color: var(--color-primary, #3b82f6);
+	}
+
+	.standalone-badge {
+		display: inline-block;
+		font-size: 0.6875rem;
+		background: rgba(245, 158, 11, 0.2);
+		color: #f59e0b;
+		padding: 0.125rem 0.375rem;
+		border-radius: 0.25rem;
+		margin-bottom: 0.5rem;
+		font-weight: 700;
+	}
+
 	.confirm-dialog {
 		border: none;
 		border-radius: 1rem;
@@ -458,6 +576,11 @@
 		place-self: center;
 	}
 
+	.raw-modal {
+		max-width: 720px;
+		width: 95%;
+	}
+
 	.confirm-dialog::backdrop {
 		background: rgba(0, 0, 0, 0.7);
 		backdrop-filter: blur(4px);
@@ -467,10 +590,74 @@
 		padding: 2rem;
 	}
 
-	.dialog-content h2 {
-		margin-top: 0;
-		font-size: 1.5rem;
-		color: var(--text-surface-primary);
+	.modal-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+
+	.modal-header h2 {
+		margin: 0;
+		font-size: 1.375rem;
+		color: var(--text-surface-primary, #f8fafc);
+	}
+
+	.close-btn {
+		background: transparent;
+		border: none;
+		color: var(--text-surface-secondary, #94a3b8);
+		font-size: 1.25rem;
+		cursor: pointer;
+	}
+
+	.close-btn:hover {
+		color: #ffffff;
+	}
+
+	.modal-sub {
+		font-size: 0.8125rem;
+		color: var(--text-surface-secondary, #94a3b8);
+		margin: 0.25rem 0 1.25rem 0;
+	}
+
+	.raw-photos-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+		gap: 1rem;
+		max-height: 420px;
+		overflow-y: auto;
+		padding-right: 0.25rem;
+	}
+
+	.raw-photo-card {
+		background: var(--surface-secondary, #1e293b);
+		border-radius: 0.5rem;
+		overflow: hidden;
+		border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+	}
+
+	.raw-img-wrapper {
+		width: 100%;
+		height: 130px;
+	}
+
+	.raw-img-wrapper img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	.raw-card-body {
+		padding: 0.625rem;
+	}
+
+	.raw-name {
+		font-size: 0.75rem;
+		color: var(--text-surface-secondary, #94a3b8);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		margin-bottom: 0.5rem;
 	}
 
 	.warning-text {
@@ -484,7 +671,7 @@
 		display: flex;
 		justify-content: flex-end;
 		gap: 1rem;
-		margin-top: 2rem;
+		margin-top: 1.5rem;
 	}
 
 	.btn-secondary,
