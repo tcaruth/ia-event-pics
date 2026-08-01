@@ -2,6 +2,8 @@
 	import '../app.css';
 	import { theme } from '$lib/stores.js';
 
+	let { children } = $props();
+
 	$effect(() => {
 		if (typeof document !== 'undefined') {
 			document.documentElement.classList.toggle('dark', $theme === 'dark');
@@ -20,7 +22,7 @@
 	/>
 </svelte:head>
 
-<slot />
+{@render children?.()}
 
 <style>
 </style>

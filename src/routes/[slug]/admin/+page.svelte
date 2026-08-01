@@ -1,73 +1,72 @@
 <script>
 	console.log('admin page');
-	/** @type {import('./$types').PageData} */
-	export let data;
-	/** @type {import('./$types').ActionData} */
-	export let form;
+	/** @type {{ data: import('./$types').PageData, form: import('./$types').ActionData }} */
+	let { data, form } = $props();
+
 	import { enhance } from '$app/forms';
 	import JSZip from 'jszip';
 	import CaptureAnalytics from '$lib/CaptureAnalytics.svelte';
 	import { groupPhotosByComposite } from '$lib/analytics';
 
-	let isDownloading = false;
-	let downloadProgress = '';
+	let isDownloading = $state(false);
+	let downloadProgress = $state('');
 
-	/** @type {HTMLDialogElement} */
-	let deleteDialog;
-	/** @type {HTMLDialogElement} */
-	let deleteAllDialog;
-	/** @type {HTMLDialogElement} */
-	let printDialog;
-	/** @type {HTMLDialogElement} */
-	let rawPhotosDialog;
+	/** @type {HTMLDialogElement | undefined} */
+	let deleteDialog = $state(undefined);
+	/** @type {HTMLDialogElement | undefined} */
+	let deleteAllDialog = $state(undefined);
+	/** @type {HTMLDialogElement | undefined} */
+	let printDialog = $state(undefined);
+	/** @type {HTMLDialogElement | undefined} */
+	let rawPhotosDialog = $state(undefined);
 
 	/** @type {import('$lib/events.server').EventImage | null} */
-	let imageToDelete = null;
+	let imageToDelete = $state(null);
 	/** @type {import('$lib/events.server').EventImage | null} */
-	let imageToPrint = null;
+	let imageToPrint = $state(null);
 	/** @type {any | null} */
-	let selectedGroupForRaws = null;
+	let selectedGroupForRaws = $state(null);
 
-	$: photoGroups = groupPhotosByComposite(data.images || []);
+	let photoGroups = $derived(groupPhotosByComposite(data.images || []));
 
 	/** @param {import('$lib/events.server').EventImage} image */
 	function confirmDelete(image) {
 		imageToDelete = image;
-		deleteDialog.showModal();
+		deleteDialog?.showModal();
 	}
 
 	function closeDeleteDialog() {
-		deleteDialog.close();
+		deleteDialog?.close();
 		imageToDelete = null;
 	}
 
 	/** @param {import('$lib/events.server').EventImage} image */
 	function confirmPrint(image) {
 		imageToPrint = image;
-		printDialog.showModal();
+		printDialog?.showModal();
 	}
 
 	function closePrintDialog() {
-		printDialog.close();
+		printDialog?.close();
 		imageToPrint = null;
 	}
 
 	function confirmDeleteAll() {
-		deleteAllDialog.showModal();
+		deleteAllDialog?.showModal();
 	}
 
 	function closeDeleteAllDialog() {
-		deleteAllDialog.close();
+		deleteAllDialog?.close();
 	}
 
 	/** @param {any} group */
 	function openRawPhotos(group) {
 		selectedGroupForRaws = group;
-		rawPhotosDialog.showModal();
+		rawPhotosDialog?.showModal();
 	}
 
 	function closeRawPhotos() {
-		rawPhotosDialog.close();
+		rawPhotosDialog?.close();
 		selectedGroupForRaws = null;
 	}
 
@@ -177,12 +176,12 @@
 	{/if}
 
 	<div class="admin-actions">
-		<button class="download-all-btn" on:click={downloadAll} disabled={isDownloading}>
+		<button class="download-all-btn" onclick={downloadAll} disabled={isDownloading}>
 			{isDownloading ? 'Preparing ZIP...' : 'Download All (ZIP)'}
 		</button>
 		<button
 			class="delete-all-photos-btn"
-			on:click={confirmDeleteAll}
+			onclick={confirmDeleteAll}
 			disabled={isDownloading || !data.images?.length}
 		>
 			Delete All Photos
@@ -202,10 +201,10 @@
 				<div class="card-content">
 					<p class="image-name" title={image.name}>{image.name}</p>
 					<div class="card-actions">
-						<button type="button" class="print-btn" on:click={() => confirmPrint(image)}>
+						<button type="button" class="print-btn" onclick={() => confirmPrint(image)}>
 							Print
 						</button>
-						<button type="button" class="delete-btn" on:click={() => confirmDelete(image)}>
+						<button type="button" class="delete-btn" onclick={() => confirmDelete(image)}>
 							Delete
 						</button>
 					</div>
@@ -214,7 +213,7 @@
 						<button
 							type="button"
 							class="raw-shots-btn"
-							on:click={() => openRawPhotos(group)}
+							onclick={() => openRawPhotos(group)}
 						>
 							📷 Raw Shots ({group.rawPhotos.length})
 						</button>
@@ -232,10 +231,10 @@
 					<p class="image-name" title={rawImage.name}>{rawImage.name}</p>
 					<span class="standalone-badge">Standalone Raw</span>
 					<div class="card-actions">
-						<button type="button" class="print-btn" on:click={() => confirmPrint(rawImage)}>
+						<button type="button" class="print-btn" onclick={() => confirmPrint(rawImage)}>
 							Print
 						</button>
-						<button type="button" class="delete-btn" on:click={() => confirmDelete(rawImage)}>
+						<button type="button" class="delete-btn" onclick={() => confirmDelete(rawImage)}>
 							Delete
 						</button>
 					</div>
@@ -251,7 +250,7 @@
 			<p class="warning-text">This action cannot be undone.</p>
 
 			<div class="dialog-actions">
-				<button type="button" class="btn-secondary" on:click={closeDeleteDialog}>Cancel</button>
+				<button type="button" class="btn-secondary" onclick={closeDeleteDialog}>Cancel</button>
 				<form
 					method="POST"
 					action="?/delete"
@@ -281,7 +280,7 @@
 			<p class="warning-text">This action is permanent and cannot be undone.</p>
 
 			<div class="dialog-actions">
-				<button type="button" class="btn-secondary" on:click={closeDeleteAllDialog}>Cancel</button>
+				<button type="button" class="btn-secondary" onclick={closeDeleteAllDialog}>Cancel</button>
 				<form
 					method="POST"
 					action="?/deleteAll"
@@ -307,7 +306,7 @@
 			<p>Are you sure you want to send <strong>{imageToPrint?.name}</strong> to the photobooth printer?</p>
 
 			<div class="dialog-actions">
-				<button type="button" class="btn-secondary" on:click={closePrintDialog}>Cancel</button>
+				<button type="button" class="btn-secondary" onclick={closePrintDialog}>Cancel</button>
 				<form
 					method="POST"
 					action="?/print"
@@ -334,7 +333,7 @@
 		<div class="dialog-content raw-dialog-content">
 			<div class="modal-header">
 				<h2>Raw Captures ({selectedGroupForRaws?.rawPhotos?.length || 0})</h2>
-				<button type="button" class="close-btn" on:click={closeRawPhotos}>✕</button>
+				<button type="button" class="close-btn" onclick={closeRawPhotos}>✕</button>
 			</div>
 			<p class="modal-sub">Nested under {selectedGroupForRaws?.composite?.name}</p>
 
@@ -347,10 +346,10 @@
 						<div class="raw-card-body">
 							<p class="raw-name" title={rawImg.name}>{rawImg.name}</p>
 							<div class="card-actions">
-								<button type="button" class="print-btn" on:click={() => confirmPrint(rawImg)}>
+								<button type="button" class="print-btn" onclick={() => confirmPrint(rawImg)}>
 									Print
 								</button>
-								<button type="button" class="delete-btn" on:click={() => confirmDelete(rawImg)}>
+								<button type="button" class="delete-btn" onclick={() => confirmDelete(rawImg)}>
 									Delete
 								</button>
 							</div>
@@ -360,7 +359,7 @@
 			</div>
 
 			<div class="dialog-actions">
-				<button type="button" class="btn-secondary" on:click={closeRawPhotos}>Close</button>
+				<button type="button" class="btn-secondary" onclick={closeRawPhotos}>Close</button>
 			</div>
 		</div>
 	</dialog>

@@ -2,14 +2,15 @@
 	import { page } from '$app/stores';
 	import QRCode from 'qrcode';
 	import { onMount } from 'svelte';
-	export let data;
 
-	const imageUrl = data.image?.url || '';
+	let { data } = $props();
+
+	let imageUrl = $derived(data.image?.url || '');
 	const qrCodeSize = 300;
 
-	let qrPageUrlDataUrl = Promise.resolve('');
-	let loadingState = data.image ? 'loaded' : 'checking'; // 'checking', 'loaded', 'error'
-	let retryCount = 0;
+	let qrPageUrlDataUrl = $state(Promise.resolve(''));
+	let loadingState = $state(data.image ? 'loaded' : 'checking'); // 'checking', 'loaded', 'error'
+	let retryCount = $state(0);
 	const MAX_RETRIES = 60; // 3 minutes at 3s interval
 
 	async function checkImage() {
@@ -105,7 +106,7 @@
 				<div class="status-container">
 					<p class="error-text">Photo Not Found</p>
 					<p class="subtext">We couldn't locate this photo. It might still be uploading.</p>
-					<button class="btn btn-primary" on:click={() => window.location.reload()}>Retry</button>
+					<button class="btn btn-primary" onclick={() => window.location.reload()}>Retry</button>
 				</div>
 			{:else}
 				<div class="image-wrapper">
@@ -114,12 +115,12 @@
 						alt={data.filename}
 						class="main-image"
 						style:--tag={'img-' + data.filename.replace(/[^a-z0-9]/gi, '-')}
-						on:error={() => (loadingState = 'checking')}
+						onerror={() => (loadingState = 'checking')}
 					/>
 				</div>
 
 				<div class="action-bar">
-					<button class="action-btn primary" on:click={downloadImage}>
+					<button class="action-btn primary" onclick={downloadImage}>
 						<span class="icon">
 							<svg
 								fill="currentColor"
@@ -137,7 +138,7 @@
 						</span>
 						<span>Save</span>
 					</button>
-					<button class="action-btn secondary" on:click={shareImage}>
+					<button class="action-btn secondary" onclick={shareImage}>
 						<span class="icon"
 							><svg
 								fill="currentColor"
@@ -176,7 +177,7 @@
 	.attribution a {
 		text-decoration: underline;
 	}
-	
+
 	.image-viewer {
 		position: fixed;
 		inset: 0;
