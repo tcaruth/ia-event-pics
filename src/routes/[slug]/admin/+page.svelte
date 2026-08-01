@@ -27,7 +27,7 @@
 	/** @type {any | null} */
 	let selectedGroupForRaws = $state(null);
 
-	let photoGroups = $derived(groupPhotosByComposite(data.images || []));
+	let photoGroups = $derived(groupPhotosByComposite(data.images || [], data.event?.captures));
 
 	/** @param {import('$lib/events.server').EventImage} image */
 	function confirmDelete(image) {
