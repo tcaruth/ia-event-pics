@@ -48,9 +48,11 @@ import groq from 'groq';
  * @property {string} [adminPassword]
  * @property {EventFonts} [fonts]
  * @property {EventColors} [colors]
+ * @property {number[]} [captures]
  * @property {EventImage[]} images
  * @property {string} [description]
  * @property {string} [theme]
+ * @property {boolean} [isPhotoboothActive]
  */
 
 /**
@@ -75,6 +77,7 @@ async function getEvent(slug, showAllImages = false) {
         fonts,
         colors,
         theme,
+        "isPhotoboothActive": count(*[_type == "photobooth" && activeEvent->slug.current == $slug]) > 0,
         "images": gallery[$showAllImages == true || !defined(asset->originalFilename) || !(asset->originalFilename match "pibooth*")]{
             "url": asset->url,
             "created": coalesce(created, _createdAt), 

@@ -75,10 +75,20 @@ export const actions = {
         }
 
         try {
-            const event = await client.fetch(`*[_type == "event" && slug.current == $slug][0]{_id}`, { slug: eventSlug });
+            const event = await client.fetch(
+                `*[_type == "event" && slug.current == $slug][0]{
+                    _id,
+                    "isPhotoboothActive": count(*[_type == "photobooth" && activeEvent->slug.current == $slug]) > 0
+                }`,
+                { slug: eventSlug }
+            );
 
             if (!event) {
                 return { success: false, error: 'Event not found' };
+            }
+
+            if (!event.isPhotoboothActive) {
+                return { success: false, error: 'Printing is only available while the event is active and assigned to a photobooth' };
             }
 
             const printTask = {

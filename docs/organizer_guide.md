@@ -22,6 +22,10 @@ This guide is for event organizers and photobooth operators to manage photos and
 3.  Click **Yes, Delete All** to proceed.
 4.  **Warning:** This will permanently remove **ALL** photos for this event. This cannot be undone.
 
+### Printing Photos
+1.  Print buttons are displayed in the Admin Dashboard while the event is active and assigned to a photobooth in Sanity.
+2.  Click **Print** on any photo to send a print task to the photobooth printer queue.
+
 ## 🎨 Updating Event Branding
 
 Branding (colors, fonts, passwords) is managed via **Sanity Studio**.

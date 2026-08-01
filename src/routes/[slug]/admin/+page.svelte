@@ -201,9 +201,11 @@
 				<div class="card-content">
 					<p class="image-name" title={image.name}>{image.name}</p>
 					<div class="card-actions">
-						<button type="button" class="print-btn" onclick={() => confirmPrint(image)}>
-							Print
-						</button>
+						{#if data.event?.isPhotoboothActive}
+							<button type="button" class="print-btn" onclick={() => confirmPrint(image)}>
+								Print
+							</button>
+						{/if}
 						<button type="button" class="delete-btn" onclick={() => confirmDelete(image)}>
 							Delete
 						</button>
@@ -231,9 +233,11 @@
 					<p class="image-name" title={rawImage.name}>{rawImage.name}</p>
 					<span class="standalone-badge">Standalone Raw</span>
 					<div class="card-actions">
-						<button type="button" class="print-btn" onclick={() => confirmPrint(rawImage)}>
-							Print
-						</button>
+						{#if data.event?.isPhotoboothActive}
+							<button type="button" class="print-btn" onclick={() => confirmPrint(rawImage)}>
+								Print
+							</button>
+						{/if}
 						<button type="button" class="delete-btn" onclick={() => confirmDelete(rawImage)}>
 							Delete
 						</button>
@@ -346,9 +350,11 @@
 						<div class="raw-card-body">
 							<p class="raw-name" title={rawImg.name}>{rawImg.name}</p>
 							<div class="card-actions">
-								<button type="button" class="print-btn" onclick={() => confirmPrint(rawImg)}>
-									Print
-								</button>
+								{#if data.event?.isPhotoboothActive}
+									<button type="button" class="print-btn" onclick={() => confirmPrint(rawImg)}>
+										Print
+									</button>
+								{/if}
 								<button type="button" class="delete-btn" onclick={() => confirmDelete(rawImg)}>
 									Delete
 								</button>

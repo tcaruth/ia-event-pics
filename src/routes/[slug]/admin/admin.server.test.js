@@ -42,6 +42,24 @@ describe('Admin Page Actions', () => {
 			expect(result).toEqual({ success: false, error: 'Event not found' });
 		});
 
+		it('returns error if event is not active and assigned to a photobooth', async () => {
+			const formData = new Map([
+				['fullPath', 'img_key_123'],
+				['assetUrl', 'https://cdn.sanity.io/images/proj/ds/image.jpg'],
+				['imageName', 'test.jpg']
+			]);
+			const request = { formData: async () => formData };
+			const params = { slug: 'inactive-event' };
+
+			vi.mocked(client.fetch).mockResolvedValue({ _id: 'event-doc-id', isPhotoboothActive: false });
+
+			const result = await actions.print({ request, params });
+			expect(result).toEqual({
+				success: false,
+				error: 'Printing is only available while the event is active and assigned to a photobooth'
+			});
+		});
+
 		it('successfully queues a print task', async () => {
 			const formData = new Map([
 				['fullPath', 'img_key_123'],
@@ -51,7 +69,7 @@ describe('Admin Page Actions', () => {
 			const request = { formData: async () => formData };
 			const params = { slug: 'test-event' };
 
-			vi.mocked(client.fetch).mockResolvedValue({ _id: 'event-doc-id' });
+			vi.mocked(client.fetch).mockResolvedValue({ _id: 'event-doc-id', isPhotoboothActive: true });
 
 			const mockCommit = vi.fn().mockResolvedValue({});
 			const mockAppend = vi.fn().mockReturnValue({ commit: mockCommit });
