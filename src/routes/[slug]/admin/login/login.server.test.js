@@ -34,9 +34,14 @@ describe('Admin Login Action', () => {
 		const params = { slug: 'non-existent' };
 
 		// Mock getEventPassword to return null
-		eventsServer.getEventPassword.mockResolvedValue(null);
+		vi.mocked(eventsServer.getEventPassword).mockResolvedValue(null);
 
-		const result = await actions.default({ request, params, cookies: {}, url: {} });
+		const result = await (/** @type {any} */ (actions.default))({
+			request,
+			params,
+			cookies: {},
+			url: {}
+		});
 
 		expect(eventsServer.getEventPassword).toHaveBeenCalledWith('non-existent');
 		expect(fail).toHaveBeenCalledWith(400, { error: 'Event not found' });
@@ -50,9 +55,14 @@ describe('Admin Login Action', () => {
 		const params = { slug: 'test-event' };
 		const cookies = { set: vi.fn() };
 
-		eventsServer.getEventPassword.mockResolvedValue({ adminPassword: 'correct-password' });
+		vi.mocked(eventsServer.getEventPassword).mockResolvedValue({ adminPassword: 'correct-password' });
 
-		const result = await actions.default({ request, params, cookies, url: {} });
+		const result = await (/** @type {any} */ (actions.default))({
+			request,
+			params,
+			cookies,
+			url: {}
+		});
 
 		expect(cookies.set).not.toHaveBeenCalled();
 		expect(fail).toHaveBeenCalledWith(400, { error: 'Invalid password' });
@@ -66,10 +76,10 @@ describe('Admin Login Action', () => {
 		const cookies = { set: vi.fn() };
 		const url = { search: '?foo=bar' };
 
-		eventsServer.getEventPassword.mockResolvedValue({ adminPassword: 'correct-password' });
+		vi.mocked(eventsServer.getEventPassword).mockResolvedValue({ adminPassword: 'correct-password' });
 
 		try {
-			await actions.default({ request, params, cookies, url });
+			await (/** @type {any} */ (actions.default))({ request, params, cookies, url });
 			expect.unreachable('Should have thrown redirect');
 		} catch (e) {
 			expect(e).toEqual({ status: 303, location: '/test-event/admin?foo=bar', type: 'redirect' });
@@ -95,10 +105,10 @@ describe('Admin Login Action', () => {
 		const url = { search: '' };
 
 		// Even if event has a different password
-		eventsServer.getEventPassword.mockResolvedValue({ adminPassword: 'other-password' });
+		vi.mocked(eventsServer.getEventPassword).mockResolvedValue({ adminPassword: 'other-password' });
 
 		try {
-			await actions.default({ request, params, cookies, url });
+			await (/** @type {any} */ (actions.default))({ request, params, cookies, url });
 			expect.unreachable('Should have thrown redirect');
 		} catch (e) {
 			expect(e).toEqual({ status: 303, location: '/test-event/admin', type: 'redirect' });

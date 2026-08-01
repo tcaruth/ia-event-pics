@@ -56,10 +56,32 @@ Events are managed via **Sanity Studio**. To add or update an event:
 3.  Configure the slug, title, colors, and fonts.
 4.  The frontend will automatically reflect these changes.
 
+## 🧪 Testing
+
+The repository features comprehensive unit, server loader, daemon script, and Playwright E2E integration test suites.
+
+```bash
+# Type check Svelte components and JavaScript files
+bun run check
+
+# Run all Vitest unit tests (server loaders, API endpoints, daemon utilities)
+bun run test:unit
+
+# Run unit tests with code coverage (v8)
+bun run test:coverage
+
+# Run Playwright E2E integration tests
+bun run test:integration
+
+# Run full test suite (E2E + unit)
+bun run test
+```
+
 ## 🗺️ Roadmap (TODO)
 
 - [x] **Consolidate Storage:** Migrate from OCI to Sanity.io.
 - [x] **Monorepo:** Consolidate Sanity Studio into the main repository.
 - [x] **CMS Integration:** Replace hardcoded events with Sanity CMS.
 - [x] **Batch Download:** Allow event organizers to download all images in one click.
+- [x] **Comprehensive Testing:** Fixed 50+ type-check errors and established unit, API, daemon, and Playwright E2E test suites.
 - [ ] **Multi-booth Capability:** Allow multiple booths (e.g., codename "MOOSE") to be configured via Sanity.

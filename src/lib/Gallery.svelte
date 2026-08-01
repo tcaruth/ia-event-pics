@@ -44,6 +44,9 @@
       : galleryItems.filter((item) => item.category === selectedCategory)
   );
 
+  /**
+   * @param {typeof galleryItems[0]} item
+   */
   function openLightbox(item) {
     activeLightboxItem = item;
   }
@@ -66,6 +69,9 @@
     activeLightboxItem = galleryItems[prevIdx];
   }
 
+  /**
+   * @param {KeyboardEvent} e
+   */
   function handleKeydown(e) {
     if (e.key === 'Escape') closeLightbox();
     if (e.key === 'ArrowRight') nextImage();
@@ -123,8 +129,15 @@
 </section>
 
 {#if activeLightboxItem}
-  <div class="lightbox-backdrop" onclick={closeLightbox} role="dialog" aria-modal="true">
-    <div class="lightbox-modal" onclick={(e) => e.stopPropagation()} role="document">
+  <div
+    class="lightbox-backdrop"
+    onclick={(e) => { if (e.target === e.currentTarget) closeLightbox(); }}
+    onkeydown={(e) => e.key === 'Escape' && closeLightbox()}
+    role="button"
+    tabindex="0"
+    aria-label="Close preview overlay"
+  >
+    <div class="lightbox-modal" role="document">
       <button class="close-button" onclick={closeLightbox} aria-label="Close preview">
         <span class="material-symbols-outlined">close</span>
       </button>
