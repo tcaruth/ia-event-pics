@@ -55,6 +55,30 @@ export function formatHourLabel(hour) {
 }
 
 /**
+ * Determines whether a file represents a composite photobooth capture (and not a raw frame/individual shot).
+ * Composite filename format example: 2026-07-31-17-08-26_pibooth.jpg
+ * @param {string} [name]
+ * @returns {boolean}
+ */
+export function isCompositePhoto(name) {
+	if (!name || typeof name !== 'string') return true;
+	const lower = name.toLowerCase();
+
+	// Exclude explicit raw indicators
+	if (lower.includes('raw')) return false;
+
+	// Exclude numbered frames like _pibooth_1.jpg, _pibooth_2.jpg, _pibooth_3.jpg
+	if (/_pibooth_\d+/i.test(lower)) return false;
+
+	// If the name contains pibooth, ensure it ends with _pibooth.<ext> or pibooth.<ext>
+	if (lower.includes('pibooth')) {
+		return /_pibooth\.(jpg|jpeg|png|webp)$/i.test(lower) || /pibooth\.(jpg|jpeg|png|webp)$/i.test(lower);
+	}
+
+	return true;
+}
+
+/**
  * Parses image list into valid sorted dates
  * @param {Array<{ created?: string }>} images
  * @returns {Date[]}
@@ -68,7 +92,8 @@ export function getSortedCaptureDates(images) {
 }
 
 /**
- * Calculates capture statistics and histogram time buckets from an array of images.
+ * Calculates capture statistics and histogram time buckets from an array of images,
+ * strictly counting composite photobooth captures (e.g., 2026-07-31-17-08-26_pibooth.jpg).
  * @param {Array<{ created?: string, name?: string }>} images
  * @param {number} [intervalMinutes=30]
  * @returns {CaptureStats}
@@ -96,12 +121,27 @@ export function calculateCaptureStats(images = [], intervalMinutes = 30) {
 		return emptyResult;
 	}
 
-	const dates = getSortedCaptureDates(images);
-	if (dates.length === 0) {
-		return emptyResult;
+	// Filter strictly for composite photos
+	const compositeImages = images.filter((img) => isCompositePhoto(img?.name));
+	const rawCount = images.length - compositeImages.length;
+	const overlaidCount = compositeImages.length;
+
+	if (compositeImages.length === 0) {
+		return {
+			...emptyResult,
+			rawCount
+		};
 	}
 
-	const totalCaptures = images.length;
+	const dates = getSortedCaptureDates(compositeImages);
+	if (dates.length === 0) {
+		return {
+			...emptyResult,
+			rawCount
+		};
+	}
+
+	const totalCaptures = compositeImages.length;
 	const firstCaptureTime = dates[0];
 	const lastCaptureTime = dates[dates.length - 1];
 
@@ -111,18 +151,6 @@ export function calculateCaptureStats(images = [], intervalMinutes = 30) {
 	// Average captures per hour during active duration
 	const durationHours = Math.max(activeDurationMinutes / 60, 1 / 60);
 	const averageCapturesPerHour = Number((totalCaptures / durationHours).toFixed(1));
-
-	// Photo classification (raw vs overlaid)
-	let rawCount = 0;
-	let overlaidCount = 0;
-	for (const img of images) {
-		const name = (img?.name || '').toLowerCase();
-		if (name.includes('raw')) {
-			rawCount++;
-		} else {
-			overlaidCount++;
-		}
-	}
 
 	// 24-hour distribution calculation
 	const hourlyCounts = Array(24).fill(0);
