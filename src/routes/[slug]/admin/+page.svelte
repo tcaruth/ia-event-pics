@@ -290,7 +290,7 @@
 		font-size: 2rem;
 		font-weight: 700;
 		margin-bottom: 2rem;
-		color: var(--color-primary);
+		color: var(--text-surface-primary, #f8fafc);
 	}
 
 	.admin-actions {
