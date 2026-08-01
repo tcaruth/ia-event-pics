@@ -6,6 +6,7 @@
 	export let form;
 	import { enhance } from '$app/forms';
 	import JSZip from 'jszip';
+	import CaptureAnalytics from '$lib/CaptureAnalytics.svelte';
 
 	let isDownloading = false;
 	let downloadProgress = '';
@@ -143,6 +144,8 @@
 
 <div class="admin-container">
 	<h1>Admin Dashboard</h1>
+
+	<CaptureAnalytics images={data.images} />
 
 	{#if form?.error}
 		<div class="alert alert-error">
