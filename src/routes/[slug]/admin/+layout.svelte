@@ -4,11 +4,7 @@
 </script>
 
 <div class="admin-theme-shell">
-	{#if children}
-		{@render children()}
-	{:else}
-		<slot />
-	{/if}
+	{@render children?.()}
 </div>
 
 <style>
