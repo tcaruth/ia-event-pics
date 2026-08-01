@@ -34,14 +34,14 @@ describe('analytics.js', () => {
 	it('groups raw photos under matching composite photo', () => {
 		const mockImages = [
 			{ name: '2026-07-31-17-08-26_pibooth.jpg', created: '2026-07-31T17:08:26.000Z', key: 'comp1' },
-			{ name: 'pibooth000.jpg', created: '2026-07-31T17:08:25.000Z', key: 'raw0' },
-			{ name: 'pibooth001.jpg', created: '2026-07-31T17:08:26.000Z', key: 'raw1' },
-			{ name: 'pibooth002.jpg', created: '2026-07-31T17:08:27.000Z', key: 'raw2' },
+			{ name: 'pibooth000.jpg', created: '2026-07-31T17:08:20.000Z', key: 'raw0' },
+			{ name: 'pibooth001.jpg', created: '2026-07-31T17:08:22.000Z', key: 'raw1' },
+			{ name: 'pibooth002.jpg', created: '2026-07-31T17:08:24.000Z', key: 'raw2' },
 			{ name: '2026-07-31-18-00-00_pibooth.jpg', created: '2026-07-31T18:00:00.000Z', key: 'comp2' },
-			{ name: 'pibooth003.jpg', created: '2026-07-31T18:00:01.000Z', key: 'raw3' }
+			{ name: 'pibooth003.jpg', created: '2026-07-31T17:59:55.000Z', key: 'raw3' }
 		];
 
-		const result = groupPhotosByComposite(mockImages);
+		const result = groupPhotosByComposite(mockImages, [1, 4]);
 
 		expect(result.groups.length).toBe(2);
 
@@ -58,6 +58,40 @@ describe('analytics.js', () => {
 		expect(group2.rawPhotos[0].key).toBe('raw3');
 
 		expect(result.standaloneRaws).toEqual([]);
+	});
+
+	it('prevents merging raw photos from back-to-back composite sessions', () => {
+		const mockImages = [
+			// Session A (composite @ 17:08:26)
+			{ name: 'pibooth000.jpg', created: '2026-07-31T17:08:10.000Z', key: 's1_r0' },
+			{ name: 'pibooth001.jpg', created: '2026-07-31T17:08:15.000Z', key: 's1_r1' },
+			{ name: 'pibooth002.jpg', created: '2026-07-31T17:08:20.000Z', key: 's1_r2' },
+			{ name: 'pibooth003.jpg', created: '2026-07-31T17:08:25.000Z', key: 's1_r3' },
+			{ name: '2026-07-31-17-08-26_pibooth.jpg', created: '2026-07-31T17:08:26.000Z', key: 's1_comp' },
+
+			// Session B taken immediately back-to-back (composite @ 17:09:02)
+			{ name: 'pibooth000.jpg', created: '2026-07-31T17:08:45.000Z', key: 's2_r0' },
+			{ name: 'pibooth001.jpg', created: '2026-07-31T17:08:50.000Z', key: 's2_r1' },
+			{ name: 'pibooth002.jpg', created: '2026-07-31T17:08:55.000Z', key: 's2_r2' },
+			{ name: 'pibooth003.jpg', created: '2026-07-31T17:09:00.000Z', key: 's2_r3' },
+			{ name: '2026-07-31-17-09-02_pibooth.jpg', created: '2026-07-31T17:09:02.000Z', key: 's2_comp' }
+		];
+
+		const result = groupPhotosByComposite(mockImages, [1, 4]);
+
+		expect(result.groups.length).toBe(2);
+
+		// Session A group
+		const groupA = result.groups[0];
+		expect(groupA.composite.key).toBe('s1_comp');
+		expect(groupA.rawPhotos.length).toBe(4);
+		expect(groupA.rawPhotos.map((r) => r.key)).toEqual(['s1_r0', 's1_r1', 's1_r2', 's1_r3']);
+
+		// Session B group
+		const groupB = result.groups[1];
+		expect(groupB.composite.key).toBe('s2_comp');
+		expect(groupB.rawPhotos.length).toBe(4);
+		expect(groupB.rawPhotos.map((r) => r.key)).toEqual(['s2_r0', 's2_r1', 's2_r2', 's2_r3']);
 	});
 
 	it('handles empty image arrays gracefully', () => {
