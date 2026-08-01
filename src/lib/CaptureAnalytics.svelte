@@ -4,7 +4,7 @@
 	/** @type {{ images?: Array<{ created?: string, name?: string }> }} */
 	let { images = [] } = $props();
 
-	let selectedInterval = $state(30);
+	let selectedInterval = $state(15);
 
 	/** @type {import('./analytics').TimelineBucket | null} */
 	let hoveredBucket = $state(null);
@@ -18,49 +18,14 @@
 	let maxHourlyCount = $derived(
 		stats.hourlyDistribution.reduce((max, h) => Math.max(max, h.count), 0) || 1
 	);
-
-	/** @param {number} mins */
-	function setInterval(mins) {
-		selectedInterval = mins;
-	}
 </script>
 
 <div class="analytics-card">
 	<div class="analytics-header">
 		<div class="header-info">
 			<h2>Capture Analytics</h2>
-			<p class="subtitle">Activity distribution & performance over time</p>
+			<p class="subtitle">Activity distribution & performance over time (15-min intervals)</p>
 		</div>
-
-		{#if images.length > 0}
-			<div class="interval-selector">
-				<span class="selector-label">Bucket:</span>
-				<button
-					type="button"
-					class="interval-btn"
-					class:active={selectedInterval === 15}
-					onclick={() => setInterval(15)}
-				>
-					15m
-				</button>
-				<button
-					type="button"
-					class="interval-btn"
-					class:active={selectedInterval === 30}
-					onclick={() => setInterval(30)}
-				>
-					30m
-				</button>
-				<button
-					type="button"
-					class="interval-btn"
-					class:active={selectedInterval === 60}
-					onclick={() => setInterval(60)}
-				>
-					1h
-				</button>
-			</div>
-		{/if}
 	</div>
 
 	{#if images.length === 0}

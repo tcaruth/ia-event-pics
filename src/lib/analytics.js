@@ -216,10 +216,10 @@ export function getSortedCaptureDates(images) {
  * Calculates capture statistics and histogram time buckets from an array of images,
  * strictly counting composite photobooth captures (e.g., 2026-07-31-17-08-26_pibooth.jpg).
  * @param {Array<{ created?: string, name?: string }>} images
- * @param {number} [intervalMinutes=30]
+ * @param {number} [intervalMinutes=15]
  * @returns {CaptureStats}
  */
-export function calculateCaptureStats(images = [], intervalMinutes = 30) {
+export function calculateCaptureStats(images = [], intervalMinutes = 15) {
 	const emptyResult = {
 		totalCaptures: 0,
 		firstCaptureTime: null,
