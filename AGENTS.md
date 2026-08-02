@@ -24,6 +24,10 @@ The repository is structured into three main components:
    * **Hardware Target:** Raspberry Pi running `pibooth` (connected at `pi:pi@pibooth.local`).
    * **Uploader Script:** `scripts/sanity-uploader.js` watches local capture directories and uploads raw/overlay photos directly to Sanity.io, rendering immediate QR codes.
 
+4. **Universal Event Capture Platform PRD (`/docs/PRD.md`)**
+   * **Product Requirements Document:** Specifications for the v2 non-Pygame/Pibooth architecture supporting Photo Booth, Audio Payphone Guestbook, and Video Guestbook modalities across Raspberry Pi & x86 Mini-PC hardware.
+
+
 ---
 
 ## 🛠️ Tooling & Command Standards
