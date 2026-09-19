@@ -37,6 +37,7 @@ The repository is structured into three main components:
   * Install dependencies: `bun install`
   * Start dev server: `bun run dev`
   * Run unit tests: `bun run test:unit`
+  * Run unit tests with coverage: `bun run test:coverage`
   * Run integration tests: `bun run test:integration`
   * Studio dev: `bun run studio:dev`
 

@@ -96,7 +96,7 @@ export function groupPhotosByComposite(images = [], eventCaptures = []) {
 	}
 
 	// 1. Separate composites and raws, sorted chronologically by creation timestamp
-	const getTimestamp = (img) => (img?.created ? new Date(img.created).getTime() : 0);
+	const getTimestamp = (/** @type {any} */ img) => (img?.created ? new Date(img.created).getTime() : 0);
 
 	const composites = images
 		.filter((img) => isCompositePhoto(img?.name))
@@ -107,7 +107,7 @@ export function groupPhotosByComposite(images = [], eventCaptures = []) {
 		.sort((a, b) => getTimestamp(a) - getTimestamp(b));
 
 	const assignedRawKeys = new Set();
-	const getIdentifier = (raw) => raw.key || raw.id || raw.url || raw.fullPath;
+	const getIdentifier = (/** @type {any} */ raw) => raw.key || raw.id || raw.url || raw.fullPath;
 
 	// Helper to extract YYYY-MM-DD-HH-MM-SS or date pattern from filename
 	const getDateKey = (filename = '') => {
@@ -182,7 +182,9 @@ export function groupPhotosByComposite(images = [], eventCaptures = []) {
 	const groups = composites.map((composite) => {
 		const rawPhotos = compositeRawMap.get(composite) || [];
 		// Sort raw photos in filename sequence order e.g. pibooth000.jpg, pibooth001.jpg
-		rawPhotos.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+		rawPhotos.sort((/** @type {any} */ a, /** @type {any} */ b) =>
+			(a.name || '').localeCompare(b.name || '')
+		);
 
 		return {
 			composite,
@@ -206,10 +208,17 @@ export function groupPhotosByComposite(images = [], eventCaptures = []) {
  */
 export function getSortedCaptureDates(images) {
 	if (!Array.isArray(images)) return [];
-	return images
-		.map((img) => (img?.created ? new Date(img.created) : null))
-		.filter((date) => date && !isNaN(date.getTime()))
-		.sort((a, b) => a.getTime() - b.getTime());
+	/** @type {Date[]} */
+	const validDates = [];
+	for (const img of images) {
+		if (img?.created) {
+			const d = new Date(img.created);
+			if (!isNaN(d.getTime())) {
+				validDates.push(d);
+			}
+		}
+	}
+	return validDates.sort((a, b) => a.getTime() - b.getTime());
 }
 
 /**

@@ -9,9 +9,15 @@
 	const qrCodeSize = 300;
 
 	let qrPageUrlDataUrl = $state(Promise.resolve(''));
-	let loadingState = $state(data.image ? 'loaded' : 'checking'); // 'checking', 'loaded', 'error'
+	let loadingState = $state('checking'); // 'checking', 'loaded', 'error'
 	let retryCount = $state(0);
 	const MAX_RETRIES = 60; // 3 minutes at 3s interval
+
+	$effect(() => {
+		if (data.image) {
+			loadingState = 'loaded';
+		}
+	});
 
 	async function checkImage() {
 		try {

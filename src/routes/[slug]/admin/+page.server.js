@@ -221,7 +221,9 @@ export const actions = {
                 };
             }
 
-            const galleryMap = new Map((event.gallery || []).map((g) => [g.key, g]));
+            const galleryMap = new Map(
+                (event.gallery || []).map((/** @type {any} */ g) => [g.key, g])
+            );
 
             const printTasks = [];
             for (let i = 0; i < items.length; i++) {
