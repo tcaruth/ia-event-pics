@@ -59,7 +59,7 @@ VITE_SANITY_DATASET="production"
 SANITY_API_TOKEN="your-write-token"
 
 # Gallery Admin
-ADMIN_PASSWORD="your-master-admin-password"
+MASTER_ADMIN_PASSWORD="your-master-admin-password"
 ```
 
 ---

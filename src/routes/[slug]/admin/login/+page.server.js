@@ -15,8 +15,11 @@ export const actions = {
             return fail(400, { error: 'Event not found' });
         }
 
-        if ((event.adminPassword && password === event.adminPassword) || password === MASTER_ADMIN_PASSWORD) {
-            cookies.set('session', 'admin', {
+        const isMaster = password === MASTER_ADMIN_PASSWORD;
+        const isEventAdmin = event.adminPassword && password === event.adminPassword;
+
+        if (isMaster || isEventAdmin) {
+            cookies.set('session', isMaster ? 'master' : 'admin', {
                 path: '/',
                 httpOnly: true,
                 sameSite: 'strict',

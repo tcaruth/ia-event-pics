@@ -1,16 +1,112 @@
 import { getEvent } from "$lib/events.server";
 import { client } from "$lib/sanity";
+import { MASTER_ADMIN_PASSWORD } from "$env/static/private";
 
-export async function load({ params }) {
+export async function load({ params, cookies }) {
+    const session = cookies.get('session');
+    const isMasterAdmin = session === 'master';
     const event = await getEvent(params.slug, true);
     return {
         images: event?.images || [],
         event: event,
-        slug: params.slug
+        slug: params.slug,
+        isMasterAdmin
     };
 }
 
 export const actions = {
+    unlockMaster: async ({ request, cookies }) => {
+        const data = await request.formData();
+        const password = data.get('password');
+
+        if (password === MASTER_ADMIN_PASSWORD) {
+            cookies.set('session', 'master', {
+                path: '/',
+                httpOnly: true,
+                sameSite: 'strict',
+                secure: process.env.NODE_ENV === 'production',
+                maxAge: 60 * 60 * 24
+            });
+            return { success: true, message: 'Master admin access granted' };
+        }
+
+        return { success: false, error: 'Incorrect master password' };
+    },
+    deleteBatch: async ({ request, params, cookies }) => {
+        const session = cookies.get('session');
+        const data = await request.formData();
+        const providedMasterPassword = data.get('masterPassword');
+
+        const isMaster = session === 'master' || providedMasterPassword === MASTER_ADMIN_PASSWORD;
+        if (!isMaster) {
+            return {
+                success: false,
+                error: 'Batch deletion is restricted to master administrators.'
+            };
+        }
+
+        // Elevate session if master password was provided and valid
+        if (providedMasterPassword === MASTER_ADMIN_PASSWORD && session !== 'master') {
+            cookies.set('session', 'master', {
+                path: '/',
+                httpOnly: true,
+                sameSite: 'strict',
+                secure: process.env.NODE_ENV === 'production',
+                maxAge: 60 * 60 * 24
+            });
+        }
+
+        const keysData = data.get('keys');
+        let keys = [];
+        if (typeof keysData === 'string') {
+            try {
+                const parsed = JSON.parse(keysData);
+                if (Array.isArray(parsed)) keys = parsed;
+            } catch {
+                keys = data.getAll('keys').map(k => String(k));
+            }
+        } else {
+            keys = data.getAll('keys').map(k => String(k));
+        }
+
+        keys = keys.filter(Boolean);
+
+        if (keys.length === 0) {
+            return { success: false, error: 'At least one photo must be selected for deletion.' };
+        }
+
+        const eventSlug = params.slug;
+
+        try {
+            const event = await client.fetch(
+                `*[_type == "event" && slug.current == $slug][0]{_id}`,
+                { slug: eventSlug }
+            );
+
+            if (!event) {
+                return { success: false, error: 'Event not found' };
+            }
+
+            const CHUNK_SIZE = 50;
+            for (let i = 0; i < keys.length; i += CHUNK_SIZE) {
+                const chunk = keys.slice(i, i + CHUNK_SIZE);
+                const unsetPaths = chunk.map(key => `gallery[_key=="${key}"]`);
+                await client
+                    .patch(event._id)
+                    .unset(unsetPaths)
+                    .commit();
+            }
+
+            return {
+                success: true,
+                deletedCount: keys.length,
+                message: `Successfully deleted ${keys.length} photo${keys.length === 1 ? '' : 's'}.`
+            };
+        } catch (e) {
+            console.error('Sanity Batch Delete Error:', e);
+            return { success: false, error: e instanceof Error ? e.message : 'An unknown error occurred' };
+        }
+    },
     delete: async ({ request, params }) => {
         const data = await request.formData();
         const key = data.get('fullPath'); // This is the _key from Sanity

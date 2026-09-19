@@ -19,6 +19,10 @@
 	let printDialog = $state(undefined);
 	/** @type {HTMLDialogElement | undefined} */
 	let rawPhotosDialog = $state(undefined);
+	/** @type {HTMLDialogElement | undefined} */
+	let deleteBatchDialog = $state(undefined);
+	/** @type {HTMLDialogElement | undefined} */
+	let unlockMasterDialog = $state(undefined);
 
 	/** @type {import('$lib/events.server').EventImage | null} */
 	let imageToDelete = $state(null);
@@ -28,6 +32,95 @@
 	let selectedGroupForRaws = $state(null);
 
 	let photoGroups = $derived(groupPhotosByComposite(data.images || [], data.event?.captures));
+
+	/** @type {string[]} */
+	let selectedKeys = $state([]);
+
+	let deleteAssociatedRaws = $state(true);
+	let deleteStandaloneRaws = $state(false);
+
+	let allSelectableKeys = $derived(
+		[
+			...photoGroups.groups.map((g) => g.composite.key),
+			...photoGroups.standaloneRaws.map((r) => r.key)
+		].filter(Boolean)
+	);
+
+	let isAllSelected = $derived(
+		allSelectableKeys.length > 0 && allSelectableKeys.every((k) => selectedKeys.includes(k))
+	);
+
+	let selectedCompositeGroups = $derived(
+		photoGroups.groups.filter((g) => selectedKeys.includes(g.composite.key))
+	);
+
+	let selectedStandaloneRawPhotos = $derived(
+		photoGroups.standaloneRaws.filter((r) => selectedKeys.includes(r.key))
+	);
+
+	let associatedRawKeys = $derived(
+		selectedCompositeGroups.flatMap((g) => (g.rawPhotos || []).map((r) => r.key).filter(Boolean))
+	);
+
+	let allStandaloneRawKeys = $derived(
+		photoGroups.standaloneRaws.map((r) => r.key).filter(Boolean)
+	);
+
+	let computedKeysToDelete = $derived(() => {
+		const set = new Set(selectedKeys);
+		if (deleteAssociatedRaws) {
+			for (const key of associatedRawKeys) {
+				set.add(key);
+			}
+		}
+		if (deleteStandaloneRaws) {
+			for (const key of allStandaloneRawKeys) {
+				set.add(key);
+			}
+		}
+		return Array.from(set);
+	});
+
+	/** @param {string} key */
+	function isSelected(key) {
+		return selectedKeys.includes(key);
+	}
+
+	/** @param {string} key */
+	function toggleSelect(key) {
+		if (selectedKeys.includes(key)) {
+			selectedKeys = selectedKeys.filter((k) => k !== key);
+		} else {
+			selectedKeys = [...selectedKeys, key];
+		}
+	}
+
+	function toggleSelectAll() {
+		if (isAllSelected) {
+			selectedKeys = [];
+		} else {
+			selectedKeys = [...allSelectableKeys];
+		}
+	}
+
+	function confirmDeleteBatch() {
+		if (selectedKeys.length === 0) return;
+		deleteAssociatedRaws = true;
+		deleteStandaloneRaws = selectedStandaloneRawPhotos.length > 0;
+		deleteBatchDialog?.showModal();
+	}
+
+	function closeDeleteBatchDialog() {
+		deleteBatchDialog?.close();
+	}
+
+	function openUnlockMaster() {
+		unlockMasterDialog?.showModal();
+	}
+
+	function closeUnlockMaster() {
+		unlockMasterDialog?.close();
+	}
 
 	/** @param {import('$lib/events.server').EventImage} image */
 	function confirmDelete(image) {
@@ -161,7 +254,16 @@
 </script>
 
 <div class="admin-container">
-	<h1>Admin Dashboard</h1>
+	<div class="admin-header">
+		<h1>Admin Dashboard</h1>
+		{#if data.isMasterAdmin}
+			<span class="master-badge">👑 Master Admin</span>
+		{:else}
+			<button type="button" class="unlock-master-btn" onclick={openUnlockMaster}>
+				🔒 Unlock Master Admin
+			</button>
+		{/if}
+	</div>
 
 	<CaptureAnalytics images={data.images} />
 
@@ -191,10 +293,55 @@
 		{/if}
 	</div>
 
+	{#if data.isMasterAdmin}
+		<div class="batch-bar">
+			<div class="batch-info">
+				<label class="select-all-label">
+					<input
+						type="checkbox"
+						checked={isAllSelected}
+						onchange={toggleSelectAll}
+						disabled={allSelectableKeys.length === 0}
+					/>
+					<span>Select All ({allSelectableKeys.length})</span>
+				</label>
+				{#if selectedKeys.length > 0}
+					<span class="selected-pill">{selectedKeys.length} selected</span>
+					<button
+						type="button"
+						class="clear-selection-btn"
+						onclick={() => (selectedKeys = [])}
+					>
+						Deselect All
+					</button>
+				{/if}
+			</div>
+
+			<button
+				type="button"
+				class="batch-delete-btn"
+				onclick={confirmDeleteBatch}
+				disabled={selectedKeys.length === 0}
+			>
+				Delete Selected ({selectedKeys.length})
+			</button>
+		</div>
+	{/if}
+
 	<div class="image-grid">
 		{#each photoGroups.groups as group}
 			{@const image = group.composite}
-			<div class="image-card">
+			<div class="image-card" class:is-selected={isSelected(image.key)}>
+				{#if data.isMasterAdmin}
+					<label class="card-select-label" title="Select photo">
+						<input
+							type="checkbox"
+							checked={isSelected(image.key)}
+							onchange={() => toggleSelect(image.key)}
+						/>
+						<span class="custom-checkbox"></span>
+					</label>
+				{/if}
 				<a
 					href={image.url}
 					target="_blank"
@@ -231,7 +378,17 @@
 		{/each}
 
 		{#each photoGroups.standaloneRaws as rawImage}
-			<div class="image-card standalone-raw">
+			<div class="image-card standalone-raw" class:is-selected={isSelected(rawImage.key)}>
+				{#if data.isMasterAdmin}
+					<label class="card-select-label" title="Select photo">
+						<input
+							type="checkbox"
+							checked={isSelected(rawImage.key)}
+							onchange={() => toggleSelect(rawImage.key)}
+						/>
+						<span class="custom-checkbox"></span>
+					</label>
+				{/if}
 				<a
 					href={rawImage.url}
 					target="_blank"
@@ -355,7 +512,17 @@
 
 			<div class="raw-photos-grid">
 				{#each selectedGroupForRaws?.rawPhotos || [] as rawImg}
-					<div class="raw-photo-card">
+					<div class="raw-photo-card" class:is-selected={isSelected(rawImg.key)}>
+						{#if data.isMasterAdmin}
+							<label class="card-select-label raw-select-label" title="Select photo">
+								<input
+									type="checkbox"
+									checked={isSelected(rawImg.key)}
+									onchange={() => toggleSelect(rawImg.key)}
+								/>
+								<span class="custom-checkbox"></span>
+							</label>
+						{/if}
 						<a
 							href={rawImg.url}
 							target="_blank"
@@ -383,8 +550,131 @@
 			</div>
 
 			<div class="dialog-actions">
+				{#if data.isMasterAdmin && selectedKeys.length > 0}
+					<button
+						type="button"
+						class="btn-danger"
+						onclick={() => {
+							closeRawPhotos();
+							confirmDeleteBatch();
+						}}
+					>
+						Delete Selected ({selectedKeys.length})
+					</button>
+				{/if}
 				<button type="button" class="btn-secondary" onclick={closeRawPhotos}>Close</button>
 			</div>
+		</div>
+	</dialog>
+
+	<dialog bind:this={deleteBatchDialog} class="confirm-dialog batch-modal">
+		<div class="dialog-content">
+			<h2>Confirm Batch Deletion</h2>
+			<p>
+				You have selected <strong>{selectedKeys.length} item{selectedKeys.length === 1 ? '' : 's'}</strong> for deletion:
+			</p>
+
+			<ul class="selection-breakdown">
+				{#if selectedCompositeGroups.length > 0}
+					<li>
+						<strong>{selectedCompositeGroups.length}</strong> composite photo{selectedCompositeGroups.length === 1 ? '' : 's'}
+					</li>
+				{/if}
+				{#if selectedStandaloneRawPhotos.length > 0}
+					<li>
+						<strong>{selectedStandaloneRawPhotos.length}</strong> standalone raw photo{selectedStandaloneRawPhotos.length === 1 ? '' : 's'}
+					</li>
+				{/if}
+			</ul>
+
+			<div class="delete-options">
+				{#if associatedRawKeys.length > 0}
+					<label class="option-row">
+						<input type="checkbox" bind:checked={deleteAssociatedRaws} />
+						<span class="option-label">
+							Delete raw capture photos associated with selected composites
+							<span class="option-sub">({associatedRawKeys.length} capture{associatedRawKeys.length === 1 ? '' : 's'} across {selectedCompositeGroups.length} composite{selectedCompositeGroups.length === 1 ? '' : 's'})</span>
+						</span>
+					</label>
+				{/if}
+
+				{#if allStandaloneRawKeys.length > 0}
+					<label class="option-row">
+						<input type="checkbox" bind:checked={deleteStandaloneRaws} />
+						<span class="option-label">
+							Delete standalone raw photos
+							<span class="option-sub">({allStandaloneRawKeys.length} standalone photo{allStandaloneRawKeys.length === 1 ? '' : 's'} in event)</span>
+						</span>
+					</label>
+				{/if}
+			</div>
+
+			<div class="total-delete-summary">
+				Total photos to delete: <strong>{computedKeysToDelete().length}</strong>
+			</div>
+
+			<p class="warning-text">This action is permanent and cannot be undone.</p>
+
+			<div class="dialog-actions">
+				<button type="button" class="btn-secondary" onclick={closeDeleteBatchDialog}>Cancel</button>
+				<form
+					method="POST"
+					action="?/deleteBatch"
+					use:enhance={() => {
+						return async ({ result, update }) => {
+							closeDeleteBatchDialog();
+							if (result.type === 'success') {
+								selectedKeys = [];
+								await update();
+							}
+						};
+					}}
+				>
+					<input type="hidden" name="keys" value={JSON.stringify(computedKeysToDelete())} />
+					<!-- svelte-ignore a11y_autofocus -->
+					<button type="submit" class="btn-danger" autofocus>
+						Yes, Delete {computedKeysToDelete().length} Photo{computedKeysToDelete().length === 1 ? '' : 's'}
+					</button>
+				</form>
+			</div>
+		</div>
+	</dialog>
+
+	<dialog bind:this={unlockMasterDialog} class="confirm-dialog">
+		<div class="dialog-content">
+			<h2>Unlock Master Admin</h2>
+			<p>Enter the master administrator password to unlock batch photo deletion.</p>
+
+			<form
+				method="POST"
+				action="?/unlockMaster"
+				use:enhance={() => {
+					return async ({ result, update }) => {
+						if (result.type === 'success') {
+							closeUnlockMaster();
+							await update();
+						}
+					};
+				}}
+			>
+				<div class="input-group">
+					<label for="master-password-input">Master Password</label>
+					<input
+						id="master-password-input"
+						type="password"
+						name="password"
+						required
+						placeholder="Enter master password"
+						class="password-input"
+					/>
+				</div>
+
+				<div class="dialog-actions">
+					<button type="button" class="btn-secondary" onclick={closeUnlockMaster}>Cancel</button>
+					<!-- svelte-ignore a11y_autofocus -->
+					<button type="submit" class="btn-primary" autofocus>Unlock</button>
+				</div>
+			</form>
 		</div>
 	</dialog>
 </div>
@@ -394,11 +684,129 @@
 		padding: 2rem 0;
 	}
 
-	h1 {
+	.admin-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: 2rem;
+		flex-wrap: wrap;
+		gap: 1rem;
+	}
+
+	.admin-header h1 {
 		font-size: 2rem;
 		font-weight: 700;
-		margin-bottom: 2rem;
+		margin: 0;
 		color: var(--text-surface-primary, #f8fafc);
+	}
+
+	.master-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.375rem;
+		background: rgba(234, 179, 8, 0.15);
+		border: 1px solid rgba(234, 179, 8, 0.4);
+		color: #facc15;
+		font-size: 0.875rem;
+		font-weight: 700;
+		padding: 0.375rem 0.75rem;
+		border-radius: 9999px;
+	}
+
+	.unlock-master-btn {
+		background: rgba(255, 255, 255, 0.08);
+		border: 1px solid var(--border-color, rgba(255, 255, 255, 0.2));
+		color: var(--text-surface-secondary, #94a3b8);
+		font-size: 0.875rem;
+		font-weight: 600;
+		padding: 0.375rem 0.75rem;
+		border-radius: 0.5rem;
+		cursor: pointer;
+		transition: all 0.2s;
+	}
+
+	.unlock-master-btn:hover {
+		background: rgba(255, 255, 255, 0.15);
+		color: var(--text-surface-primary, #f8fafc);
+	}
+
+	.batch-bar {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: 1.5rem;
+		background: var(--surface-secondary);
+		padding: 0.875rem 1.25rem;
+		border-radius: 0.75rem;
+		border: 1px solid var(--border-color);
+		flex-wrap: wrap;
+		gap: 1rem;
+	}
+
+	.batch-info {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+	}
+
+	.select-all-label {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-size: 0.875rem;
+		font-weight: 600;
+		cursor: pointer;
+		color: var(--text-surface-primary, #f8fafc);
+	}
+
+	.select-all-label input[type='checkbox'] {
+		width: 1.125rem;
+		height: 1.125rem;
+		cursor: pointer;
+		accent-color: var(--color-primary, #3b82f6);
+	}
+
+	.selected-pill {
+		font-size: 0.75rem;
+		background: var(--color-primary, #3b82f6);
+		color: white;
+		padding: 0.2rem 0.5rem;
+		border-radius: 9999px;
+		font-weight: 600;
+	}
+
+	.clear-selection-btn {
+		background: transparent;
+		border: none;
+		color: var(--text-surface-secondary, #94a3b8);
+		font-size: 0.8125rem;
+		text-decoration: underline;
+		cursor: pointer;
+	}
+
+	.clear-selection-btn:hover {
+		color: var(--text-surface-primary, #f8fafc);
+	}
+
+	.batch-delete-btn {
+		padding: 0.625rem 1.25rem;
+		background-color: #dc2626;
+		color: white;
+		border: none;
+		border-radius: 0.5rem;
+		font-weight: 600;
+		font-size: 0.875rem;
+		cursor: pointer;
+		transition: background-color 0.2s, opacity 0.2s;
+	}
+
+	.batch-delete-btn:hover:not(:disabled) {
+		background-color: #b91c1c;
+	}
+
+	.batch-delete-btn:disabled {
+		opacity: 0.4;
+		cursor: not-allowed;
 	}
 
 	.admin-actions {
@@ -485,12 +893,54 @@
 	}
 
 	.image-card {
+		position: relative;
 		background: var(--surface-secondary);
 		border-radius: 0.75rem;
 		overflow: hidden;
 		box-shadow: var(--shadow-sm);
 		border: 1px solid var(--border-color);
-		transition: transform 0.2s;
+		transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+	}
+
+	.image-card.is-selected,
+	.raw-photo-card.is-selected {
+		border-color: var(--color-primary, #3b82f6);
+		box-shadow: 0 0 0 2px var(--color-primary, #3b82f6);
+	}
+
+	.card-select-label {
+		position: absolute;
+		top: 0.625rem;
+		left: 0.625rem;
+		z-index: 5;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: rgba(0, 0, 0, 0.65);
+		border-radius: 0.375rem;
+		padding: 0.375rem;
+		backdrop-filter: blur(4px);
+		border: 1px solid rgba(255, 255, 255, 0.25);
+		transition: background 0.2s;
+	}
+
+	.card-select-label:hover {
+		background: rgba(0, 0, 0, 0.85);
+	}
+
+	.card-select-label input[type='checkbox'] {
+		width: 1.125rem;
+		height: 1.125rem;
+		cursor: pointer;
+		accent-color: var(--color-primary, #3b82f6);
+		margin: 0;
+	}
+
+	.raw-select-label {
+		top: 0.375rem;
+		left: 0.375rem;
+		padding: 0.25rem;
 	}
 
 	.image-card:hover {
@@ -660,10 +1110,12 @@
 	}
 
 	.raw-photo-card {
+		position: relative;
 		background: var(--surface-secondary, #1e293b);
 		border-radius: 0.5rem;
 		overflow: hidden;
 		border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+		transition: border-color 0.2s, box-shadow 0.2s;
 	}
 
 	.raw-img-wrapper {
@@ -749,5 +1201,101 @@
 
 	.btn-danger:hover {
 		background: #b91c1c;
+	}
+
+	.batch-modal {
+		max-width: 540px;
+		width: 95%;
+	}
+
+	.selection-breakdown {
+		margin: 0.75rem 0 1.25rem 1.25rem;
+		padding: 0;
+		font-size: 0.875rem;
+		color: var(--text-surface-secondary, #94a3b8);
+	}
+
+	.selection-breakdown li {
+		margin-bottom: 0.25rem;
+	}
+
+	.delete-options {
+		display: flex;
+		flex-direction: column;
+		gap: 0.875rem;
+		background: rgba(255, 255, 255, 0.04);
+		border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+		border-radius: 0.5rem;
+		padding: 1rem;
+		margin-bottom: 1.25rem;
+	}
+
+	.option-row {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.75rem;
+		cursor: pointer;
+	}
+
+	.option-row input[type='checkbox'] {
+		width: 1.125rem;
+		height: 1.125rem;
+		margin-top: 0.125rem;
+		cursor: pointer;
+		accent-color: var(--color-primary, #3b82f6);
+		flex-shrink: 0;
+	}
+
+	.option-label {
+		font-size: 0.875rem;
+		color: var(--text-surface-primary, #f8fafc);
+		line-height: 1.35;
+	}
+
+	.option-sub {
+		display: block;
+		font-size: 0.75rem;
+		color: var(--text-surface-secondary, #94a3b8);
+		margin-top: 0.125rem;
+	}
+
+	.total-delete-summary {
+		font-size: 0.9375rem;
+		font-weight: 600;
+		color: var(--text-surface-primary, #f8fafc);
+		background: rgba(239, 68, 68, 0.1);
+		border: 1px solid rgba(239, 68, 68, 0.3);
+		padding: 0.75rem 1rem;
+		border-radius: 0.5rem;
+		margin-bottom: 0.75rem;
+	}
+
+	.input-group {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		margin: 1.25rem 0;
+	}
+
+	.input-group label {
+		font-size: 0.875rem;
+		font-weight: 600;
+		color: var(--text-surface-secondary, #94a3b8);
+	}
+
+	.password-input {
+		width: 100%;
+		padding: 0.625rem 0.875rem;
+		border-radius: 0.375rem;
+		border: 1px solid var(--border-color, rgba(255, 255, 255, 0.2));
+		background: var(--surface-secondary, #1e293b);
+		color: var(--text-surface-primary, #f8fafc);
+		font-size: 0.875rem;
+		box-sizing: border-box;
+	}
+
+	.password-input:focus {
+		outline: none;
+		border-color: var(--color-primary, #3b82f6);
 	}
 </style>

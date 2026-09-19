@@ -104,6 +104,14 @@ describe('Admin Login Action', () => {
 			expect(e).toEqual({ status: 303, location: '/test-event/admin', type: 'redirect' });
 		}
 
-		expect(cookies.set).toHaveBeenCalled();
+		expect(cookies.set).toHaveBeenCalledWith(
+			'session',
+			'master',
+			expect.objectContaining({
+				path: '/',
+				httpOnly: true,
+				maxAge: 60 * 60 * 24
+			})
+		);
 	});
 });
