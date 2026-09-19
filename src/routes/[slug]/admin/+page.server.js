@@ -164,5 +164,106 @@ export const actions = {
             console.error('Sanity Print Queue Error:', e);
             return { success: false, error: e instanceof Error ? e.message : 'Failed to queue print job' };
         }
+    },
+    printBatch: async ({ request, params }) => {
+        const data = await request.formData();
+        const imagesData = data.get('images');
+        const keysData = data.get('keys');
+        const eventSlug = params.slug;
+
+        let items = [];
+        if (typeof imagesData === 'string') {
+            try {
+                const parsed = JSON.parse(imagesData);
+                if (Array.isArray(parsed)) items = parsed;
+            } catch (e) {
+                console.error('Error parsing images JSON:', e);
+            }
+        }
+
+        if (items.length === 0 && typeof keysData === 'string') {
+            try {
+                const parsedKeys = JSON.parse(keysData);
+                if (Array.isArray(parsedKeys)) {
+                    items = parsedKeys.map((k) => ({ fullPath: String(k) }));
+                }
+            } catch (e) {
+                console.error('Error parsing keys JSON:', e);
+            }
+        }
+
+        if (items.length === 0) {
+            return { success: false, error: 'At least one photo must be selected for printing.' };
+        }
+
+        try {
+            const event = await client.fetch(
+                `*[_type == "event" && slug.current == $slug][0]{
+                    _id,
+                    "isPhotoboothActive": count(*[_type == "photobooth" && activeEvent->slug.current == $slug]) > 0,
+                    "gallery": gallery[]{
+                        "key": _key,
+                        "url": asset->url,
+                        "name": asset->originalFilename
+                    }
+                }`,
+                { slug: eventSlug }
+            );
+
+            if (!event) {
+                return { success: false, error: 'Event not found' };
+            }
+
+            if (!event.isPhotoboothActive) {
+                return {
+                    success: false,
+                    error: 'Printing is only available while the event is active and assigned to a photobooth'
+                };
+            }
+
+            const galleryMap = new Map((event.gallery || []).map((g) => [g.key, g]));
+
+            const printTasks = [];
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+                const key = item.fullPath || item.key || item.imageKey;
+                const galleryItem = key ? galleryMap.get(key) : null;
+                const assetUrl = item.assetUrl || item.url || galleryItem?.url;
+                const imageName = item.imageName || item.name || galleryItem?.name || '';
+
+                if (key && assetUrl) {
+                    printTasks.push({
+                        _key: `print_${Date.now()}_${i}_${Math.random().toString(36).substring(2, 7)}`,
+                        imageKey: String(key),
+                        assetUrl: String(assetUrl),
+                        imageName: String(imageName),
+                        status: 'pending',
+                        requestedAt: new Date().toISOString()
+                    });
+                }
+            }
+
+            if (printTasks.length === 0) {
+                return { success: false, error: 'No valid photos found to print.' };
+            }
+
+            const CHUNK_SIZE = 50;
+            for (let i = 0; i < printTasks.length; i += CHUNK_SIZE) {
+                const chunk = printTasks.slice(i, i + CHUNK_SIZE);
+                await client
+                    .patch(event._id)
+                    .setIfMissing({ printQueue: [] })
+                    .append('printQueue', chunk)
+                    .commit();
+            }
+
+            return {
+                success: true,
+                message: `Queued ${printTasks.length} photo${printTasks.length === 1 ? '' : 's'} for printing.`
+            };
+        } catch (e) {
+            console.error('Sanity Print Batch Error:', e);
+            return { success: false, error: e instanceof Error ? e.message : 'Failed to queue print jobs' };
+        }
     }
 };

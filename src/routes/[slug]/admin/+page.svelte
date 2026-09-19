@@ -21,6 +21,8 @@
 	let deleteBatchDialog = $state(undefined);
 	/** @type {HTMLDialogElement | undefined} */
 	let downloadDialog = $state(undefined);
+	/** @type {HTMLDialogElement | undefined} */
+	let printBatchDialog = $state(undefined);
 
 	/** @type {import('$lib/events.server').EventImage | null} */
 	let imageToDelete = $state(null);
@@ -203,6 +205,27 @@
 		imageToPrint = null;
 	}
 
+	let selectedPrintImages = $derived(
+		(data.images || []).filter((img) => selectedKeys.includes(img.key || img.fullPath))
+	);
+
+	function openPrintBatchDialog() {
+		if (selectedPrintImages.length === 0) return;
+		printBatchDialog?.showModal();
+	}
+
+	function closePrintBatchDialog() {
+		printBatchDialog?.close();
+	}
+
+	function selectedPrintPayload() {
+		return selectedPrintImages.map((img) => ({
+			fullPath: img.key || img.fullPath,
+			assetUrl: img.url,
+			imageName: img.name || ''
+		}));
+	}
+
 	/** @param {any} group */
 	function openRawPhotos(group) {
 		selectedGroupForRaws = group;
@@ -375,6 +398,24 @@
 
 			<button
 				type="button"
+				class="batch-print-btn"
+				onclick={openPrintBatchDialog}
+				disabled={selectedKeys.length === 0 || !data.event?.isPhotoboothActive}
+				title={!data.event?.isPhotoboothActive
+					? 'Photobooth must be active and assigned to this event to print'
+					: selectedKeys.length === 0
+						? 'Select photos to print'
+						: `Send ${selectedKeys.length} selected photo${selectedKeys.length === 1 ? '' : 's'} to photobooth printer`}
+			>
+				{#if selectedKeys.length > 0}
+					🖨️ Print Selected ({selectedKeys.length})
+				{:else}
+					🖨️ Print Selected
+				{/if}
+			</button>
+
+			<button
+				type="button"
 				class="batch-delete-btn"
 				onclick={confirmDeleteBatch}
 				disabled={selectedKeys.length === 0}
@@ -532,6 +573,37 @@
 		</div>
 	</dialog>
 
+	<dialog bind:this={printBatchDialog} class="confirm-dialog">
+		<div class="dialog-content">
+			<h2>Confirm Batch Print Job</h2>
+			<p>
+				Are you sure you want to send <strong>{selectedPrintImages.length}</strong> photo{selectedPrintImages.length === 1 ? '' : 's'} to the photobooth printer?
+			</p>
+
+			<div class="dialog-actions">
+				<button type="button" class="btn-secondary" onclick={closePrintBatchDialog}>Cancel</button>
+				<form
+					method="POST"
+					action="?/printBatch"
+					use:enhance={() => {
+						return async ({ result, update }) => {
+							closePrintBatchDialog();
+							if (result.type === 'success') {
+								await update();
+							}
+						};
+					}}
+				>
+					<input type="hidden" name="images" value={JSON.stringify(selectedPrintPayload())} />
+					<!-- svelte-ignore a11y_autofocus -->
+					<button type="submit" class="btn-primary" autofocus>
+						Yes, Print {selectedPrintImages.length} Photo{selectedPrintImages.length === 1 ? '' : 's'}
+					</button>
+				</form>
+			</div>
+		</div>
+	</dialog>
+
 	<dialog bind:this={rawPhotosDialog} class="confirm-dialog raw-modal">
 		<div class="dialog-content raw-dialog-content">
 			<div class="modal-header">
@@ -578,6 +650,18 @@
 			</div>
 
 			<div class="dialog-actions">
+				{#if selectedKeys.length > 0 && data.event?.isPhotoboothActive}
+					<button
+						type="button"
+						class="btn-print"
+						onclick={() => {
+							closeRawPhotos();
+							openPrintBatchDialog();
+						}}
+					>
+						Print Selected ({selectedKeys.length})
+					</button>
+				{/if}
 				{#if selectedKeys.length > 0}
 					<button
 						type="button"
@@ -750,14 +834,20 @@
 	}
 
 	.unified-toolbar {
+		position: sticky;
+		top: 1rem;
+		z-index: 50;
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
 		margin-bottom: 1.5rem;
-		background: var(--surface-secondary);
+		background: rgba(30, 41, 59, 0.95);
+		backdrop-filter: blur(12px);
+		-webkit-backdrop-filter: blur(12px);
 		padding: 0.875rem 1.25rem;
 		border-radius: 0.75rem;
 		border: 1px solid var(--border-color);
+		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
 		flex-wrap: wrap;
 		gap: 1rem;
 	}
@@ -826,6 +916,27 @@
 	}
 
 	.download-btn:disabled {
+		opacity: 0.4;
+		cursor: not-allowed;
+	}
+
+	.batch-print-btn {
+		padding: 0.625rem 1.25rem;
+		background-color: #4f46e5;
+		color: white;
+		border: none;
+		border-radius: 0.5rem;
+		font-weight: 600;
+		font-size: 0.875rem;
+		cursor: pointer;
+		transition: background-color 0.2s, opacity 0.2s;
+	}
+
+	.batch-print-btn:hover:not(:disabled) {
+		background-color: #4338ca;
+	}
+
+	.batch-print-btn:disabled {
 		opacity: 0.4;
 		cursor: not-allowed;
 	}
@@ -1179,7 +1290,8 @@
 
 	.btn-secondary,
 	.btn-primary,
-	.btn-danger {
+	.btn-danger,
+	.btn-print {
 		padding: 0.625rem 1.25rem;
 		border-radius: 0.5rem;
 		font-weight: 600;
@@ -1215,6 +1327,15 @@
 
 	.btn-danger:hover {
 		background: #b91c1c;
+	}
+
+	.btn-print {
+		background: #4f46e5;
+		color: white;
+	}
+
+	.btn-print:hover {
+		background: #4338ca;
 	}
 
 	.download-modal,
