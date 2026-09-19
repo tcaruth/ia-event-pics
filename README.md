@@ -21,6 +21,7 @@ A custom-built photo gallery and distribution platform for an Iowa-based physica
 *   **Batch Photo Deletion:** Multi-photo selection and deletion with granular controls to delete composite photos, associated raw camera frames, and standalone raw photos.
 *   **Custom Batch Download:** Flexible ZIP generation for organizers to download selected photos or the entire event gallery, with options to include or exclude raw camera captures.
 *   **Batch Remote Printing:** Queue multiple selected photos directly to the physical photobooth printer from a sticky unified action toolbar.
+*   **Smooth View Transitions:** Native browser View Transitions API integration providing seamless morphing animations between gallery grid thumbnails and full-screen photo views.
 
 ## 🛠️ Tech Stack
 

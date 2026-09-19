@@ -12,6 +12,7 @@ The repository is structured into three main components:
 
 1. **SvelteKit Web Gallery (`/src`)**
    * **Framework:** SvelteKit powered by **Svelte 5** (utilizing Svelte 5 Runes).
+   * **View Transitions:** Native browser View Transitions API wired via `$lib/page-transitions.js` (`onNavigate`) and `[style*='--tag']` CSS custom ident mappings for seamless thumbnail-to-detail photo morphing.
    * **Deployment:** Hosted on **Netlify** using `@sveltejs/adapter-netlify`.
    * **Styling:** Vanilla CSS with dynamic HSL themes and custom typography populated from Sanity CMS.
 

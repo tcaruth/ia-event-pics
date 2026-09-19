@@ -1,6 +1,9 @@
 <script>
 	import '../app.css';
 	import { theme } from '$lib/stores.js';
+	import { preparePageTransition } from '$lib/page-transitions.js';
+
+	preparePageTransition();
 
 	let { children } = $props();
 
