@@ -18,8 +18,8 @@ A custom-built photo gallery and distribution platform for an Iowa-based physica
 *   **Event-Specific Branding:** Real-time styling updates (colors, fonts) driven by Sanity data.
 *   **Sanity Image Pipeline:** High-performance, optimized image delivery (WebP, auto-resize).
 *   **Admin Dashboard:** Per-event admin pages (`/[slug]/admin`) with capture stats & time-series visualizations, remote print queue management, and batch photo deletion/ZIP downloading.
-*   **Batch Photo Deletion:** Master admin-restricted multi-photo deletion with checkboxes and granular controls to delete composite photos, associated raw camera frames, and standalone raw photos.
-*   **Batch Download:** One-click ZIP generation for organizers to download all event photos.
+*   **Batch Photo Deletion:** Multi-photo selection and deletion with granular controls to delete composite photos, associated raw camera frames, and standalone raw photos.
+*   **Custom Batch Download:** Flexible ZIP generation for organizers to download selected photos or the entire event gallery, with options to include or exclude raw camera captures.
 
 ## 🛠️ Tech Stack
 
