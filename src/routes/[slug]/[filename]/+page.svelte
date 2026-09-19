@@ -9,7 +9,8 @@
 	const qrCodeSize = 300;
 
 	let qrPageUrlDataUrl = $state(Promise.resolve(''));
-	let loadingState = $state('checking'); // 'checking', 'loaded', 'error'
+	// svelte-ignore state_referenced_locally
+	let loadingState = $state(data.image ? 'loaded' : 'checking'); // 'checking', 'loaded', 'error'
 	let retryCount = $state(0);
 	const MAX_RETRIES = 60; // 3 minutes at 3s interval
 
@@ -43,7 +44,7 @@
 			width: qrCodeSize,
 			height: qrCodeSize
 		});
-		/** @type {ReturnType<typeof setInterval>} */
+		/** @type {ReturnType<typeof setInterval> | undefined} */
 		let interval;
 
 		const poll = async () => {
@@ -59,10 +60,14 @@
 			}
 		};
 
-		poll(); // Initial check
-		interval = setInterval(poll, 3000);
+		if (loadingState === 'checking') {
+			poll(); // Initial check
+			interval = setInterval(poll, 3000);
+		}
 
-		return () => clearInterval(interval);
+		return () => {
+			if (interval) clearInterval(interval);
+		};
 	});
 
 	async function downloadImage() {
