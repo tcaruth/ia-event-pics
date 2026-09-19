@@ -43,6 +43,28 @@ node sanity-uploader.js --dir <photo_dir> [--event <slug> | --photobooth <name>]
 - `--event`: (Manual Override) Directly specify event slug.
 - `--config`: (Optional) Path to `pibooth.cfg`. Defaults to `~/.config/pibooth/pibooth.cfg`.
 
+## Recovery: Upload Missed Photos (Offline / Catch-Up)
+
+If the photobooth lost network connectivity during an event, captures and prints will have succeeded locally on disk in `~/Pictures/pibooth`, but real-time uploads to Sanity may have failed.
+
+A recovery script is provided to scan the capture directory, detect which images are missing in Sanity, preserve capture timestamps, and upload all missed photos.
+
+```bash
+# Preview what will be uploaded without writing to Sanity
+./upload-missed-photos.sh --dry-run
+
+# Run catch-up upload for the active photobooth event
+./upload-missed-photos.sh
+
+# Or run with Node directly:
+node upload-missed-photos.js --dir ~/Pictures/pibooth --photobooth "Moose"
+```
+
+### Key Recovery Features:
+- **Duplicate Prevention:** Computes SHA-1 hashes and checks existing assets in Sanity so already-uploaded photos are skipped.
+- **Timestamp Preservation:** Sets `created` in Sanity from file modification timestamps (`mtime`) so the Admin UI's `groupPhotosByComposite` accurately pairs raw captures with their composite photos.
+- **Desktop Launcher:** A `.desktop` shortcut (`Upload Missed Photos.desktop`) can be placed on `/home/pi/Desktop` for 1-click execution.
+
 ### Automatic Startup (systemd)
 
 The `start.sh` script is used as a wrapper to load `nvm` and the correct Node version before launching the uploader.
