@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
 	calculateCaptureStats,
+	filterOutlierPhotos,
 	formatHourLabel,
 	formatTimeShort,
 	getSortedCaptureDates,
@@ -104,5 +105,120 @@ describe('analytics.js', () => {
 		expect(result.peakHourLabel).toBe('N/A');
 		expect(result.timelineBuckets).toEqual([]);
 		expect(result.hourlyDistribution.length).toBe(24);
+		expect(result.outliersExcludedCount).toBe(0);
+	});
+
+	describe('filterOutlierPhotos', () => {
+		it('returns empty array when passed empty or non-array inputs', () => {
+			expect(filterOutlierPhotos([])).toEqual([]);
+			expect(filterOutlierPhotos(null)).toEqual([]);
+			expect(filterOutlierPhotos(undefined)).toEqual([]);
+		});
+
+		it('returns all photos when all photos are within the 4-hour threshold', () => {
+			const images = [
+				{ name: '2026-09-12-20-00-00_pibooth.jpg', created: '2026-09-12T20:00:00.000Z' },
+				{ name: 'pibooth000.jpg', created: '2026-09-12T20:00:05.000Z' },
+				{ name: '2026-09-12-21-30-00_pibooth.jpg', created: '2026-09-12T21:30:00.000Z' },
+				{ name: '2026-09-12-23-00-00_pibooth.jpg', created: '2026-09-12T23:00:00.000Z' }
+			];
+
+			const filtered = filterOutlierPhotos(images, 4);
+			expect(filtered.length).toBe(4);
+		});
+
+		it('excludes test photos taken on Friday when the actual event is on Saturday', () => {
+			const images = [
+				// Friday test setup (26+ hours prior to event)
+				{ name: '2026-09-11-17-16-18_pibooth.jpg', created: '2026-09-11T22:16:18.000Z' },
+				{ name: 'pibooth000.jpg', created: '2026-09-11T22:16:15.000Z' },
+				{ name: '2026-09-11-17-18-37_pibooth.jpg', created: '2026-09-11T22:18:37.000Z' },
+				{ name: '2026-09-11-17-20-23_pibooth.jpg', created: '2026-09-11T22:20:23.000Z' },
+
+				// Saturday event photos
+				{ name: '2026-09-12-20-00-01_pibooth.jpg', created: '2026-09-13T01:00:01.000Z' },
+				{ name: 'pibooth000.jpg', created: '2026-09-13T01:00:00.000Z' },
+				{ name: '2026-09-12-21-15-00_pibooth.jpg', created: '2026-09-13T02:15:00.000Z' },
+				{ name: '2026-09-12-22-30-00_pibooth.jpg', created: '2026-09-13T03:30:00.000Z' },
+				{ name: '2026-09-12-23-45-00_pibooth.jpg', created: '2026-09-13T04:45:00.000Z' }
+			];
+
+			const filtered = filterOutlierPhotos(images, 4);
+
+			// Should only contain the 5 Saturday photos
+			expect(filtered.length).toBe(5);
+			expect(filtered.every((img) => img.created.startsWith('2026-09-13'))).toBe(true);
+		});
+
+		it('excludes teardown test photos taken more than 4 hours after the event', () => {
+			const images = [
+				// Event captures
+				{ name: '2026-09-12-19-00-00_pibooth.jpg', created: '2026-09-12T19:00:00.000Z' },
+				{ name: '2026-09-12-20-00-00_pibooth.jpg', created: '2026-09-12T20:00:00.000Z' },
+				{ name: '2026-09-12-22-00-00_pibooth.jpg', created: '2026-09-12T22:00:00.000Z' },
+
+				// Sunday morning teardown (10 hours later)
+				{ name: '2026-09-13-08-00-00_pibooth.jpg', created: '2026-09-13T08:00:00.000Z' }
+			];
+
+			const filtered = filterOutlierPhotos(images, 4);
+
+			expect(filtered.length).toBe(3);
+			expect(filtered.some((img) => img.name.startsWith('2026-09-13'))).toBe(false);
+		});
+
+		it('preserves sessions with natural gaps under 4 hours (e.g. 2.5 hour dinner)', () => {
+			const images = [
+				{ name: '2026-09-12-17-00-00_pibooth.jpg', created: '2026-09-12T17:00:00.000Z' },
+				// 2.5 hour gap (dinner/speeches)
+				{ name: '2026-09-12-19-30-00_pibooth.jpg', created: '2026-09-12T19:30:00.000Z' },
+				{ name: '2026-09-12-21-00-00_pibooth.jpg', created: '2026-09-12T21:00:00.000Z' }
+			];
+
+			const filtered = filterOutlierPhotos(images, 4);
+			expect(filtered.length).toBe(3);
+		});
+	});
+
+	describe('calculateCaptureStats with outlier filtering', () => {
+		it('calculates accurate duration and capture rate by ignoring Friday test captures', () => {
+			const images = [
+				// Friday test setup (3 composites)
+				{ name: '2026-09-11-17-16-18_pibooth.jpg', created: '2026-09-11T22:16:18.000Z' },
+				{ name: '2026-09-11-17-18-37_pibooth.jpg', created: '2026-09-11T22:18:37.000Z' },
+				{ name: '2026-09-11-17-20-23_pibooth.jpg', created: '2026-09-11T22:20:23.000Z' },
+				// Raw photo for Friday
+				{ name: 'pibooth000.jpg', created: '2026-09-11T22:16:15.000Z' },
+
+				// Saturday event: 8:00 PM to 10:00 PM (2 hours = 120 mins)
+				{ name: '2026-09-12-20-00-00_pibooth.jpg', created: '2026-09-13T01:00:00.000Z' },
+				{ name: '2026-09-12-20-30-00_pibooth.jpg', created: '2026-09-13T01:30:00.000Z' },
+				{ name: '2026-09-12-21-00-00_pibooth.jpg', created: '2026-09-13T02:00:00.000Z' },
+				{ name: '2026-09-12-21-30-00_pibooth.jpg', created: '2026-09-13T02:30:00.000Z' },
+				{ name: '2026-09-12-22-00-00_pibooth.jpg', created: '2026-09-13T03:00:00.000Z' },
+				// Raw photo for Saturday
+				{ name: 'pibooth000.jpg', created: '2026-09-13T01:00:05.000Z' }
+			];
+
+			const stats = calculateCaptureStats(images, 15);
+
+			// Friday's 3 composites + 1 raw = 4 photos excluded
+			expect(stats.outliersExcludedCount).toBe(4);
+			expect(stats.totalCaptures).toBe(5);
+			expect(stats.overlaidCount).toBe(5);
+			expect(stats.rawCount).toBe(1);
+
+			// Active duration should be 120 mins (2 hours), NOT 28+ hours!
+			expect(stats.activeDurationMinutes).toBe(120);
+			expect(stats.firstCaptureTime).toEqual(new Date('2026-09-13T01:00:00.000Z'));
+			expect(stats.lastCaptureTime).toEqual(new Date('2026-09-13T03:00:00.000Z'));
+
+			// Average capture rate: 5 captures / 2 hours = 2.5/hr
+			expect(stats.averageCapturesPerHour).toBe(2.5);
+
+			// Timeline buckets should span only the 2-hour event, not 28+ hours of empty buckets
+			expect(stats.timelineBuckets.length).toBe(9);
+		});
 	});
 });
+

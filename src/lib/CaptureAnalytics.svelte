@@ -22,6 +22,11 @@
 			<h2>Capture Analytics</h2>
 			<p class="subtitle">Activity distribution & performance over time (15-min intervals)</p>
 		</div>
+		{#if stats.outliersExcludedCount > 0}
+			<div class="outlier-badge" title="{stats.outliersExcludedCount} photo{stats.outliersExcludedCount === 1 ? '' : 's'} outside primary event session (>4h gap) excluded from analytics">
+				<span>⚡</span> Main session ({stats.outliersExcludedCount} outlier{stats.outliersExcludedCount === 1 ? '' : 's'} filtered)
+			</div>
+		{/if}
 	</div>
 
 	{#if images.length === 0}
@@ -36,6 +41,9 @@
 				<span class="kpi-value">{stats.totalCaptures}</span>
 				<span class="kpi-sub">
 					{stats.overlaidCount} overlaid, {stats.rawCount} raw
+					{#if stats.outliersExcludedCount > 0}
+						<span class="outlier-note">({stats.outliersExcludedCount} outlier{stats.outliersExcludedCount === 1 ? '' : 's'} excluded)</span>
+					{/if}
 				</span>
 			</div>
 
@@ -140,6 +148,25 @@
 		font-size: 0.875rem;
 		color: var(--text-surface-secondary, #9ca3af);
 		margin: 0.25rem 0 0 0;
+	}
+
+	.outlier-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.375rem;
+		font-size: 0.75rem;
+		font-weight: 600;
+		color: #f59e0b;
+		background: rgba(245, 158, 11, 0.1);
+		border: 1px solid rgba(245, 158, 11, 0.3);
+		padding: 0.25rem 0.625rem;
+		border-radius: 9999px;
+	}
+
+	.outlier-note {
+		color: #f59e0b;
+		display: block;
+		margin-top: 0.125rem;
 	}
 
 	.empty-analytics {

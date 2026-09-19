@@ -27,6 +27,7 @@
  * @property {number} peakHourCount
  * @property {HourlyDistribution[]} hourlyDistribution
  * @property {TimelineBucket[]} timelineBuckets
+ * @property {number} outliersExcludedCount
  */
 
 /**
@@ -222,13 +223,81 @@ export function getSortedCaptureDates(images) {
 }
 
 /**
+ * Filters out outlier captures that are separated by more than maxGapHours from the primary capture session.
+ * Groups photos by timestamp proximity (gaps > maxGapHours start a new session cluster).
+ * Identifies the primary event session by the highest number of composite captures.
+ *
+ * @param {Array<{ created?: string, name?: string }> | null} [images]
+ * @param {number} [maxGapHours=4]
+ * @returns {Array<any>} Filtered images belonging to the primary session cluster
+ */
+export function filterOutlierPhotos(images = [], maxGapHours = 4) {
+	if (!Array.isArray(images) || images.length === 0) {
+		return [];
+	}
+
+	const getTimestamp = (/** @type {any} */ img) => {
+		if (!img?.created) return NaN;
+		const t = new Date(img.created).getTime();
+		return isNaN(t) ? NaN : t;
+	};
+
+	// Only cluster images with valid timestamps
+	const validImages = images.filter((img) => !isNaN(getTimestamp(img)));
+	if (validImages.length === 0) {
+		return images;
+	}
+
+	// Sort chronologically
+	const sorted = validImages.slice().sort((a, b) => getTimestamp(a) - getTimestamp(b));
+
+	const maxGapMs = Math.max(1, maxGapHours) * 60 * 60 * 1000;
+	const clusters = [];
+	let currentCluster = [sorted[0]];
+
+	for (let i = 1; i < sorted.length; i++) {
+		const prevTime = getTimestamp(sorted[i - 1]);
+		const currTime = getTimestamp(sorted[i]);
+
+		if (currTime - prevTime <= maxGapMs) {
+			currentCluster.push(sorted[i]);
+		} else {
+			clusters.push(currentCluster);
+			currentCluster = [sorted[i]];
+		}
+	}
+	clusters.push(currentCluster);
+
+	if (clusters.length === 1) {
+		return images;
+	}
+
+	// Score clusters primarily by composite capture count, breaking ties by total captures and recency
+	let bestCluster = clusters[0];
+	let maxScore = -1;
+
+	for (const cluster of clusters) {
+		const compCount = cluster.filter((img) => isCompositePhoto(img?.name)).length;
+		const score = compCount > 0 ? compCount * 100000 + cluster.length : cluster.length;
+		if (score >= maxScore) {
+			maxScore = score;
+			bestCluster = cluster;
+		}
+	}
+
+	return bestCluster;
+}
+
+/**
  * Calculates capture statistics and histogram time buckets from an array of images,
  * strictly counting composite photobooth captures (e.g., 2026-07-31-17-08-26_pibooth.jpg).
+ * Outlier photos separated by more than maxGapHours (default 4h) from the main session are excluded.
  * @param {Array<{ created?: string, name?: string }>} images
  * @param {number} [intervalMinutes=15]
+ * @param {number} [maxGapHours=4]
  * @returns {CaptureStats}
  */
-export function calculateCaptureStats(images = [], intervalMinutes = 15) {
+export function calculateCaptureStats(images = [], intervalMinutes = 15, maxGapHours = 4) {
 	const emptyResult = {
 		totalCaptures: 0,
 		firstCaptureTime: null,
@@ -244,22 +313,28 @@ export function calculateCaptureStats(images = [], intervalMinutes = 15) {
 			label: formatHourLabel(i),
 			count: 0
 		})),
-		timelineBuckets: []
+		timelineBuckets: [],
+		outliersExcludedCount: 0
 	};
 
 	if (!Array.isArray(images) || images.length === 0) {
 		return emptyResult;
 	}
 
+	// Exclude outlier captures that are > maxGapHours away from the primary event session
+	const filteredImages = filterOutlierPhotos(images, maxGapHours);
+	const outliersExcludedCount = images.length - filteredImages.length;
+
 	// Filter strictly for composite photos
-	const compositeImages = images.filter((img) => isCompositePhoto(img?.name));
-	const rawCount = images.length - compositeImages.length;
+	const compositeImages = filteredImages.filter((img) => isCompositePhoto(img?.name));
+	const rawCount = filteredImages.length - compositeImages.length;
 	const overlaidCount = compositeImages.length;
 
 	if (compositeImages.length === 0) {
 		return {
 			...emptyResult,
-			rawCount
+			rawCount,
+			outliersExcludedCount
 		};
 	}
 
@@ -267,7 +342,8 @@ export function calculateCaptureStats(images = [], intervalMinutes = 15) {
 	if (dates.length === 0) {
 		return {
 			...emptyResult,
-			rawCount
+			rawCount,
+			outliersExcludedCount
 		};
 	}
 
@@ -361,6 +437,7 @@ export function calculateCaptureStats(images = [], intervalMinutes = 15) {
 		peakHourLabel,
 		peakHourCount: maxHourlyCount,
 		hourlyDistribution,
-		timelineBuckets
+		timelineBuckets,
+		outliersExcludedCount
 	};
 }
