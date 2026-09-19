@@ -1,6 +1,7 @@
 <script>
 	import { onMount, onDestroy, tick } from 'svelte';
 	import { invalidateAll } from '$app/navigation';
+	import { activeTransitionPhoto } from '$lib/stores.js';
 
 	let { data } = $props();
 
@@ -91,14 +92,21 @@
 		<div class="gallery">
 			{#each data.event?.images || [] as image, index}
 				{@const isLastImage = index === (data.event?.images || []).length - 1}
-				<a href="/{data.slug}/{image.name}" class="gallery-item" data-last-image={isLastImage}>
+				<a
+					href="/{data.slug}/{image.name}"
+					class="gallery-item"
+					data-last-image={isLastImage}
+					onclick={() => activeTransitionPhoto.set(image.name)}
+				>
 					<figure>
 						<div class="img-container">
 							<img
 								src={image.url}
 								alt={image.alt || ''}
 								loading="lazy"
-								style:--tag={'img-' + image.name.replace(/[^a-z0-9]/gi, '-')}
+								style:--tag={!$activeTransitionPhoto || $activeTransitionPhoto === image.name
+									? 'img-' + image.name.replace(/[^a-z0-9]/gi, '-')
+									: undefined}
 							/>
 						</div>
 						<figcaption>

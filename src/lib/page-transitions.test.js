@@ -95,4 +95,37 @@ describe('page-transitions.js', () => {
 		await cbPromise;
 		expect(completeResolved).toBe(true);
 	});
+
+	it('tracks target photo filename in activeTransitionPhoto store during transition', async () => {
+		const { get } = await import('svelte/store');
+		const { activeTransitionPhoto } = await import('./stores.js');
+
+		preparePageTransition();
+		const callback = vi.mocked(navigation.onNavigate).mock.calls[0][0];
+
+		let transitionCallback;
+		const startViewTransition = vi.fn((cb) => {
+			transitionCallback = cb;
+		});
+		// @ts-ignore
+		globalThis.document = { startViewTransition };
+
+		const nav = {
+			from: { url: new URL('http://localhost/demo'), params: {} },
+			to: { url: new URL('http://localhost/demo/photo-123.jpg'), params: { filename: 'photo-123.jpg' } },
+			complete: Promise.resolve()
+		};
+
+		// @ts-ignore
+		const transitionPromise = callback(nav);
+		expect(get(activeTransitionPhoto)).toBe('photo-123.jpg');
+
+		// Finish transition
+		const cbPromise = (/** @type {any} */ (transitionCallback))();
+		await transitionPromise;
+		await cbPromise;
+
+		// Should reset to null after completion
+		expect(get(activeTransitionPhoto)).toBeNull();
+	});
 });
