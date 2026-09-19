@@ -21,8 +21,6 @@
 	let deleteBatchDialog = $state(undefined);
 	/** @type {HTMLDialogElement | undefined} */
 	let downloadDialog = $state(undefined);
-	/** @type {HTMLDialogElement | undefined} */
-	let unlockMasterDialog = $state(undefined);
 
 	/** @type {import('$lib/events.server').EventImage | null} */
 	let imageToDelete = $state(null);
@@ -183,14 +181,6 @@
 		downloadDialog?.close();
 	}
 
-	function openUnlockMaster() {
-		unlockMasterDialog?.showModal();
-	}
-
-	function closeUnlockMaster() {
-		unlockMasterDialog?.close();
-	}
-
 	/** @param {import('$lib/events.server').EventImage} image */
 	function confirmDelete(image) {
 		imageToDelete = image;
@@ -330,13 +320,6 @@
 <div class="admin-container">
 	<div class="admin-header">
 		<h1>Admin Dashboard</h1>
-		{#if data.isMasterAdmin}
-			<span class="master-badge">👑 Master Admin</span>
-		{:else}
-			<button type="button" class="unlock-master-btn" onclick={openUnlockMaster}>
-				🔒 Unlock Master Admin
-			</button>
-		{/if}
 	</div>
 
 	<CaptureAnalytics images={data.images} />
@@ -390,25 +373,14 @@
 				{/if}
 			</button>
 
-			{#if data.isMasterAdmin}
-				<button
-					type="button"
-					class="batch-delete-btn"
-					onclick={confirmDeleteBatch}
-					disabled={selectedKeys.length === 0}
-				>
-					🗑️ Delete Selected ({selectedKeys.length})
-				</button>
-			{:else}
-				<button
-					type="button"
-					class="batch-delete-btn master-locked"
-					onclick={openUnlockMaster}
-					title="Master administrator password required to delete photos"
-				>
-					🔒 Delete Selected
-				</button>
-			{/if}
+			<button
+				type="button"
+				class="batch-delete-btn"
+				onclick={confirmDeleteBatch}
+				disabled={selectedKeys.length === 0}
+			>
+				🗑️ Delete Selected ({selectedKeys.length})
+			</button>
 		</div>
 	</div>
 
@@ -606,7 +578,7 @@
 			</div>
 
 			<div class="dialog-actions">
-				{#if data.isMasterAdmin && selectedKeys.length > 0}
+				{#if selectedKeys.length > 0}
 					<button
 						type="button"
 						class="btn-danger"
@@ -754,44 +726,6 @@
 			</div>
 		</div>
 	</dialog>
-
-	<dialog bind:this={unlockMasterDialog} class="confirm-dialog">
-		<div class="dialog-content">
-			<h2>Unlock Master Admin</h2>
-			<p>Enter the master administrator password to unlock batch photo deletion.</p>
-
-			<form
-				method="POST"
-				action="?/unlockMaster"
-				use:enhance={() => {
-					return async ({ result, update }) => {
-						if (result.type === 'success') {
-							closeUnlockMaster();
-							await update();
-						}
-					};
-				}}
-			>
-				<div class="input-group">
-					<label for="master-password-input">Master Password</label>
-					<input
-						id="master-password-input"
-						type="password"
-						name="password"
-						required
-						placeholder="Enter master password"
-						class="password-input"
-					/>
-				</div>
-
-				<div class="dialog-actions">
-					<button type="button" class="btn-secondary" onclick={closeUnlockMaster}>Cancel</button>
-					<!-- svelte-ignore a11y_autofocus -->
-					<button type="submit" class="btn-primary" autofocus>Unlock</button>
-				</div>
-			</form>
-		</div>
-	</dialog>
 </div>
 
 <style>
@@ -812,36 +746,6 @@
 		font-size: 2rem;
 		font-weight: 700;
 		margin: 0;
-		color: var(--text-surface-primary, #f8fafc);
-	}
-
-	.master-badge {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.375rem;
-		background: rgba(234, 179, 8, 0.15);
-		border: 1px solid rgba(234, 179, 8, 0.4);
-		color: #facc15;
-		font-size: 0.875rem;
-		font-weight: 700;
-		padding: 0.375rem 0.75rem;
-		border-radius: 9999px;
-	}
-
-	.unlock-master-btn {
-		background: rgba(255, 255, 255, 0.08);
-		border: 1px solid var(--border-color, rgba(255, 255, 255, 0.2));
-		color: var(--text-surface-secondary, #94a3b8);
-		font-size: 0.875rem;
-		font-weight: 600;
-		padding: 0.375rem 0.75rem;
-		border-radius: 0.5rem;
-		cursor: pointer;
-		transition: all 0.2s;
-	}
-
-	.unlock-master-btn:hover {
-		background: rgba(255, 255, 255, 0.15);
 		color: var(--text-surface-primary, #f8fafc);
 	}
 
@@ -945,17 +849,6 @@
 	.batch-delete-btn:disabled {
 		opacity: 0.4;
 		cursor: not-allowed;
-	}
-
-	.batch-delete-btn.master-locked {
-		background: transparent;
-		border: 1px dashed rgba(255, 255, 255, 0.3);
-		color: var(--text-surface-secondary, #94a3b8);
-	}
-
-	.batch-delete-btn.master-locked:hover {
-		background: rgba(255, 255, 255, 0.08);
-		color: var(--text-surface-primary, #f8fafc);
 	}
 
 	.progress-banner {
@@ -1401,34 +1294,5 @@
 		padding: 0.75rem 1rem;
 		border-radius: 0.5rem;
 		margin-bottom: 0.75rem;
-	}
-
-	.input-group {
-		display: flex;
-		flex-direction: column;
-		gap: 0.5rem;
-		margin: 1.25rem 0;
-	}
-
-	.input-group label {
-		font-size: 0.875rem;
-		font-weight: 600;
-		color: var(--text-surface-secondary, #94a3b8);
-	}
-
-	.password-input {
-		width: 100%;
-		padding: 0.625rem 0.875rem;
-		border-radius: 0.375rem;
-		border: 1px solid var(--border-color, rgba(255, 255, 255, 0.2));
-		background: var(--surface-secondary, #1e293b);
-		color: var(--text-surface-primary, #f8fafc);
-		font-size: 0.875rem;
-		box-sizing: border-box;
-	}
-
-	.password-input:focus {
-		outline: none;
-		border-color: var(--color-primary, #3b82f6);
 	}
 </style>

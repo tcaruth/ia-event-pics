@@ -1,61 +1,18 @@
 import { getEvent } from "$lib/events.server";
 import { client } from "$lib/sanity";
-import { MASTER_ADMIN_PASSWORD } from "$env/static/private";
 
-export async function load({ params, cookies }) {
-    const session = cookies.get('session');
-    const isMasterAdmin = session === 'master';
+export async function load({ params }) {
     const event = await getEvent(params.slug, true);
     return {
         images: event?.images || [],
         event: event,
-        slug: params.slug,
-        isMasterAdmin
+        slug: params.slug
     };
 }
 
 export const actions = {
-    unlockMaster: async ({ request, cookies }) => {
+    deleteBatch: async ({ request, params }) => {
         const data = await request.formData();
-        const password = data.get('password');
-
-        if (password === MASTER_ADMIN_PASSWORD) {
-            cookies.set('session', 'master', {
-                path: '/',
-                httpOnly: true,
-                sameSite: 'strict',
-                secure: process.env.NODE_ENV === 'production',
-                maxAge: 60 * 60 * 24
-            });
-            return { success: true, message: 'Master admin access granted' };
-        }
-
-        return { success: false, error: 'Incorrect master password' };
-    },
-    deleteBatch: async ({ request, params, cookies }) => {
-        const session = cookies.get('session');
-        const data = await request.formData();
-        const providedMasterPassword = data.get('masterPassword');
-
-        const isMaster = session === 'master' || providedMasterPassword === MASTER_ADMIN_PASSWORD;
-        if (!isMaster) {
-            return {
-                success: false,
-                error: 'Batch deletion is restricted to master administrators.'
-            };
-        }
-
-        // Elevate session if master password was provided and valid
-        if (providedMasterPassword === MASTER_ADMIN_PASSWORD && session !== 'master') {
-            cookies.set('session', 'master', {
-                path: '/',
-                httpOnly: true,
-                sameSite: 'strict',
-                secure: process.env.NODE_ENV === 'production',
-                maxAge: 60 * 60 * 24
-            });
-        }
-
         const keysData = data.get('keys');
         let keys = [];
         if (typeof keysData === 'string') {
@@ -63,9 +20,9 @@ export const actions = {
                 const parsed = JSON.parse(keysData);
                 if (Array.isArray(parsed)) keys = parsed;
             } catch {
-                keys = data.getAll('keys').map(k => String(k));
+                keys = typeof data.getAll === 'function' ? data.getAll('keys').map(k => String(k)) : [keysData];
             }
-        } else {
+        } else if (typeof data.getAll === 'function') {
             keys = data.getAll('keys').map(k => String(k));
         }
 
