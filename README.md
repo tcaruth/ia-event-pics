@@ -17,7 +17,7 @@ A custom-built photo gallery and distribution platform for an Iowa-based physica
 *   **Unified CMS & Storage:** Both event metadata and high-resolution image assets are hosted on Sanity.io.
 *   **Event-Specific Branding:** Real-time styling updates (colors, fonts) driven by Sanity data.
 *   **Sanity Image Pipeline:** High-performance, optimized image delivery (WebP, auto-resize).
-*   **Admin Dashboard:** Per-event admin pages (`/[slug]/admin`) with capture stats & time-series visualizations, remote print queue management, and batch photo deletion/ZIP downloading.
+*   **Admin Dashboard & Capture Analytics:** Per-event admin pages (`/[slug]/admin`) with capture statistics, 15-minute time-series visualizations with automatic outlier filtering (>4-hour setup/teardown gaps), remote print queue management, and batch photo deletion/ZIP downloading.
 *   **Batch Photo Deletion:** Multi-photo selection and deletion with granular controls to delete composite photos, associated raw camera frames, and standalone raw photos.
 *   **Custom Batch Download:** Flexible ZIP generation for organizers to download selected photos or the entire event gallery, with options to include or exclude raw camera captures.
 *   **Batch Remote Printing:** Queue multiple selected photos directly to the physical photobooth printer from a sticky unified action toolbar.
