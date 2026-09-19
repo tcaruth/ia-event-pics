@@ -58,6 +58,7 @@ test.describe('Routing', () => {
 		await page.fill('input[name="password"]', masterPassword);
 		await page.click('button[type="submit"]');
 		await expect(page.locator('.admin-container')).toBeVisible({ timeout: 10000 });
+		await expect(page.locator('.batch-print-btn')).toBeVisible();
 
 		const cards = page.locator('.image-card');
 		const cardCount = await cards.count();

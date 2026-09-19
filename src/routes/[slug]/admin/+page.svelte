@@ -6,7 +6,7 @@
 	import { enhance } from '$app/forms';
 	import JSZip from 'jszip';
 	import CaptureAnalytics from '$lib/CaptureAnalytics.svelte';
-	import { groupPhotosByComposite } from '$lib/analytics';
+	import { groupPhotosByComposite, isEventEnded } from '$lib/analytics';
 
 	let isDownloading = $state(false);
 	let downloadProgress = $state('');
@@ -22,6 +22,9 @@
 
 	/** @type {any | null} */
 	let selectedGroupForRaws = $state(null);
+
+	let eventEnded = $derived(isEventEnded(data.images || []));
+	let isPrintAvailable = $derived(Boolean(data.isMaster || !eventEnded));
 
 	let photoGroups = $derived(groupPhotosByComposite(data.images || [], data.event?.captures));
 
@@ -179,6 +182,7 @@
 	);
 
 	function openPrintBatchDialog() {
+		if (!isPrintAvailable) return;
 		if (selectedPrintImages.length === 0) return;
 		printBatchDialog?.showModal();
 	}
@@ -361,23 +365,25 @@
 				{/if}
 			</button>
 
-			<button
-				type="button"
-				class="batch-print-btn"
-				onclick={openPrintBatchDialog}
-				disabled={selectedKeys.length === 0 || !data.event?.isPhotoboothActive}
-				title={!data.event?.isPhotoboothActive
-					? 'Photobooth must be active and assigned to this event to print'
-					: selectedKeys.length === 0
-						? 'Select photos to print'
-						: `Send ${selectedKeys.length} selected photo${selectedKeys.length === 1 ? '' : 's'} to photobooth printer`}
-			>
-				{#if selectedKeys.length > 0}
-					🖨️ Print Selected ({selectedKeys.length})
-				{:else}
-					🖨️ Print Selected
-				{/if}
-			</button>
+			{#if isPrintAvailable}
+				<button
+					type="button"
+					class="batch-print-btn"
+					onclick={openPrintBatchDialog}
+					disabled={selectedKeys.length === 0 || !data.event?.isPhotoboothActive}
+					title={!data.event?.isPhotoboothActive
+						? 'Photobooth must be active and assigned to this event to print'
+						: selectedKeys.length === 0
+							? 'Select photos to print'
+							: `Send ${selectedKeys.length} selected photo${selectedKeys.length === 1 ? '' : 's'} to photobooth printer`}
+				>
+					{#if selectedKeys.length > 0}
+						🖨️ Print Selected ({selectedKeys.length})
+					{:else}
+						🖨️ Print Selected
+					{/if}
+				</button>
+			{/if}
 
 			<button
 				type="button"
@@ -478,39 +484,42 @@
 		{/each}
 	</div>
 
-	<dialog bind:this={printBatchDialog} class="confirm-dialog">
-		<div class="dialog-content">
-			<h2>Confirm Batch Print Job</h2>
-			<p>
-				Are you sure you want to send <strong>{selectedPrintImages.length}</strong>
-				photo{selectedPrintImages.length === 1 ? '' : 's'} to the photobooth printer?
-			</p>
+	{#if isPrintAvailable}
+		<dialog bind:this={printBatchDialog} class="confirm-dialog">
+			<div class="dialog-content">
+				<h2>Confirm Batch Print Job</h2>
+				<p>
+					Are you sure you want to send <strong>{selectedPrintImages.length}</strong>
+					photo{selectedPrintImages.length === 1 ? '' : 's'} to the photobooth printer?
+				</p>
 
-			<div class="dialog-actions">
-				<button type="button" class="btn-secondary" onclick={closePrintBatchDialog}>Cancel</button>
-				<form
-					method="POST"
-					action="?/printBatch"
-					use:enhance={() => {
-						return async ({ result, update }) => {
-							closePrintBatchDialog();
-							if (result.type === 'success') {
-								await update();
-							}
-						};
-					}}
-				>
-					<input type="hidden" name="images" value={JSON.stringify(selectedPrintPayload())} />
-					<!-- svelte-ignore a11y_autofocus -->
-					<button type="submit" class="btn-primary" autofocus>
-						Yes, Print {selectedPrintImages.length} Photo{selectedPrintImages.length === 1
-							? ''
-							: 's'}
-					</button>
-				</form>
+				<div class="dialog-actions">
+					<button type="button" class="btn-secondary" onclick={closePrintBatchDialog}>Cancel</button
+					>
+					<form
+						method="POST"
+						action="?/printBatch"
+						use:enhance={() => {
+							return async ({ result, update }) => {
+								closePrintBatchDialog();
+								if (result.type === 'success') {
+									await update();
+								}
+							};
+						}}
+					>
+						<input type="hidden" name="images" value={JSON.stringify(selectedPrintPayload())} />
+						<!-- svelte-ignore a11y_autofocus -->
+						<button type="submit" class="btn-primary" autofocus>
+							Yes, Print {selectedPrintImages.length} Photo{selectedPrintImages.length === 1
+								? ''
+								: 's'}
+						</button>
+					</form>
+				</div>
 			</div>
-		</div>
-	</dialog>
+		</dialog>
+	{/if}
 
 	<dialog bind:this={rawPhotosDialog} class="confirm-dialog raw-modal">
 		<div class="dialog-content raw-dialog-content">
@@ -559,7 +568,7 @@
 			</div>
 
 			<div class="dialog-actions">
-				{#if selectedKeys.length > 0 && data.event?.isPhotoboothActive}
+				{#if isPrintAvailable && selectedKeys.length > 0 && data.event?.isPhotoboothActive}
 					<button
 						type="button"
 						class="btn-print"

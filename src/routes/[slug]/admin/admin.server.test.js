@@ -1,12 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { actions } from './+page.server';
+import { actions, load } from './+page.server';
 import { client } from '$lib/sanity';
+import { getEvent } from '$lib/events.server';
 
 vi.mock('$lib/sanity', () => ({
 	client: {
 		fetch: vi.fn(),
 		patch: vi.fn()
 	}
+}));
+
+vi.mock('$lib/events.server', () => ({
+	getEvent: vi.fn()
 }));
 
 describe('Admin Page Actions', () => {
@@ -20,7 +25,7 @@ describe('Admin Page Actions', () => {
 			const request = { formData: async () => formData };
 			const params = { slug: 'test-event' };
 
-			const result = await (/** @type {any} */ (actions.print))({ request, params });
+			const result = await /** @type {any} */ (actions.print)({ request, params });
 			expect(result).toEqual({
 				success: false,
 				error: 'Image details are required for printing'
@@ -38,7 +43,7 @@ describe('Admin Page Actions', () => {
 
 			vi.mocked(client.fetch).mockResolvedValue(/** @type {any} */ (null));
 
-			const result = await (/** @type {any} */ (actions.print))({ request, params });
+			const result = await /** @type {any} */ (actions.print)({ request, params });
 			expect(result).toEqual({ success: false, error: 'Event not found' });
 		});
 
@@ -55,7 +60,7 @@ describe('Admin Page Actions', () => {
 				/** @type {any} */ ({ _id: 'event-doc-id', isPhotoboothActive: false })
 			);
 
-			const result = await (/** @type {any} */ (actions.print))({ request, params });
+			const result = await /** @type {any} */ (actions.print)({ request, params });
 			expect(result).toEqual({
 				success: false,
 				error: 'Printing is only available while the event is active and assigned to a photobooth'
@@ -82,7 +87,7 @@ describe('Admin Page Actions', () => {
 
 			vi.mocked(client.patch).mockImplementation(mockPatch);
 
-			const result = await (/** @type {any} */ (actions.print))({ request, params });
+			const result = await /** @type {any} */ (actions.print)({ request, params });
 
 			expect(client.patch).toHaveBeenCalledWith('event-doc-id');
 			expect(mockSetIfMissing).toHaveBeenCalledWith({ printQueue: [] });
@@ -102,6 +107,65 @@ describe('Admin Page Actions', () => {
 				message: 'Print job queued for photo_1.jpg'
 			});
 		});
+
+		it('rejects if more than 24 hours have passed since last photo and user is not master', async () => {
+			const formData = new Map([
+				['fullPath', 'img_key_123'],
+				['assetUrl', 'https://cdn.sanity.io/images/proj/ds/image.jpg'],
+				['imageName', 'photo_1.jpg']
+			]);
+			const request = { formData: async () => formData };
+			const params = { slug: 'test-event' };
+			const cookies = { get: vi.fn().mockReturnValue('admin') };
+
+			const oldTimestamp = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+			vi.mocked(client.fetch).mockResolvedValue(
+				/** @type {any} */ ({
+					_id: 'event-doc-id',
+					isPhotoboothActive: true,
+					gallery: [{ key: 'old_key', created: oldTimestamp }]
+				})
+			);
+
+			const result = await /** @type {any} */ (actions.print)({ request, params, cookies });
+			expect(result).toEqual({
+				success: false,
+				error:
+					'Printing is restricted to master administrators more than 24 hours after the last photo'
+			});
+		});
+
+		it('allows printing after 24 hours if user is master admin', async () => {
+			const formData = new Map([
+				['fullPath', 'img_key_123'],
+				['assetUrl', 'https://cdn.sanity.io/images/proj/ds/image.jpg'],
+				['imageName', 'photo_1.jpg']
+			]);
+			const request = { formData: async () => formData };
+			const params = { slug: 'test-event' };
+			const cookies = { get: vi.fn().mockReturnValue('master') };
+
+			const oldTimestamp = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+			vi.mocked(client.fetch).mockResolvedValue(
+				/** @type {any} */ ({
+					_id: 'event-doc-id',
+					isPhotoboothActive: true,
+					gallery: [{ key: 'old_key', created: oldTimestamp }]
+				})
+			);
+
+			const mockCommit = vi.fn().mockResolvedValue({});
+			const mockAppend = vi.fn().mockReturnValue({ commit: mockCommit });
+			const mockSetIfMissing = vi.fn().mockReturnValue({ append: mockAppend });
+			const mockPatch = vi.fn().mockReturnValue({ setIfMissing: mockSetIfMissing });
+			vi.mocked(client.patch).mockImplementation(mockPatch);
+
+			const result = await /** @type {any} */ (actions.print)({ request, params, cookies });
+			expect(result).toEqual({
+				success: true,
+				message: 'Print job queued for photo_1.jpg'
+			});
+		});
 	});
 
 	describe('deleteBatch action', () => {
@@ -110,7 +174,7 @@ describe('Admin Page Actions', () => {
 			const request = { formData: async () => formData };
 			const params = { slug: 'test-event' };
 
-			const result = await (/** @type {any} */ (actions.deleteBatch))({ request, params });
+			const result = await /** @type {any} */ (actions.deleteBatch)({ request, params });
 			expect(result).toEqual({
 				success: false,
 				error: 'At least one photo must be selected for deletion.'
@@ -124,7 +188,7 @@ describe('Admin Page Actions', () => {
 
 			vi.mocked(client.fetch).mockResolvedValue(/** @type {any} */ (null));
 
-			const result = await (/** @type {any} */ (actions.deleteBatch))({ request, params });
+			const result = await /** @type {any} */ (actions.deleteBatch)({ request, params });
 			expect(result).toEqual({ success: false, error: 'Event not found' });
 		});
 
@@ -140,13 +204,10 @@ describe('Admin Page Actions', () => {
 			const mockPatch = vi.fn().mockReturnValue({ unset: mockUnset });
 			vi.mocked(client.patch).mockImplementation(/** @type {any} */ (mockPatch));
 
-			const result = await (/** @type {any} */ (actions.deleteBatch))({ request, params });
+			const result = await /** @type {any} */ (actions.deleteBatch)({ request, params });
 
 			expect(client.patch).toHaveBeenCalledWith('event-123');
-			expect(mockUnset).toHaveBeenCalledWith([
-				'gallery[_key=="key-1"]',
-				'gallery[_key=="key-2"]'
-			]);
+			expect(mockUnset).toHaveBeenCalledWith(['gallery[_key=="key-1"]', 'gallery[_key=="key-2"]']);
 			expect(result).toEqual({
 				success: true,
 				deletedCount: 2,
@@ -166,7 +227,7 @@ describe('Admin Page Actions', () => {
 			const mockUnset = vi.fn().mockReturnValue({ commit: mockCommit });
 			vi.mocked(client.patch).mockReturnValue(/** @type {any} */ ({ unset: mockUnset }));
 
-			const result = await (/** @type {any} */ (actions.deleteBatch))({ request, params });
+			const result = await /** @type {any} */ (actions.deleteBatch)({ request, params });
 
 			expect(mockUnset).toHaveBeenCalledTimes(3); // 50, 50, 20
 			expect(result.deletedCount).toBe(120);
@@ -179,7 +240,7 @@ describe('Admin Page Actions', () => {
 			const request = { formData: async () => formData };
 			const params = { slug: 'test-event' };
 
-			const result = await (/** @type {any} */ (actions.printBatch))({ request, params });
+			const result = await /** @type {any} */ (actions.printBatch)({ request, params });
 			expect(result).toEqual({
 				success: false,
 				error: 'At least one photo must be selected for printing.'
@@ -200,7 +261,7 @@ describe('Admin Page Actions', () => {
 
 			vi.mocked(client.fetch).mockResolvedValue(/** @type {any} */ (null));
 
-			const result = await (/** @type {any} */ (actions.printBatch))({ request, params });
+			const result = await /** @type {any} */ (actions.printBatch)({ request, params });
 			expect(result).toEqual({ success: false, error: 'Event not found' });
 		});
 
@@ -224,7 +285,7 @@ describe('Admin Page Actions', () => {
 				})
 			);
 
-			const result = await (/** @type {any} */ (actions.printBatch))({ request, params });
+			const result = await /** @type {any} */ (actions.printBatch)({ request, params });
 			expect(result).toEqual({
 				success: false,
 				error: 'Printing is only available while the event is active and assigned to a photobooth'
@@ -254,7 +315,7 @@ describe('Admin Page Actions', () => {
 			const mockPatch = vi.fn().mockReturnValue({ setIfMissing: mockSetIfMissing });
 			vi.mocked(client.patch).mockImplementation(/** @type {any} */ (mockPatch));
 
-			const result = await (/** @type {any} */ (actions.printBatch))({ request, params });
+			const result = await /** @type {any} */ (actions.printBatch)({ request, params });
 
 			expect(client.patch).toHaveBeenCalledWith('event-123');
 			expect(mockSetIfMissing).toHaveBeenCalledWith({ printQueue: [] });
@@ -297,9 +358,11 @@ describe('Admin Page Actions', () => {
 			const mockCommit = vi.fn().mockResolvedValue({});
 			const mockAppend = vi.fn().mockReturnValue({ commit: mockCommit });
 			const mockSetIfMissing = vi.fn().mockReturnValue({ append: mockAppend });
-			vi.mocked(client.patch).mockReturnValue(/** @type {any} */ ({ setIfMissing: mockSetIfMissing }));
+			vi.mocked(client.patch).mockReturnValue(
+				/** @type {any} */ ({ setIfMissing: mockSetIfMissing })
+			);
 
-			const result = await (/** @type {any} */ (actions.printBatch))({ request, params });
+			const result = await /** @type {any} */ (actions.printBatch)({ request, params });
 
 			expect(mockAppend).toHaveBeenCalledWith(
 				'printQueue',
@@ -336,13 +399,93 @@ describe('Admin Page Actions', () => {
 			const mockCommit = vi.fn().mockResolvedValue({});
 			const mockAppend = vi.fn().mockReturnValue({ commit: mockCommit });
 			const mockSetIfMissing = vi.fn().mockReturnValue({ append: mockAppend });
-			vi.mocked(client.patch).mockReturnValue(/** @type {any} */ ({ setIfMissing: mockSetIfMissing }));
+			vi.mocked(client.patch).mockReturnValue(
+				/** @type {any} */ ({ setIfMissing: mockSetIfMissing })
+			);
 
-			const result = await (/** @type {any} */ (actions.printBatch))({ request, params });
+			const result = await /** @type {any} */ (actions.printBatch)({ request, params });
 
 			expect(mockAppend).toHaveBeenCalledTimes(3); // 50, 50, 10
 			expect(result.success).toBe(true);
 			expect(result.message).toBe('Queued 110 photos for printing.');
+		});
+
+		it('rejects batch print if more than 24 hours have passed since last photo and user is not master', async () => {
+			const items = [
+				{ fullPath: 'k1', assetUrl: 'https://cdn.sanity.io/img1.jpg', imageName: 'p1.jpg' }
+			];
+			const formData = new Map([['images', JSON.stringify(items)]]);
+			const request = { formData: async () => formData };
+			const params = { slug: 'test-event' };
+			const cookies = { get: vi.fn().mockReturnValue('admin') };
+
+			const oldTimestamp = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+			vi.mocked(client.fetch).mockResolvedValue(
+				/** @type {any} */ ({
+					_id: 'event-123',
+					isPhotoboothActive: true,
+					gallery: [{ key: 'k1', created: oldTimestamp }]
+				})
+			);
+
+			const result = await /** @type {any} */ (actions.printBatch)({ request, params, cookies });
+			expect(result).toEqual({
+				success: false,
+				error:
+					'Printing is restricted to master administrators more than 24 hours after the last photo'
+			});
+		});
+
+		it('allows batch print after 24 hours if user is master admin', async () => {
+			const items = [
+				{ fullPath: 'k1', assetUrl: 'https://cdn.sanity.io/img1.jpg', imageName: 'p1.jpg' }
+			];
+			const formData = new Map([['images', JSON.stringify(items)]]);
+			const request = { formData: async () => formData };
+			const params = { slug: 'test-event' };
+			const cookies = { get: vi.fn().mockReturnValue('master') };
+
+			const oldTimestamp = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+			vi.mocked(client.fetch).mockResolvedValue(
+				/** @type {any} */ ({
+					_id: 'event-123',
+					isPhotoboothActive: true,
+					gallery: [{ key: 'k1', created: oldTimestamp }]
+				})
+			);
+
+			const mockCommit = vi.fn().mockResolvedValue({});
+			const mockAppend = vi.fn().mockReturnValue({ commit: mockCommit });
+			const mockSetIfMissing = vi.fn().mockReturnValue({ append: mockAppend });
+			vi.mocked(client.patch).mockReturnValue(
+				/** @type {any} */ ({ setIfMissing: mockSetIfMissing })
+			);
+
+			const result = await /** @type {any} */ (actions.printBatch)({ request, params, cookies });
+			expect(result.success).toBe(true);
+			expect(result.message).toBe('Queued 1 photo for printing.');
+		});
+	});
+
+	describe('load function', () => {
+		it('returns isMaster true when session cookie is master', async () => {
+			const cookies = { get: vi.fn().mockReturnValue('master') };
+			const params = { slug: 'test-event' };
+			vi.mocked(getEvent).mockResolvedValue(/** @type {any} */ ({ images: [{ key: 'img1' }] }));
+
+			const result = await /** @type {any} */ (load)({ params, cookies });
+			expect(result.isMaster).toBe(true);
+			expect(result.slug).toBe('test-event');
+			expect(result.images).toEqual([{ key: 'img1' }]);
+		});
+
+		it('returns isMaster false when session cookie is not master', async () => {
+			const cookies = { get: vi.fn().mockReturnValue('admin') };
+			const params = { slug: 'test-event' };
+			vi.mocked(getEvent).mockResolvedValue(/** @type {any} */ ({ images: [] }));
+
+			const result = await /** @type {any} */ (load)({ params, cookies });
+			expect(result.isMaster).toBe(false);
 		});
 	});
 });

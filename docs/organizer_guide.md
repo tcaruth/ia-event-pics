@@ -31,7 +31,8 @@ This guide is for event organizers and photobooth operators to manage photos and
 ### Printing Photos
 
 1. Batch printing is available in the sticky action bar when the event is active and assigned to an active photobooth.
-2. Select one or more photos and click **🖨️ Print Selected** in the sticky action bar to queue the print jobs to the photobooth.
+2. If more than 24 hours have passed since the last photo was taken (indicating the event has ended), print buttons are restricted to master administrators to prevent accidental print queuing after hardware teardown.
+3. Select one or more photos and click **🖨️ Print Selected** in the sticky action bar to queue the print jobs to the photobooth.
 
 ## 🎨 Updating Event Branding
 
