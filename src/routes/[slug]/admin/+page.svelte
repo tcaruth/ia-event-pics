@@ -14,13 +14,13 @@
 	/** @type {HTMLDialogElement | undefined} */
 	let deleteDialog = $state(undefined);
 	/** @type {HTMLDialogElement | undefined} */
-	let deleteAllDialog = $state(undefined);
-	/** @type {HTMLDialogElement | undefined} */
 	let printDialog = $state(undefined);
 	/** @type {HTMLDialogElement | undefined} */
 	let rawPhotosDialog = $state(undefined);
 	/** @type {HTMLDialogElement | undefined} */
 	let deleteBatchDialog = $state(undefined);
+	/** @type {HTMLDialogElement | undefined} */
+	let downloadDialog = $state(undefined);
 	/** @type {HTMLDialogElement | undefined} */
 	let unlockMasterDialog = $state(undefined);
 
@@ -36,8 +36,13 @@
 	/** @type {string[]} */
 	let selectedKeys = $state([]);
 
+	// Deletion options
 	let deleteAssociatedRaws = $state(true);
 	let deleteStandaloneRaws = $state(false);
+
+	// Download options
+	let downloadIncludeAssociatedRaws = $state(false);
+	let downloadIncludeStandaloneRaws = $state(false);
 
 	let allSelectableKeys = $derived(
 		[
@@ -81,6 +86,60 @@
 		return Array.from(set);
 	});
 
+	let downloadScopeIsSelection = $derived(selectedKeys.length > 0);
+
+	let availableAssociatedRawsForDownload = $derived(() => {
+		if (downloadScopeIsSelection) {
+			return selectedCompositeGroups.flatMap((g) => g.rawPhotos || []);
+		}
+		return photoGroups.groups.flatMap((g) => g.rawPhotos || []);
+	});
+
+	let imagesToDownloadList = $derived(() => {
+		const result = new Map();
+
+		if (downloadScopeIsSelection) {
+			// Include selected images
+			for (const img of data.images || []) {
+				if (selectedKeys.includes(img.key) && img?.url) {
+					result.set(img.key || img.url, img);
+				}
+			}
+			// Include associated raws if requested
+			if (downloadIncludeAssociatedRaws) {
+				for (const raw of availableAssociatedRawsForDownload()) {
+					if (raw?.url) result.set(raw.key || raw.url, raw);
+				}
+			}
+			// Include standalone raws if requested
+			if (downloadIncludeStandaloneRaws) {
+				for (const raw of photoGroups.standaloneRaws) {
+					if (raw?.url) result.set(raw.key || raw.url, raw);
+				}
+			}
+		} else {
+			// All composites
+			for (const group of photoGroups.groups) {
+				const comp = group.composite;
+				if (comp?.url) result.set(comp.key || comp.url, comp);
+			}
+			// Include associated raws if requested
+			if (downloadIncludeAssociatedRaws) {
+				for (const raw of availableAssociatedRawsForDownload()) {
+					if (raw?.url) result.set(raw.key || raw.url, raw);
+				}
+			}
+			// Include standalone raws if requested
+			if (downloadIncludeStandaloneRaws) {
+				for (const raw of photoGroups.standaloneRaws) {
+					if (raw?.url) result.set(raw.key || raw.url, raw);
+				}
+			}
+		}
+
+		return Array.from(result.values());
+	});
+
 	/** @param {string} key */
 	function isSelected(key) {
 		return selectedKeys.includes(key);
@@ -114,6 +173,16 @@
 		deleteBatchDialog?.close();
 	}
 
+	function openDownloadDialog() {
+		downloadIncludeAssociatedRaws = false;
+		downloadIncludeStandaloneRaws = downloadScopeIsSelection && selectedStandaloneRawPhotos.length > 0;
+		downloadDialog?.showModal();
+	}
+
+	function closeDownloadDialog() {
+		downloadDialog?.close();
+	}
+
 	function openUnlockMaster() {
 		unlockMasterDialog?.showModal();
 	}
@@ -144,14 +213,6 @@
 		imageToPrint = null;
 	}
 
-	function confirmDeleteAll() {
-		deleteAllDialog?.showModal();
-	}
-
-	function closeDeleteAllDialog() {
-		deleteAllDialog?.close();
-	}
-
 	/** @param {any} group */
 	function openRawPhotos(group) {
 		selectedGroupForRaws = group;
@@ -163,23 +224,21 @@
 		selectedGroupForRaws = null;
 	}
 
-	async function downloadAll() {
+	async function executeDownload() {
+		const imagesToDownload = imagesToDownloadList();
+		if (imagesToDownload.length === 0) {
+			alert('No images to download.');
+			return;
+		}
+
+		closeDownloadDialog();
 		if (isDownloading) return;
 		isDownloading = true;
-		downloadProgress = 'Fetching image list...';
+		downloadProgress = `Preparing ${imagesToDownload.length} photos...`;
 
 		try {
-			const response = await fetch(`/api/image-list?event=${data.slug}`);
-			if (!response.ok) throw new Error('Failed to fetch image list');
-			const images = await response.json();
-
-			if (!images || images.length === 0) {
-				alert('No images found to download.');
-				return;
-			}
-
 			const zip = new JSZip();
-			const total = images.length;
+			const total = imagesToDownload.length;
 			const eventSlug = (data.event?.name || 'event')
 				.toLowerCase()
 				.replace(/[^a-z0-9]/g, '-')
@@ -190,9 +249,11 @@
 			const CONCURRENCY_LIMIT = 5;
 			const chunks = [];
 
-			for (let i = 0; i < images.length; i += CONCURRENCY_LIMIT) {
-				chunks.push(images.slice(i, i + CONCURRENCY_LIMIT));
+			for (let i = 0; i < imagesToDownload.length; i += CONCURRENCY_LIMIT) {
+				chunks.push(imagesToDownload.slice(i, i + CONCURRENCY_LIMIT));
 			}
+
+			const usedFilenames = new Set();
 
 			for (const chunk of chunks) {
 				await Promise.all(
@@ -205,48 +266,61 @@
 						}
 						const blob = await imgRes.blob();
 
-						// Improved filename: event-name_timestamp_suffix.jpg
-						const timestamp = new Date(image.created)
-							.toISOString()
-							.replace(/[:.]/g, '-')
-							.replace('T', '_')
-							.split('Z')[0];
+						const timestamp = image.created
+							? new Date(image.created)
+									.toISOString()
+									.replace(/[:.]/g, '-')
+									.replace('T', '_')
+									.split('Z')[0]
+							: 'photo';
 
-						// Determine suffix based on name or presence of 'raw'
 						let suffix = '';
 						if (image.name) {
 							suffix = image.name.toLowerCase().includes('raw') ? '_raw' : '_overlaid';
 						}
 
 						const ext = image.name?.split('.').pop() || 'jpg';
-						const friendlyName = `${eventSlug}_${timestamp}${suffix}.${ext}`;
+						const baseFilename = image.name || `${eventSlug}_${timestamp}${suffix}.${ext}`;
 
-						zip.file(friendlyName, blob);
+						let uniqueFilename = baseFilename;
+						let counter = 1;
+						while (usedFilenames.has(uniqueFilename)) {
+							const nameWithoutExt = baseFilename.replace(/\.[^/.]+$/, '');
+							uniqueFilename = `${nameWithoutExt}_${counter}.${ext}`;
+							counter++;
+						}
+						usedFilenames.add(uniqueFilename);
+
+						zip.file(uniqueFilename, blob);
 						completed++;
 						downloadProgress = `Downloading image ${completed} of ${total}...`;
 					})
 				);
 			}
 
-			downloadProgress = 'Generating ZIP file...';
+			downloadProgress = 'Compressing ZIP archive...';
 			const content = await zip.generateAsync({ type: 'blob' });
 
 			const link = document.createElement('a');
 			link.href = URL.createObjectURL(content);
 			const dateStr = new Date().toISOString().split('T')[0];
-			link.download = `${eventSlug}_${dateStr}.zip`;
+			const zipName = downloadScopeIsSelection
+				? `${eventSlug}_selected_${total}_${dateStr}.zip`
+				: `${eventSlug}_all_${dateStr}.zip`;
+			link.download = zipName;
 			link.click();
 
-			downloadProgress = 'Download complete!';
+			downloadProgress = `Downloaded ${total} photo${total === 1 ? '' : 's'}!`;
 			setTimeout(() => {
 				downloadProgress = '';
-			}, 3000);
+			}, 3500);
 		} catch (error) {
 			console.error('Batch download failed:', error);
 			alert(
 				'Failed to download images: ' +
 					(error instanceof Error ? error.message : 'An unknown error occurred')
 			);
+			downloadProgress = '';
 		} finally {
 			isDownloading = false;
 		}
@@ -277,54 +351,71 @@
 		<div class="alert alert-success">{form.message || 'Image deleted successfully.'}</div>
 	{/if}
 
-	<div class="admin-actions">
-		<button class="download-all-btn" onclick={downloadAll} disabled={isDownloading}>
-			{isDownloading ? 'Preparing ZIP...' : 'Download All (ZIP)'}
-		</button>
-		<button
-			class="delete-all-photos-btn"
-			onclick={confirmDeleteAll}
-			disabled={isDownloading || !data.images?.length}
-		>
-			Delete All Photos
-		</button>
-		{#if downloadProgress}
-			<p class="progress-message">{downloadProgress}</p>
-		{/if}
-	</div>
+	<div class="unified-toolbar">
+		<div class="toolbar-left">
+			<label class="select-all-label">
+				<input
+					type="checkbox"
+					checked={isAllSelected}
+					onchange={toggleSelectAll}
+					disabled={allSelectableKeys.length === 0}
+				/>
+				<span>Select All ({allSelectableKeys.length})</span>
+			</label>
+			{#if selectedKeys.length > 0}
+				<span class="selected-pill">{selectedKeys.length} selected</span>
+				<button
+					type="button"
+					class="clear-selection-btn"
+					onclick={() => (selectedKeys = [])}
+				>
+					Deselect All
+				</button>
+			{/if}
+		</div>
 
-	{#if data.isMasterAdmin}
-		<div class="batch-bar">
-			<div class="batch-info">
-				<label class="select-all-label">
-					<input
-						type="checkbox"
-						checked={isAllSelected}
-						onchange={toggleSelectAll}
-						disabled={allSelectableKeys.length === 0}
-					/>
-					<span>Select All ({allSelectableKeys.length})</span>
-				</label>
-				{#if selectedKeys.length > 0}
-					<span class="selected-pill">{selectedKeys.length} selected</span>
-					<button
-						type="button"
-						class="clear-selection-btn"
-						onclick={() => (selectedKeys = [])}
-					>
-						Deselect All
-					</button>
-				{/if}
-			</div>
-
+		<div class="toolbar-right">
 			<button
 				type="button"
-				class="batch-delete-btn"
-				onclick={confirmDeleteBatch}
-				disabled={selectedKeys.length === 0}
+				class="download-btn"
+				onclick={openDownloadDialog}
+				disabled={isDownloading || !data.images?.length}
 			>
-				Delete Selected ({selectedKeys.length})
+				{#if isDownloading}
+					Preparing ZIP...
+				{:else if selectedKeys.length > 0}
+					⬇️ Download Selected ({selectedKeys.length})
+				{:else}
+					⬇️ Download (ZIP)
+				{/if}
 			</button>
+
+			{#if data.isMasterAdmin}
+				<button
+					type="button"
+					class="batch-delete-btn"
+					onclick={confirmDeleteBatch}
+					disabled={selectedKeys.length === 0}
+				>
+					🗑️ Delete Selected ({selectedKeys.length})
+				</button>
+			{:else}
+				<button
+					type="button"
+					class="batch-delete-btn master-locked"
+					onclick={openUnlockMaster}
+					title="Master administrator password required to delete photos"
+				>
+					🔒 Delete Selected
+				</button>
+			{/if}
+		</div>
+	</div>
+
+	{#if downloadProgress}
+		<div class="progress-banner">
+			<span class="progress-spinner"></span>
+			<span>{downloadProgress}</span>
 		</div>
 	{/if}
 
@@ -332,16 +423,14 @@
 		{#each photoGroups.groups as group}
 			{@const image = group.composite}
 			<div class="image-card" class:is-selected={isSelected(image.key)}>
-				{#if data.isMasterAdmin}
-					<label class="card-select-label" title="Select photo">
-						<input
-							type="checkbox"
-							checked={isSelected(image.key)}
-							onchange={() => toggleSelect(image.key)}
-						/>
-						<span class="custom-checkbox"></span>
-					</label>
-				{/if}
+				<label class="card-select-label" title="Select photo">
+					<input
+						type="checkbox"
+						checked={isSelected(image.key)}
+						onchange={() => toggleSelect(image.key)}
+					/>
+					<span class="custom-checkbox"></span>
+				</label>
 				<a
 					href={image.url}
 					target="_blank"
@@ -379,16 +468,14 @@
 
 		{#each photoGroups.standaloneRaws as rawImage}
 			<div class="image-card standalone-raw" class:is-selected={isSelected(rawImage.key)}>
-				{#if data.isMasterAdmin}
-					<label class="card-select-label" title="Select photo">
-						<input
-							type="checkbox"
-							checked={isSelected(rawImage.key)}
-							onchange={() => toggleSelect(rawImage.key)}
-						/>
-						<span class="custom-checkbox"></span>
-					</label>
-				{/if}
+				<label class="card-select-label" title="Select photo">
+					<input
+						type="checkbox"
+						checked={isSelected(rawImage.key)}
+						onchange={() => toggleSelect(rawImage.key)}
+					/>
+					<span class="custom-checkbox"></span>
+				</label>
 				<a
 					href={rawImage.url}
 					target="_blank"
@@ -444,35 +531,6 @@
 		</div>
 	</dialog>
 
-	<dialog bind:this={deleteAllDialog} class="confirm-dialog">
-		<div class="dialog-content">
-			<h2>Confirm Delete All</h2>
-			<p>
-				Are you sure you want to delete <strong>ALL {data.images?.length} photos</strong> for this event?
-			</p>
-			<p class="warning-text">This action is permanent and cannot be undone.</p>
-
-			<div class="dialog-actions">
-				<button type="button" class="btn-secondary" onclick={closeDeleteAllDialog}>Cancel</button>
-				<form
-					method="POST"
-					action="?/deleteAll"
-					use:enhance={() => {
-						return async ({ result, update }) => {
-							closeDeleteAllDialog();
-							if (result.type === 'success') {
-								await update();
-							}
-						};
-					}}
-				>
-					<!-- svelte-ignore a11y_autofocus -->
-					<button type="submit" class="btn-danger" autofocus>Yes, Delete All</button>
-				</form>
-			</div>
-		</div>
-	</dialog>
-
 	<dialog bind:this={printDialog} class="confirm-dialog">
 		<div class="dialog-content">
 			<h2>Confirm Print Job</h2>
@@ -513,16 +571,14 @@
 			<div class="raw-photos-grid">
 				{#each selectedGroupForRaws?.rawPhotos || [] as rawImg}
 					<div class="raw-photo-card" class:is-selected={isSelected(rawImg.key)}>
-						{#if data.isMasterAdmin}
-							<label class="card-select-label raw-select-label" title="Select photo">
-								<input
-									type="checkbox"
-									checked={isSelected(rawImg.key)}
-									onchange={() => toggleSelect(rawImg.key)}
-								/>
-								<span class="custom-checkbox"></span>
-							</label>
-						{/if}
+						<label class="card-select-label raw-select-label" title="Select photo">
+							<input
+								type="checkbox"
+								checked={isSelected(rawImg.key)}
+								onchange={() => toggleSelect(rawImg.key)}
+							/>
+							<span class="custom-checkbox"></span>
+						</label>
 						<a
 							href={rawImg.url}
 							target="_blank"
@@ -563,6 +619,65 @@
 					</button>
 				{/if}
 				<button type="button" class="btn-secondary" onclick={closeRawPhotos}>Close</button>
+			</div>
+		</div>
+	</dialog>
+
+	<dialog bind:this={downloadDialog} class="confirm-dialog download-modal">
+		<div class="dialog-content">
+			<div class="modal-header">
+				<h2>Download Photos (ZIP)</h2>
+				<button type="button" class="close-btn" onclick={closeDownloadDialog}>✕</button>
+			</div>
+
+			<p class="modal-sub">
+				{#if downloadScopeIsSelection}
+					Packaging <strong>{selectedKeys.length} selected photo{selectedKeys.length === 1 ? '' : 's'}</strong>:
+				{:else}
+					Packaging <strong>all {photoGroups.groups.length} composite photo{photoGroups.groups.length === 1 ? '' : 's'}</strong> in this event:
+				{/if}
+			</p>
+
+			<div class="delete-options">
+				{#if availableAssociatedRawsForDownload().length > 0}
+					<label class="option-row">
+						<input type="checkbox" bind:checked={downloadIncludeAssociatedRaws} />
+						<span class="option-label">
+							Include associated raw camera captures
+							<span class="option-sub">
+								({availableAssociatedRawsForDownload().length} capture{availableAssociatedRawsForDownload().length === 1 ? '' : 's'})
+							</span>
+						</span>
+					</label>
+				{/if}
+
+				{#if allStandaloneRawKeys.length > 0}
+					<label class="option-row">
+						<input type="checkbox" bind:checked={downloadIncludeStandaloneRaws} />
+						<span class="option-label">
+							Include standalone raw photos
+							<span class="option-sub">
+								({allStandaloneRawKeys.length} standalone photo{allStandaloneRawKeys.length === 1 ? '' : 's'} in event)
+							</span>
+						</span>
+					</label>
+				{/if}
+			</div>
+
+			<div class="total-download-summary">
+				Total files in ZIP: <strong>{imagesToDownloadList().length}</strong>
+			</div>
+
+			<div class="dialog-actions">
+				<button type="button" class="btn-secondary" onclick={closeDownloadDialog}>Cancel</button>
+				<button
+					type="button"
+					class="btn-primary"
+					onclick={executeDownload}
+					disabled={isDownloading || imagesToDownloadList().length === 0}
+				>
+					{isDownloading ? 'Preparing ZIP...' : `Download ${imagesToDownloadList().length} Photo${imagesToDownloadList().length === 1 ? '' : 's'}`}
+				</button>
 			</div>
 		</div>
 	</dialog>
@@ -730,7 +845,7 @@
 		color: var(--text-surface-primary, #f8fafc);
 	}
 
-	.batch-bar {
+	.unified-toolbar {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
@@ -743,10 +858,12 @@
 		gap: 1rem;
 	}
 
-	.batch-info {
+	.toolbar-left,
+	.toolbar-right {
 		display: flex;
 		align-items: center;
-		gap: 1rem;
+		gap: 0.75rem;
+		flex-wrap: wrap;
 	}
 
 	.select-all-label {
@@ -788,6 +905,27 @@
 		color: var(--text-surface-primary, #f8fafc);
 	}
 
+	.download-btn {
+		padding: 0.625rem 1.25rem;
+		background-color: var(--color-primary, #0153a4);
+		color: var(--text-primary, #ffffff);
+		border: none;
+		border-radius: 0.5rem;
+		font-weight: 600;
+		font-size: 0.875rem;
+		cursor: pointer;
+		transition: opacity 0.2s;
+	}
+
+	.download-btn:hover:not(:disabled) {
+		opacity: 0.9;
+	}
+
+	.download-btn:disabled {
+		opacity: 0.4;
+		cursor: not-allowed;
+	}
+
 	.batch-delete-btn {
 		padding: 0.625rem 1.25rem;
 		background-color: #dc2626;
@@ -809,61 +947,44 @@
 		cursor: not-allowed;
 	}
 
-	.admin-actions {
+	.batch-delete-btn.master-locked {
+		background: transparent;
+		border: 1px dashed rgba(255, 255, 255, 0.3);
+		color: var(--text-surface-secondary, #94a3b8);
+	}
+
+	.batch-delete-btn.master-locked:hover {
+		background: rgba(255, 255, 255, 0.08);
+		color: var(--text-surface-primary, #f8fafc);
+	}
+
+	.progress-banner {
 		display: flex;
 		align-items: center;
-		gap: 1rem;
-		margin-bottom: 2rem;
-		background: var(--surface-secondary);
-		padding: 1rem;
-		border-radius: 0.75rem;
-		border: 1px solid var(--border-color);
-	}
-
-	.download-all-btn {
-		padding: 0.75rem 1.5rem;
-		background-color: var(--color-primary);
-		color: var(--text-primary);
-		border: none;
+		gap: 0.75rem;
+		background: rgba(59, 130, 246, 0.15);
+		border: 1px solid rgba(59, 130, 246, 0.3);
+		color: var(--text-surface-primary, #f8fafc);
+		padding: 0.75rem 1.25rem;
 		border-radius: 0.5rem;
-		font-weight: 600;
-		cursor: pointer;
-		transition: opacity 0.2s;
-	}
-
-	.download-all-btn:hover:not(:disabled) {
-		opacity: 0.9;
-	}
-
-	.download-all-btn:disabled {
-		background-color: #9ca3af;
-		cursor: not-allowed;
-	}
-
-	.delete-all-photos-btn {
-		padding: 0.75rem 1.5rem;
-		background-color: transparent;
-		color: #ef4444;
-		border: 1px solid #ef4444;
-		border-radius: 0.5rem;
-		font-weight: 600;
-		cursor: pointer;
-		transition: all 0.2s;
-	}
-
-	.delete-all-photos-btn:hover:not(:disabled) {
-		background-color: #ef4444;
-		color: white;
-	}
-
-	.delete-all-photos-btn:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
-	}
-
-	.progress-message {
 		font-size: 0.875rem;
-		color: var(--text-surface-secondary);
+		font-weight: 500;
+		margin-bottom: 1.5rem;
+	}
+
+	.progress-spinner {
+		width: 1rem;
+		height: 1rem;
+		border: 2px solid rgba(255, 255, 255, 0.3);
+		border-top-color: var(--color-primary, #3b82f6);
+		border-radius: 50%;
+		animation: spin 0.8s linear infinite;
+	}
+
+	@keyframes spin {
+		to {
+			transform: rotate(360deg);
+		}
 	}
 
 	.alert {
@@ -1203,9 +1324,21 @@
 		background: #b91c1c;
 	}
 
+	.download-modal,
 	.batch-modal {
 		max-width: 540px;
 		width: 95%;
+	}
+
+	.total-download-summary {
+		font-size: 0.9375rem;
+		font-weight: 600;
+		color: var(--text-surface-primary, #f8fafc);
+		background: rgba(59, 130, 246, 0.1);
+		border: 1px solid rgba(59, 130, 246, 0.3);
+		padding: 0.75rem 1rem;
+		border-radius: 0.5rem;
+		margin-bottom: 0.75rem;
 	}
 
 	.selection-breakdown {
