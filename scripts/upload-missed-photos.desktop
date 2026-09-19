@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Upload Missed Photos
+Comment=Upload photos that were captured offline to Sanity
+Exec=lxterminal -e /home/pi/Desktop/upload-missed-photos.sh
+Icon=camera-photo
+Terminal=true
+Type=Application
+Categories=Utility;
