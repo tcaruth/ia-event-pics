@@ -37,9 +37,11 @@ describe('Root Page Form Action', () => {
 			formData: vi.fn().mockResolvedValue(new Map([['code', 'DEMO']]))
 		};
 
-		vi.mocked(client.fetch).mockResolvedValue({
-			slug: { current: 'demo' }
-		});
+		vi.mocked(client.fetch).mockResolvedValue(
+			/** @type {any} */ ({
+				slug: { current: 'demo' }
+			})
+		);
 
 		try {
 			await (/** @type {any} */ (actions.default))({ request });
@@ -59,7 +61,7 @@ describe('Root Page Form Action', () => {
 			formData: vi.fn().mockResolvedValue(new Map([['code', 'NON-EXISTENT']]))
 		};
 
-		vi.mocked(client.fetch).mockResolvedValue(null);
+		vi.mocked(client.fetch).mockResolvedValue(/** @type {any} */ (null));
 
 		const result = await (/** @type {any} */ (actions.default))({ request });
 

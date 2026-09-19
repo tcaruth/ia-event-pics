@@ -20,9 +20,11 @@ describe('[slug]/[filename] Page Server Loader', () => {
 				{ name: 'photo2.jpg', url: 'https://cdn.sanity.io/photo2.jpg' }
 			]
 		};
-		vi.mocked(eventsServer.getEvent).mockResolvedValue(mockEvent);
+		vi.mocked(eventsServer.getEvent).mockResolvedValue(/** @type {any} */ (mockEvent));
 
-		const result = await load({ params: { slug: 'demo', filename: 'photo2.jpg' } });
+		const result = await load(
+			/** @type {any} */ ({ params: { slug: 'demo', filename: 'photo2.jpg' } })
+		);
 
 		expect(eventsServer.getEvent).toHaveBeenCalledWith('demo');
 		expect(result).toEqual({
@@ -34,9 +36,11 @@ describe('[slug]/[filename] Page Server Loader', () => {
 	});
 
 	it('returns undefined image when filename is not found', async () => {
-		vi.mocked(eventsServer.getEvent).mockResolvedValue({ images: [] });
+		vi.mocked(eventsServer.getEvent).mockResolvedValue(/** @type {any} */ ({ images: [] }));
 
-		const result = await load({ params: { slug: 'demo', filename: 'missing.jpg' } });
+		const result = await load(
+			/** @type {any} */ ({ params: { slug: 'demo', filename: 'missing.jpg' } })
+		);
 
 		expect(result.image).toBeUndefined();
 	});

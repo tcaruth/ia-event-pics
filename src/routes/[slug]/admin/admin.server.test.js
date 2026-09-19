@@ -110,7 +110,7 @@ describe('Admin Page Actions', () => {
 			const request = { formData: async () => formData };
 			const params = { slug: 'test-event' };
 
-			const result = await actions.deleteBatch({ request, params });
+			const result = await (/** @type {any} */ (actions.deleteBatch))({ request, params });
 			expect(result).toEqual({
 				success: false,
 				error: 'At least one photo must be selected for deletion.'
@@ -122,9 +122,9 @@ describe('Admin Page Actions', () => {
 			const request = { formData: async () => formData };
 			const params = { slug: 'non-existent' };
 
-			vi.mocked(client.fetch).mockResolvedValue(null);
+			vi.mocked(client.fetch).mockResolvedValue(/** @type {any} */ (null));
 
-			const result = await actions.deleteBatch({ request, params });
+			const result = await (/** @type {any} */ (actions.deleteBatch))({ request, params });
 			expect(result).toEqual({ success: false, error: 'Event not found' });
 		});
 
@@ -133,14 +133,14 @@ describe('Admin Page Actions', () => {
 			const request = { formData: async () => formData };
 			const params = { slug: 'test-event' };
 
-			vi.mocked(client.fetch).mockResolvedValue({ _id: 'event-123' });
+			vi.mocked(client.fetch).mockResolvedValue(/** @type {any} */ ({ _id: 'event-123' }));
 
 			const mockCommit = vi.fn().mockResolvedValue({});
 			const mockUnset = vi.fn().mockReturnValue({ commit: mockCommit });
 			const mockPatch = vi.fn().mockReturnValue({ unset: mockUnset });
-			vi.mocked(client.patch).mockImplementation(mockPatch);
+			vi.mocked(client.patch).mockImplementation(/** @type {any} */ (mockPatch));
 
-			const result = await actions.deleteBatch({ request, params });
+			const result = await (/** @type {any} */ (actions.deleteBatch))({ request, params });
 
 			expect(client.patch).toHaveBeenCalledWith('event-123');
 			expect(mockUnset).toHaveBeenCalledWith([
@@ -160,13 +160,13 @@ describe('Admin Page Actions', () => {
 			const request = { formData: async () => formData };
 			const params = { slug: 'test-event' };
 
-			vi.mocked(client.fetch).mockResolvedValue({ _id: 'event-123' });
+			vi.mocked(client.fetch).mockResolvedValue(/** @type {any} */ ({ _id: 'event-123' }));
 
 			const mockCommit = vi.fn().mockResolvedValue({});
 			const mockUnset = vi.fn().mockReturnValue({ commit: mockCommit });
-			vi.mocked(client.patch).mockReturnValue({ unset: mockUnset });
+			vi.mocked(client.patch).mockReturnValue(/** @type {any} */ ({ unset: mockUnset }));
 
-			const result = await actions.deleteBatch({ request, params });
+			const result = await (/** @type {any} */ (actions.deleteBatch))({ request, params });
 
 			expect(mockUnset).toHaveBeenCalledTimes(3); // 50, 50, 20
 			expect(result.deletedCount).toBe(120);
@@ -179,7 +179,7 @@ describe('Admin Page Actions', () => {
 			const request = { formData: async () => formData };
 			const params = { slug: 'test-event' };
 
-			const result = await actions.printBatch({ request, params });
+			const result = await (/** @type {any} */ (actions.printBatch))({ request, params });
 			expect(result).toEqual({
 				success: false,
 				error: 'At least one photo must be selected for printing.'
@@ -198,9 +198,9 @@ describe('Admin Page Actions', () => {
 			const request = { formData: async () => formData };
 			const params = { slug: 'non-existent' };
 
-			vi.mocked(client.fetch).mockResolvedValue(null);
+			vi.mocked(client.fetch).mockResolvedValue(/** @type {any} */ (null));
 
-			const result = await actions.printBatch({ request, params });
+			const result = await (/** @type {any} */ (actions.printBatch))({ request, params });
 			expect(result).toEqual({ success: false, error: 'Event not found' });
 		});
 
@@ -216,13 +216,15 @@ describe('Admin Page Actions', () => {
 			const request = { formData: async () => formData };
 			const params = { slug: 'inactive-event' };
 
-			vi.mocked(client.fetch).mockResolvedValue({
-				_id: 'event-123',
-				isPhotoboothActive: false,
-				gallery: []
-			});
+			vi.mocked(client.fetch).mockResolvedValue(
+				/** @type {any} */ ({
+					_id: 'event-123',
+					isPhotoboothActive: false,
+					gallery: []
+				})
+			);
 
-			const result = await actions.printBatch({ request, params });
+			const result = await (/** @type {any} */ (actions.printBatch))({ request, params });
 			expect(result).toEqual({
 				success: false,
 				error: 'Printing is only available while the event is active and assigned to a photobooth'
@@ -238,19 +240,21 @@ describe('Admin Page Actions', () => {
 			const request = { formData: async () => formData };
 			const params = { slug: 'test-event' };
 
-			vi.mocked(client.fetch).mockResolvedValue({
-				_id: 'event-123',
-				isPhotoboothActive: true,
-				gallery: []
-			});
+			vi.mocked(client.fetch).mockResolvedValue(
+				/** @type {any} */ ({
+					_id: 'event-123',
+					isPhotoboothActive: true,
+					gallery: []
+				})
+			);
 
 			const mockCommit = vi.fn().mockResolvedValue({});
 			const mockAppend = vi.fn().mockReturnValue({ commit: mockCommit });
 			const mockSetIfMissing = vi.fn().mockReturnValue({ append: mockAppend });
 			const mockPatch = vi.fn().mockReturnValue({ setIfMissing: mockSetIfMissing });
-			vi.mocked(client.patch).mockImplementation(mockPatch);
+			vi.mocked(client.patch).mockImplementation(/** @type {any} */ (mockPatch));
 
-			const result = await actions.printBatch({ request, params });
+			const result = await (/** @type {any} */ (actions.printBatch))({ request, params });
 
 			expect(client.patch).toHaveBeenCalledWith('event-123');
 			expect(mockSetIfMissing).toHaveBeenCalledWith({ printQueue: [] });
@@ -282,18 +286,20 @@ describe('Admin Page Actions', () => {
 			const request = { formData: async () => formData };
 			const params = { slug: 'test-event' };
 
-			vi.mocked(client.fetch).mockResolvedValue({
-				_id: 'event-123',
-				isPhotoboothActive: true,
-				gallery: [{ key: 'k1', url: 'https://cdn.sanity.io/resolved.jpg', name: 'resolved.jpg' }]
-			});
+			vi.mocked(client.fetch).mockResolvedValue(
+				/** @type {any} */ ({
+					_id: 'event-123',
+					isPhotoboothActive: true,
+					gallery: [{ key: 'k1', url: 'https://cdn.sanity.io/resolved.jpg', name: 'resolved.jpg' }]
+				})
+			);
 
 			const mockCommit = vi.fn().mockResolvedValue({});
 			const mockAppend = vi.fn().mockReturnValue({ commit: mockCommit });
 			const mockSetIfMissing = vi.fn().mockReturnValue({ append: mockAppend });
-			vi.mocked(client.patch).mockReturnValue({ setIfMissing: mockSetIfMissing });
+			vi.mocked(client.patch).mockReturnValue(/** @type {any} */ ({ setIfMissing: mockSetIfMissing }));
 
-			const result = await actions.printBatch({ request, params });
+			const result = await (/** @type {any} */ (actions.printBatch))({ request, params });
 
 			expect(mockAppend).toHaveBeenCalledWith(
 				'printQueue',
@@ -319,18 +325,20 @@ describe('Admin Page Actions', () => {
 			const request = { formData: async () => formData };
 			const params = { slug: 'test-event' };
 
-			vi.mocked(client.fetch).mockResolvedValue({
-				_id: 'event-123',
-				isPhotoboothActive: true,
-				gallery: []
-			});
+			vi.mocked(client.fetch).mockResolvedValue(
+				/** @type {any} */ ({
+					_id: 'event-123',
+					isPhotoboothActive: true,
+					gallery: []
+				})
+			);
 
 			const mockCommit = vi.fn().mockResolvedValue({});
 			const mockAppend = vi.fn().mockReturnValue({ commit: mockCommit });
 			const mockSetIfMissing = vi.fn().mockReturnValue({ append: mockAppend });
-			vi.mocked(client.patch).mockReturnValue({ setIfMissing: mockSetIfMissing });
+			vi.mocked(client.patch).mockReturnValue(/** @type {any} */ ({ setIfMissing: mockSetIfMissing }));
 
-			const result = await actions.printBatch({ request, params });
+			const result = await (/** @type {any} */ (actions.printBatch))({ request, params });
 
 			expect(mockAppend).toHaveBeenCalledTimes(3); // 50, 50, 10
 			expect(result.success).toBe(true);

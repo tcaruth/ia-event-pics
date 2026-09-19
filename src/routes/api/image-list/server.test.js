@@ -15,7 +15,7 @@ describe('API Endpoint GET /api/image-list', () => {
 
 	it('returns 400 when event parameter is missing', async () => {
 		const requestUrl = new URL('http://localhost/api/image-list');
-		const response = await GET({ url: requestUrl });
+		const response = await GET(/** @type {any} */ ({ url: requestUrl }));
 
 		expect(response.status).toBe(400);
 		const json = await response.json();
@@ -33,9 +33,9 @@ describe('API Endpoint GET /api/image-list', () => {
 				key: 'key-1'
 			}
 		];
-		vi.mocked(client.fetch).mockResolvedValue({ gallery: mockGallery });
+		vi.mocked(client.fetch).mockResolvedValue(/** @type {any} */ ({ gallery: mockGallery }));
 
-		const response = await GET({ url: requestUrl });
+		const response = await GET(/** @type {any} */ ({ url: requestUrl }));
 
 		expect(response.status).toBe(200);
 		const json = await response.json();
@@ -51,9 +51,9 @@ describe('API Endpoint GET /api/image-list', () => {
 
 	it('returns empty array when gallery is null or missing', async () => {
 		const requestUrl = new URL('http://localhost/api/image-list?event=empty-event');
-		vi.mocked(client.fetch).mockResolvedValue(null);
+		vi.mocked(client.fetch).mockResolvedValue(/** @type {any} */ (null));
 
-		const response = await GET({ url: requestUrl });
+		const response = await GET(/** @type {any} */ ({ url: requestUrl }));
 
 		expect(response.status).toBe(200);
 		const json = await response.json();
@@ -65,7 +65,7 @@ describe('API Endpoint GET /api/image-list', () => {
 		const requestUrl = new URL('http://localhost/api/image-list?event=error');
 		vi.mocked(client.fetch).mockRejectedValue(new Error('Sanity timeout'));
 
-		const response = await GET({ url: requestUrl });
+		const response = await GET(/** @type {any} */ ({ url: requestUrl }));
 
 		expect(response.status).toBe(500);
 		const json = await response.json();

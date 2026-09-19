@@ -13,9 +13,9 @@ describe('[slug] Layout Server Loader', () => {
 
 	it('loads layout event data', async () => {
 		const mockEvent = { title: 'Demo Event', slug: 'demo' };
-		vi.mocked(eventsServer.getEvent).mockResolvedValue(mockEvent);
+		vi.mocked(eventsServer.getEvent).mockResolvedValue(/** @type {any} */ (mockEvent));
 
-		const result = await load({ params: { slug: 'demo' } });
+		const result = await load(/** @type {any} */ ({ params: { slug: 'demo' } }));
 
 		expect(eventsServer.getEvent).toHaveBeenCalledWith('demo');
 		expect(result).toEqual({

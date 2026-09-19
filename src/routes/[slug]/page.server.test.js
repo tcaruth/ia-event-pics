@@ -17,9 +17,9 @@ describe('[slug] Page Server Loader', () => {
 			slug: 'demo',
 			images: [{ name: 'photo1.jpg' }]
 		};
-		vi.mocked(eventsServer.getEvent).mockResolvedValue(mockEvent);
+		vi.mocked(eventsServer.getEvent).mockResolvedValue(/** @type {any} */ (mockEvent));
 
-		const result = await load({ params: { slug: 'demo' } });
+		const result = await load(/** @type {any} */ ({ params: { slug: 'demo' } }));
 
 		expect(eventsServer.getEvent).toHaveBeenCalledWith('demo', false);
 		expect(result).toEqual({
@@ -30,9 +30,9 @@ describe('[slug] Page Server Loader', () => {
 	});
 
 	it('returns empty images array when event is null', async () => {
-		vi.mocked(eventsServer.getEvent).mockResolvedValue(null);
+		vi.mocked(eventsServer.getEvent).mockResolvedValue(/** @type {any} */ (null));
 
-		const result = await load({ params: { slug: 'non-existent' } });
+		const result = await load(/** @type {any} */ ({ params: { slug: 'non-existent' } }));
 
 		expect(result).toEqual({
 			images: [],
