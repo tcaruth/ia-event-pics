@@ -10,21 +10,28 @@ This guide is for event organizers and photobooth operators to manage photos and
 
 ## 🖼️ Managing Photos
 
-### Deleting Photos
-1.  Locate the photo in the Admin Dashboard.
-2.  Click the **Delete** button.
-3.  Confirm the deletion in the popup dialog.
-4.  **Warning:** This action is permanent and removes the photo from Sanity storage.
+### Selecting Photos
 
-### Deleting All Photos
-1.  In the Admin Dashboard, click the **Delete All Photos** button near the top.
-2.  A confirmation dialog will appear showing the total count of images to be deleted.
-3.  Click **Yes, Delete All** to proceed.
-4.  **Warning:** This will permanently remove **ALL** photos for this event. This cannot be undone.
+1. Click anywhere on a photo thumbnail or its checkbox to select or deselect the photo (and its raw captures grouping).
+2. Use the **Select All** checkbox in the top sticky action bar to quickly select or clear all photos in the event.
+
+### Viewing Full-Resolution Photos
+
+1. Click **Open Image** on any photo card to view the direct full-resolution photo in a new tab.
+2. If raw captures exist for a composite photo, click **📷 Raw Shots** to inspect the individual capture frames.
+
+### Deleting Photos
+
+1. Select one or more photos by clicking their thumbnails or checkboxes.
+2. Click **🗑️ Delete Selected** in the sticky action bar.
+3. Choose whether to delete associated raw captures or standalone raws in the confirmation dialog.
+4. Click **Yes, Delete** to proceed.
+5. **Warning:** Deletion is permanent and removes the photos from Sanity storage.
 
 ### Printing Photos
-1.  Print buttons are displayed in the Admin Dashboard while the event is active and assigned to a photobooth in Sanity.
-2.  Click **Print** on any photo to send a print task to the photobooth printer queue.
+
+1. Batch printing is available in the sticky action bar when the event is active and assigned to an active photobooth.
+2. Select one or more photos and click **🖨️ Print Selected** in the sticky action bar to queue the print jobs to the photobooth.
 
 ## 🎨 Updating Event Branding
 
