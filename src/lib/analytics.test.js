@@ -6,7 +6,9 @@ import {
 	formatTimeShort,
 	getSortedCaptureDates,
 	groupPhotosByComposite,
-	isCompositePhoto
+	isCompositePhoto,
+	getLastPhotoTimestamp,
+	isEventEnded
 } from './analytics';
 
 describe('analytics.js', () => {
@@ -34,11 +36,19 @@ describe('analytics.js', () => {
 
 	it('groups raw photos under matching composite photo', () => {
 		const mockImages = [
-			{ name: '2026-07-31-17-08-26_pibooth.jpg', created: '2026-07-31T17:08:26.000Z', key: 'comp1' },
+			{
+				name: '2026-07-31-17-08-26_pibooth.jpg',
+				created: '2026-07-31T17:08:26.000Z',
+				key: 'comp1'
+			},
 			{ name: 'pibooth000.jpg', created: '2026-07-31T17:08:20.000Z', key: 'raw0' },
 			{ name: 'pibooth001.jpg', created: '2026-07-31T17:08:22.000Z', key: 'raw1' },
 			{ name: 'pibooth002.jpg', created: '2026-07-31T17:08:24.000Z', key: 'raw2' },
-			{ name: '2026-07-31-18-00-00_pibooth.jpg', created: '2026-07-31T18:00:00.000Z', key: 'comp2' },
+			{
+				name: '2026-07-31-18-00-00_pibooth.jpg',
+				created: '2026-07-31T18:00:00.000Z',
+				key: 'comp2'
+			},
 			{ name: 'pibooth003.jpg', created: '2026-07-31T17:59:55.000Z', key: 'raw3' }
 		];
 
@@ -68,14 +78,22 @@ describe('analytics.js', () => {
 			{ name: 'pibooth001.jpg', created: '2026-07-31T17:08:15.000Z', key: 's1_r1' },
 			{ name: 'pibooth002.jpg', created: '2026-07-31T17:08:20.000Z', key: 's1_r2' },
 			{ name: 'pibooth003.jpg', created: '2026-07-31T17:08:25.000Z', key: 's1_r3' },
-			{ name: '2026-07-31-17-08-26_pibooth.jpg', created: '2026-07-31T17:08:26.000Z', key: 's1_comp' },
+			{
+				name: '2026-07-31-17-08-26_pibooth.jpg',
+				created: '2026-07-31T17:08:26.000Z',
+				key: 's1_comp'
+			},
 
 			// Session B taken immediately back-to-back (composite @ 17:09:02)
 			{ name: 'pibooth000.jpg', created: '2026-07-31T17:08:45.000Z', key: 's2_r0' },
 			{ name: 'pibooth001.jpg', created: '2026-07-31T17:08:50.000Z', key: 's2_r1' },
 			{ name: 'pibooth002.jpg', created: '2026-07-31T17:08:55.000Z', key: 's2_r2' },
 			{ name: 'pibooth003.jpg', created: '2026-07-31T17:09:00.000Z', key: 's2_r3' },
-			{ name: '2026-07-31-17-09-02_pibooth.jpg', created: '2026-07-31T17:09:02.000Z', key: 's2_comp' }
+			{
+				name: '2026-07-31-17-09-02_pibooth.jpg',
+				created: '2026-07-31T17:09:02.000Z',
+				key: 's2_comp'
+			}
 		];
 
 		const result = groupPhotosByComposite(mockImages, [1, 4]);
@@ -220,5 +238,53 @@ describe('analytics.js', () => {
 			expect(stats.timelineBuckets.length).toBe(9);
 		});
 	});
-});
 
+	describe('getLastPhotoTimestamp', () => {
+		it('returns null for empty or non-array inputs', () => {
+			expect(getLastPhotoTimestamp([])).toBeNull();
+			expect(getLastPhotoTimestamp(null)).toBeNull();
+			expect(getLastPhotoTimestamp(undefined)).toBeNull();
+		});
+
+		it('returns newest timestamp from image created properties', () => {
+			const images = [
+				{ created: '2026-08-01T10:00:00.000Z' },
+				{ created: '2026-08-01T14:30:00.000Z' },
+				{ created: '2026-08-01T12:00:00.000Z' }
+			];
+			expect(getLastPhotoTimestamp(images)).toBe(new Date('2026-08-01T14:30:00.000Z').getTime());
+		});
+
+		it('extracts timestamp from filename when created is missing', () => {
+			const images = [
+				{ name: '2026-08-01-10-00-00_pibooth.jpg' },
+				{ name: '2026-08-01-18-45-00_pibooth.jpg' }
+			];
+			expect(getLastPhotoTimestamp(images)).toBe(new Date('2026-08-01T18:45:00').getTime());
+		});
+	});
+
+	describe('isEventEnded', () => {
+		it('returns false for empty image array', () => {
+			expect(isEventEnded([])).toBe(false);
+		});
+
+		it('returns false when last photo is within 24 hours', () => {
+			const now = new Date('2026-08-02T12:00:00.000Z').getTime();
+			const images = [
+				{ created: '2026-08-01T14:00:00.000Z' }, // 22 hours ago
+				{ created: '2026-08-01T15:00:00.000Z' } // 21 hours ago
+			];
+			expect(isEventEnded(images, now)).toBe(false);
+		});
+
+		it('returns true when more than 24 hours have passed since last photo', () => {
+			const now = new Date('2026-08-02T20:00:00.000Z').getTime();
+			const images = [
+				{ created: '2026-08-01T12:00:00.000Z' }, // 32 hours ago
+				{ created: '2026-08-01T15:00:00.000Z' } // 29 hours ago
+			];
+			expect(isEventEnded(images, now)).toBe(true);
+		});
+	});
+});

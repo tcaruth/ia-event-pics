@@ -97,7 +97,8 @@ export function groupPhotosByComposite(images = [], eventCaptures = []) {
 	}
 
 	// 1. Separate composites and raws, sorted chronologically by creation timestamp
-	const getTimestamp = (/** @type {any} */ img) => (img?.created ? new Date(img.created).getTime() : 0);
+	const getTimestamp = (/** @type {any} */ img) =>
+		img?.created ? new Date(img.created).getTime() : 0;
 
 	const composites = images
 		.filter((img) => isCompositePhoto(img?.name))
@@ -440,4 +441,48 @@ export function calculateCaptureStats(images = [], intervalMinutes = 15, maxGapH
 		timelineBuckets,
 		outliersExcludedCount
 	};
+}
+
+/**
+ * Calculates the timestamp (in ms) of the most recent photo in an image collection.
+ * @param {Array<{ created?: string, name?: string }> | null} [images]
+ * @returns {number | null} Timestamp of the newest photo, or null if no valid photos exist.
+ */
+export function getLastPhotoTimestamp(images = []) {
+	if (!Array.isArray(images) || images.length === 0) return null;
+	let maxTime = 0;
+
+	for (const img of images) {
+		if (img?.created) {
+			const t = new Date(img.created).getTime();
+			if (!isNaN(t) && t > maxTime) {
+				maxTime = t;
+			}
+		}
+		if (img?.name) {
+			const match = img.name.match(/(\d{4})-(\d{2})-(\d{2})[-_](\d{2})[-_](\d{2})[-_](\d{2})/);
+			if (match) {
+				const [_, y, m, d, h, min, s] = match;
+				const t = new Date(`${y}-${m}-${d}T${h}:${min}:${s}`).getTime();
+				if (!isNaN(t) && t > maxTime) {
+					maxTime = t;
+				}
+			}
+		}
+	}
+
+	return maxTime > 0 ? maxTime : null;
+}
+
+/**
+ * Determines whether more than 24 hours have elapsed since the last photo was taken (indicating event ended).
+ * @param {Array<{ created?: string, name?: string }> | null} [images]
+ * @param {number} [now]
+ * @returns {boolean}
+ */
+export function isEventEnded(images = [], now = Date.now()) {
+	const lastPhotoTime = getLastPhotoTimestamp(images);
+	if (!lastPhotoTime) return false;
+	const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
+	return now - lastPhotoTime > TWENTY_FOUR_HOURS_MS;
 }

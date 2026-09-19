@@ -6,15 +6,11 @@
 	import { enhance } from '$app/forms';
 	import JSZip from 'jszip';
 	import CaptureAnalytics from '$lib/CaptureAnalytics.svelte';
-	import { groupPhotosByComposite } from '$lib/analytics';
+	import { groupPhotosByComposite, isEventEnded } from '$lib/analytics';
 
 	let isDownloading = $state(false);
 	let downloadProgress = $state('');
 
-	/** @type {HTMLDialogElement | undefined} */
-	let deleteDialog = $state(undefined);
-	/** @type {HTMLDialogElement | undefined} */
-	let printDialog = $state(undefined);
 	/** @type {HTMLDialogElement | undefined} */
 	let rawPhotosDialog = $state(undefined);
 	/** @type {HTMLDialogElement | undefined} */
@@ -24,12 +20,11 @@
 	/** @type {HTMLDialogElement | undefined} */
 	let printBatchDialog = $state(undefined);
 
-	/** @type {import('$lib/events.server').EventImage | null} */
-	let imageToDelete = $state(null);
-	/** @type {import('$lib/events.server').EventImage | null} */
-	let imageToPrint = $state(null);
 	/** @type {any | null} */
 	let selectedGroupForRaws = $state(null);
+
+	let eventEnded = $derived(isEventEnded(data.images || []));
+	let isPrintAvailable = $derived(Boolean(data.isMaster || !eventEnded));
 
 	let photoGroups = $derived(groupPhotosByComposite(data.images || [], data.event?.captures));
 
@@ -67,9 +62,7 @@
 		selectedCompositeGroups.flatMap((g) => (g.rawPhotos || []).map((r) => r.key).filter(Boolean))
 	);
 
-	let allStandaloneRawKeys = $derived(
-		photoGroups.standaloneRaws.map((r) => r.key).filter(Boolean)
-	);
+	let allStandaloneRawKeys = $derived(photoGroups.standaloneRaws.map((r) => r.key).filter(Boolean));
 
 	let computedKeysToDelete = $derived(() => {
 		const set = new Set(selectedKeys);
@@ -175,7 +168,8 @@
 
 	function openDownloadDialog() {
 		downloadIncludeAssociatedRaws = false;
-		downloadIncludeStandaloneRaws = downloadScopeIsSelection && selectedStandaloneRawPhotos.length > 0;
+		downloadIncludeStandaloneRaws =
+			downloadScopeIsSelection && selectedStandaloneRawPhotos.length > 0;
 		downloadDialog?.showModal();
 	}
 
@@ -183,33 +177,12 @@
 		downloadDialog?.close();
 	}
 
-	/** @param {import('$lib/events.server').EventImage} image */
-	function confirmDelete(image) {
-		imageToDelete = image;
-		deleteDialog?.showModal();
-	}
-
-	function closeDeleteDialog() {
-		deleteDialog?.close();
-		imageToDelete = null;
-	}
-
-	/** @param {import('$lib/events.server').EventImage} image */
-	function confirmPrint(image) {
-		imageToPrint = image;
-		printDialog?.showModal();
-	}
-
-	function closePrintDialog() {
-		printDialog?.close();
-		imageToPrint = null;
-	}
-
 	let selectedPrintImages = $derived(
 		(data.images || []).filter((img) => selectedKeys.includes(img.key || img.fullPath))
 	);
 
 	function openPrintBatchDialog() {
+		if (!isPrintAvailable) return;
 		if (selectedPrintImages.length === 0) return;
 		printBatchDialog?.showModal();
 	}
@@ -370,11 +343,7 @@
 			</label>
 			{#if selectedKeys.length > 0}
 				<span class="selected-pill">{selectedKeys.length} selected</span>
-				<button
-					type="button"
-					class="clear-selection-btn"
-					onclick={() => (selectedKeys = [])}
-				>
+				<button type="button" class="clear-selection-btn" onclick={() => (selectedKeys = [])}>
 					Deselect All
 				</button>
 			{/if}
@@ -396,23 +365,25 @@
 				{/if}
 			</button>
 
-			<button
-				type="button"
-				class="batch-print-btn"
-				onclick={openPrintBatchDialog}
-				disabled={selectedKeys.length === 0 || !data.event?.isPhotoboothActive}
-				title={!data.event?.isPhotoboothActive
-					? 'Photobooth must be active and assigned to this event to print'
-					: selectedKeys.length === 0
-						? 'Select photos to print'
-						: `Send ${selectedKeys.length} selected photo${selectedKeys.length === 1 ? '' : 's'} to photobooth printer`}
-			>
-				{#if selectedKeys.length > 0}
-					🖨️ Print Selected ({selectedKeys.length})
-				{:else}
-					🖨️ Print Selected
-				{/if}
-			</button>
+			{#if isPrintAvailable}
+				<button
+					type="button"
+					class="batch-print-btn"
+					onclick={openPrintBatchDialog}
+					disabled={selectedKeys.length === 0 || !data.event?.isPhotoboothActive}
+					title={!data.event?.isPhotoboothActive
+						? 'Photobooth must be active and assigned to this event to print'
+						: selectedKeys.length === 0
+							? 'Select photos to print'
+							: `Send ${selectedKeys.length} selected photo${selectedKeys.length === 1 ? '' : 's'} to photobooth printer`}
+				>
+					{#if selectedKeys.length > 0}
+						🖨️ Print Selected ({selectedKeys.length})
+					{:else}
+						🖨️ Print Selected
+					{/if}
+				</button>
+			{/if}
 
 			<button
 				type="button"
@@ -444,37 +415,33 @@
 					/>
 					<span class="custom-checkbox"></span>
 				</label>
-				<a
-					href={image.url}
-					target="_blank"
-					rel="noopener noreferrer"
+				<button
+					type="button"
 					class="image-wrapper"
-					title="Open direct Sanity image"
+					onclick={() => toggleSelect(image.key)}
+					title={isSelected(image.key) ? 'Click to deselect photo' : 'Click to select photo'}
+					aria-label="Select photo {image.name}"
 				>
 					<img src={image.url} alt={image.name} loading="lazy" />
-				</a>
+				</button>
 				<div class="card-content">
 					<p class="image-name" title={image.name}>{image.name}</p>
 					<div class="card-actions">
-						{#if data.event?.isPhotoboothActive}
-							<button type="button" class="print-btn" onclick={() => confirmPrint(image)}>
-								Print
+						<a
+							href={image.url}
+							target="_blank"
+							rel="noopener noreferrer"
+							class="open-image-btn"
+							title="Open image in a new tab"
+						>
+							Open Image
+						</a>
+						{#if group.rawPhotos.length > 0}
+							<button type="button" class="raw-shots-btn" onclick={() => openRawPhotos(group)}>
+								📷 Raw Shots ({group.rawPhotos.length})
 							</button>
 						{/if}
-						<button type="button" class="delete-btn" onclick={() => confirmDelete(image)}>
-							Delete
-						</button>
 					</div>
-
-					{#if group.rawPhotos.length > 0}
-						<button
-							type="button"
-							class="raw-shots-btn"
-							onclick={() => openRawPhotos(group)}
-						>
-							📷 Raw Shots ({group.rawPhotos.length})
-						</button>
-					{/if}
 				</div>
 			</div>
 		{/each}
@@ -489,120 +456,70 @@
 					/>
 					<span class="custom-checkbox"></span>
 				</label>
-				<a
-					href={rawImage.url}
-					target="_blank"
-					rel="noopener noreferrer"
+				<button
+					type="button"
 					class="image-wrapper"
-					title="Open direct Sanity image"
+					onclick={() => toggleSelect(rawImage.key)}
+					title={isSelected(rawImage.key) ? 'Click to deselect photo' : 'Click to select photo'}
+					aria-label="Select photo {rawImage.name}"
 				>
 					<img src={rawImage.url} alt={rawImage.name} loading="lazy" />
-				</a>
+				</button>
 				<div class="card-content">
 					<p class="image-name" title={rawImage.name}>{rawImage.name}</p>
 					<span class="standalone-badge">Standalone Raw</span>
 					<div class="card-actions">
-						{#if data.event?.isPhotoboothActive}
-							<button type="button" class="print-btn" onclick={() => confirmPrint(rawImage)}>
-								Print
-							</button>
-						{/if}
-						<button type="button" class="delete-btn" onclick={() => confirmDelete(rawImage)}>
-							Delete
-						</button>
+						<a
+							href={rawImage.url}
+							target="_blank"
+							rel="noopener noreferrer"
+							class="open-image-btn"
+							title="Open image in a new tab"
+						>
+							Open Image
+						</a>
 					</div>
 				</div>
 			</div>
 		{/each}
 	</div>
 
-	<dialog bind:this={deleteDialog} class="confirm-dialog">
-		<div class="dialog-content">
-			<h2>Confirm Deletion</h2>
-			<p>Are you sure you want to delete <strong>{imageToDelete?.name}</strong>?</p>
-			<p class="warning-text">This action cannot be undone.</p>
+	{#if isPrintAvailable}
+		<dialog bind:this={printBatchDialog} class="confirm-dialog">
+			<div class="dialog-content">
+				<h2>Confirm Batch Print Job</h2>
+				<p>
+					Are you sure you want to send <strong>{selectedPrintImages.length}</strong>
+					photo{selectedPrintImages.length === 1 ? '' : 's'} to the photobooth printer?
+				</p>
 
-			<div class="dialog-actions">
-				<button type="button" class="btn-secondary" onclick={closeDeleteDialog}>Cancel</button>
-				<form
-					method="POST"
-					action="?/delete"
-					use:enhance={() => {
-						return async ({ result, update }) => {
-							closeDeleteDialog();
-							if (result.type === 'success') {
-								await update();
-							}
-						};
-					}}
-				>
-					<input type="hidden" name="fullPath" value={imageToDelete?.fullPath} />
-					<!-- svelte-ignore a11y_autofocus -->
-					<button type="submit" class="btn-danger" autofocus>Yes, Delete</button>
-				</form>
+				<div class="dialog-actions">
+					<button type="button" class="btn-secondary" onclick={closePrintBatchDialog}>Cancel</button
+					>
+					<form
+						method="POST"
+						action="?/printBatch"
+						use:enhance={() => {
+							return async ({ result, update }) => {
+								closePrintBatchDialog();
+								if (result.type === 'success') {
+									await update();
+								}
+							};
+						}}
+					>
+						<input type="hidden" name="images" value={JSON.stringify(selectedPrintPayload())} />
+						<!-- svelte-ignore a11y_autofocus -->
+						<button type="submit" class="btn-primary" autofocus>
+							Yes, Print {selectedPrintImages.length} Photo{selectedPrintImages.length === 1
+								? ''
+								: 's'}
+						</button>
+					</form>
+				</div>
 			</div>
-		</div>
-	</dialog>
-
-	<dialog bind:this={printDialog} class="confirm-dialog">
-		<div class="dialog-content">
-			<h2>Confirm Print Job</h2>
-			<p>Are you sure you want to send <strong>{imageToPrint?.name}</strong> to the photobooth printer?</p>
-
-			<div class="dialog-actions">
-				<button type="button" class="btn-secondary" onclick={closePrintDialog}>Cancel</button>
-				<form
-					method="POST"
-					action="?/print"
-					use:enhance={() => {
-						return async ({ result, update }) => {
-							closePrintDialog();
-							if (result.type === 'success') {
-								await update();
-							}
-						};
-					}}
-				>
-					<input type="hidden" name="fullPath" value={imageToPrint?.fullPath} />
-					<input type="hidden" name="assetUrl" value={imageToPrint?.url} />
-					<input type="hidden" name="imageName" value={imageToPrint?.name} />
-					<!-- svelte-ignore a11y_autofocus -->
-					<button type="submit" class="btn-primary" autofocus>Yes, Print</button>
-				</form>
-			</div>
-		</div>
-	</dialog>
-
-	<dialog bind:this={printBatchDialog} class="confirm-dialog">
-		<div class="dialog-content">
-			<h2>Confirm Batch Print Job</h2>
-			<p>
-				Are you sure you want to send <strong>{selectedPrintImages.length}</strong> photo{selectedPrintImages.length === 1 ? '' : 's'} to the photobooth printer?
-			</p>
-
-			<div class="dialog-actions">
-				<button type="button" class="btn-secondary" onclick={closePrintBatchDialog}>Cancel</button>
-				<form
-					method="POST"
-					action="?/printBatch"
-					use:enhance={() => {
-						return async ({ result, update }) => {
-							closePrintBatchDialog();
-							if (result.type === 'success') {
-								await update();
-							}
-						};
-					}}
-				>
-					<input type="hidden" name="images" value={JSON.stringify(selectedPrintPayload())} />
-					<!-- svelte-ignore a11y_autofocus -->
-					<button type="submit" class="btn-primary" autofocus>
-						Yes, Print {selectedPrintImages.length} Photo{selectedPrintImages.length === 1 ? '' : 's'}
-					</button>
-				</form>
-			</div>
-		</div>
-	</dialog>
+		</dialog>
+	{/if}
 
 	<dialog bind:this={rawPhotosDialog} class="confirm-dialog raw-modal">
 		<div class="dialog-content raw-dialog-content">
@@ -623,26 +540,27 @@
 							/>
 							<span class="custom-checkbox"></span>
 						</label>
-						<a
-							href={rawImg.url}
-							target="_blank"
-							rel="noopener noreferrer"
+						<button
+							type="button"
 							class="raw-img-wrapper"
-							title="Open direct Sanity image"
+							onclick={() => toggleSelect(rawImg.key)}
+							title={isSelected(rawImg.key) ? 'Click to deselect photo' : 'Click to select photo'}
+							aria-label="Select photo {rawImg.name}"
 						>
 							<img src={rawImg.url} alt={rawImg.name} loading="lazy" />
-						</a>
+						</button>
 						<div class="raw-card-body">
 							<p class="raw-name" title={rawImg.name}>{rawImg.name}</p>
 							<div class="card-actions">
-								{#if data.event?.isPhotoboothActive}
-									<button type="button" class="print-btn" onclick={() => confirmPrint(rawImg)}>
-										Print
-									</button>
-								{/if}
-								<button type="button" class="delete-btn" onclick={() => confirmDelete(rawImg)}>
-									Delete
-								</button>
+								<a
+									href={rawImg.url}
+									target="_blank"
+									rel="noopener noreferrer"
+									class="open-image-btn"
+									title="Open image in a new tab"
+								>
+									Open Image
+								</a>
 							</div>
 						</div>
 					</div>
@@ -650,7 +568,7 @@
 			</div>
 
 			<div class="dialog-actions">
-				{#if selectedKeys.length > 0 && data.event?.isPhotoboothActive}
+				{#if isPrintAvailable && selectedKeys.length > 0 && data.event?.isPhotoboothActive}
 					<button
 						type="button"
 						class="btn-print"
@@ -688,9 +606,15 @@
 
 			<p class="modal-sub">
 				{#if downloadScopeIsSelection}
-					Packaging <strong>{selectedKeys.length} selected photo{selectedKeys.length === 1 ? '' : 's'}</strong>:
+					Packaging <strong
+						>{selectedKeys.length} selected photo{selectedKeys.length === 1 ? '' : 's'}</strong
+					>:
 				{:else}
-					Packaging <strong>all {photoGroups.groups.length} composite photo{photoGroups.groups.length === 1 ? '' : 's'}</strong> in this event:
+					Packaging <strong
+						>all {photoGroups.groups.length} composite photo{photoGroups.groups.length === 1
+							? ''
+							: 's'}</strong
+					> in this event:
 				{/if}
 			</p>
 
@@ -701,7 +625,10 @@
 						<span class="option-label">
 							Include associated raw camera captures
 							<span class="option-sub">
-								({availableAssociatedRawsForDownload().length} capture{availableAssociatedRawsForDownload().length === 1 ? '' : 's'})
+								({availableAssociatedRawsForDownload().length} capture{availableAssociatedRawsForDownload()
+									.length === 1
+									? ''
+									: 's'})
 							</span>
 						</span>
 					</label>
@@ -713,7 +640,9 @@
 						<span class="option-label">
 							Include standalone raw photos
 							<span class="option-sub">
-								({allStandaloneRawKeys.length} standalone photo{allStandaloneRawKeys.length === 1 ? '' : 's'} in event)
+								({allStandaloneRawKeys.length} standalone photo{allStandaloneRawKeys.length === 1
+									? ''
+									: 's'} in event)
 							</span>
 						</span>
 					</label>
@@ -732,7 +661,9 @@
 					onclick={executeDownload}
 					disabled={isDownloading || imagesToDownloadList().length === 0}
 				>
-					{isDownloading ? 'Preparing ZIP...' : `Download ${imagesToDownloadList().length} Photo${imagesToDownloadList().length === 1 ? '' : 's'}`}
+					{isDownloading
+						? 'Preparing ZIP...'
+						: `Download ${imagesToDownloadList().length} Photo${imagesToDownloadList().length === 1 ? '' : 's'}`}
 				</button>
 			</div>
 		</div>
@@ -742,18 +673,26 @@
 		<div class="dialog-content">
 			<h2>Confirm Batch Deletion</h2>
 			<p>
-				You have selected <strong>{selectedKeys.length} item{selectedKeys.length === 1 ? '' : 's'}</strong> for deletion:
+				You have selected <strong
+					>{selectedKeys.length} item{selectedKeys.length === 1 ? '' : 's'}</strong
+				> for deletion:
 			</p>
 
 			<ul class="selection-breakdown">
 				{#if selectedCompositeGroups.length > 0}
 					<li>
-						<strong>{selectedCompositeGroups.length}</strong> composite photo{selectedCompositeGroups.length === 1 ? '' : 's'}
+						<strong>{selectedCompositeGroups.length}</strong> composite photo{selectedCompositeGroups.length ===
+						1
+							? ''
+							: 's'}
 					</li>
 				{/if}
 				{#if selectedStandaloneRawPhotos.length > 0}
 					<li>
-						<strong>{selectedStandaloneRawPhotos.length}</strong> standalone raw photo{selectedStandaloneRawPhotos.length === 1 ? '' : 's'}
+						<strong>{selectedStandaloneRawPhotos.length}</strong> standalone raw photo{selectedStandaloneRawPhotos.length ===
+						1
+							? ''
+							: 's'}
 					</li>
 				{/if}
 			</ul>
@@ -764,7 +703,12 @@
 						<input type="checkbox" bind:checked={deleteAssociatedRaws} />
 						<span class="option-label">
 							Delete raw capture photos associated with selected composites
-							<span class="option-sub">({associatedRawKeys.length} capture{associatedRawKeys.length === 1 ? '' : 's'} across {selectedCompositeGroups.length} composite{selectedCompositeGroups.length === 1 ? '' : 's'})</span>
+							<span class="option-sub"
+								>({associatedRawKeys.length} capture{associatedRawKeys.length === 1 ? '' : 's'} across
+								{selectedCompositeGroups.length} composite{selectedCompositeGroups.length === 1
+									? ''
+									: 's'})</span
+							>
 						</span>
 					</label>
 				{/if}
@@ -774,7 +718,11 @@
 						<input type="checkbox" bind:checked={deleteStandaloneRaws} />
 						<span class="option-label">
 							Delete standalone raw photos
-							<span class="option-sub">({allStandaloneRawKeys.length} standalone photo{allStandaloneRawKeys.length === 1 ? '' : 's'} in event)</span>
+							<span class="option-sub"
+								>({allStandaloneRawKeys.length} standalone photo{allStandaloneRawKeys.length === 1
+									? ''
+									: 's'} in event)</span
+							>
 						</span>
 					</label>
 				{/if}
@@ -804,7 +752,9 @@
 					<input type="hidden" name="keys" value={JSON.stringify(computedKeysToDelete())} />
 					<!-- svelte-ignore a11y_autofocus -->
 					<button type="submit" class="btn-danger" autofocus>
-						Yes, Delete {computedKeysToDelete().length} Photo{computedKeysToDelete().length === 1 ? '' : 's'}
+						Yes, Delete {computedKeysToDelete().length} Photo{computedKeysToDelete().length === 1
+							? ''
+							: 's'}
 					</button>
 				</form>
 			</div>
@@ -929,7 +879,9 @@
 		font-weight: 600;
 		font-size: 0.875rem;
 		cursor: pointer;
-		transition: background-color 0.2s, opacity 0.2s;
+		transition:
+			background-color 0.2s,
+			opacity 0.2s;
 	}
 
 	.batch-print-btn:hover:not(:disabled) {
@@ -950,7 +902,9 @@
 		font-weight: 600;
 		font-size: 0.875rem;
 		cursor: pointer;
-		transition: background-color 0.2s, opacity 0.2s;
+		transition:
+			background-color 0.2s,
+			opacity 0.2s;
 	}
 
 	.batch-delete-btn:hover:not(:disabled) {
@@ -1024,7 +978,10 @@
 		overflow: hidden;
 		box-shadow: var(--shadow-sm);
 		border: 1px solid var(--border-color);
-		transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+		transition:
+			transform 0.2s,
+			border-color 0.2s,
+			box-shadow 0.2s;
 	}
 
 	.image-card.is-selected,
@@ -1078,6 +1035,11 @@
 		width: 100%;
 		height: 200px;
 		cursor: pointer;
+		background: none;
+		border: none;
+		padding: 0;
+		margin: 0;
+		text-align: left;
 	}
 
 	.image-wrapper img {
@@ -1085,10 +1047,17 @@
 		height: 100%;
 		object-fit: cover;
 		transition: opacity 0.2s ease;
+		display: block;
+		pointer-events: none;
 	}
 
 	.image-wrapper:hover img {
 		opacity: 0.9;
+	}
+
+	.image-wrapper:focus-visible {
+		outline: 2px solid var(--color-primary, #3b82f6);
+		outline-offset: -2px;
 	}
 
 	.card-content {
@@ -1106,51 +1075,45 @@
 
 	.card-actions {
 		display: flex;
+		flex-wrap: wrap;
 		gap: 0.5rem;
+		align-items: center;
 	}
 
-	.print-btn,
-	.delete-btn {
-		flex: 1;
-		padding: 0.5rem;
-		border: none;
+	.open-image-btn,
+	.raw-shots-btn {
+		flex: 1 1 120px;
+		min-width: 0;
+		box-sizing: border-box;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0.5rem 0.75rem;
 		border-radius: 0.375rem;
 		font-weight: 600;
-		font-size: 0.875rem;
+		font-size: 0.8125rem;
+		text-align: center;
+		white-space: nowrap;
 		cursor: pointer;
-		transition: background-color 0.2s;
+		transition: all 0.2s ease;
 	}
 
-	.print-btn {
+	.open-image-btn {
 		background-color: var(--color-primary, #0153a4);
-		color: white;
+		color: #ffffff;
+		text-decoration: none;
+		border: 1px solid transparent;
 	}
 
-	.print-btn:hover {
+	.open-image-btn:hover {
 		filter: brightness(1.15);
 	}
 
-	.delete-btn {
-		background-color: #dc2626;
-		color: white;
-	}
-
-	.delete-btn:hover {
-		background-color: #b91c1c;
-	}
-
 	.raw-shots-btn {
-		width: 100%;
-		margin-top: 0.75rem;
-		padding: 0.5rem;
 		background: rgba(255, 255, 255, 0.06);
 		border: 1px dashed var(--border-color, rgba(255, 255, 255, 0.2));
-		border-radius: 0.375rem;
 		color: var(--text-surface-primary, #f8fafc);
-		font-size: 0.8125rem;
-		font-weight: 600;
-		cursor: pointer;
-		transition: all 0.2s ease;
+		margin-top: 0;
 	}
 
 	.raw-shots-btn:hover {
@@ -1240,7 +1203,9 @@
 		border-radius: 0.5rem;
 		overflow: hidden;
 		border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
-		transition: border-color 0.2s, box-shadow 0.2s;
+		transition:
+			border-color 0.2s,
+			box-shadow 0.2s;
 	}
 
 	.raw-img-wrapper {
@@ -1248,6 +1213,11 @@
 		width: 100%;
 		height: 130px;
 		cursor: pointer;
+		background: none;
+		border: none;
+		padding: 0;
+		margin: 0;
+		text-align: left;
 	}
 
 	.raw-img-wrapper img {
@@ -1255,10 +1225,17 @@
 		height: 100%;
 		object-fit: cover;
 		transition: opacity 0.2s ease;
+		display: block;
+		pointer-events: none;
 	}
 
 	.raw-img-wrapper:hover img {
 		opacity: 0.9;
+	}
+
+	.raw-img-wrapper:focus-visible {
+		outline: 2px solid var(--color-primary, #3b82f6);
+		outline-offset: -2px;
 	}
 
 	.raw-card-body {
